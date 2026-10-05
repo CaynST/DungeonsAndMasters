@@ -9,6 +9,7 @@ import type {
   PlayerCharacter,
   ActionResult,
   RulesetView,
+  ShopView,
   User,
 } from "@/types/game";
 
@@ -112,4 +113,18 @@ export const api = {
   ruleset: (edition: string) => request<RulesetView>(`/api/rulesets/${edition}`),
 
   intro: (id: number) => request<CampaignIntro>(`/api/campaigns/${id}/intro`),
+
+  shop: (id: number) => request<ShopView>(`/api/campaigns/${id}/shop`),
+
+  buy: (id: number, itemId: string, quantity = 1) =>
+    request<PlayerCharacter>(`/api/campaigns/${id}/shop/buy`, {
+      method: "POST",
+      body: JSON.stringify({ itemId, quantity }),
+    }),
+
+  sell: (id: number, itemName: string, quantity = 1) =>
+    request<PlayerCharacter>(`/api/campaigns/${id}/shop/sell`, {
+      method: "POST",
+      body: JSON.stringify({ itemName, quantity }),
+    }),
 };

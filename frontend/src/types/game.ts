@@ -300,6 +300,24 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface ShopItem {
+  id: string;
+  name: string;
+  kind: string;
+  price: number;
+  icon: string;
+  description: string;
+}
+
+export interface ShopView {
+  characterId: number;
+  gold: number;
+  silver: number;
+  copper: number;
+  items: ShopItem[];
+  inventory: InventoryItem[];
+}
+
 export interface CampaignIntro {
   title: string;
   setting?: string;

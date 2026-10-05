@@ -6,6 +6,7 @@ import { ArrowLeft, Crown, Flag } from "lucide-react";
 import { api } from "@/lib/api";
 import { connectCampaignSocket } from "@/lib/ws";
 import { CinematicIntro } from "@/components/intro/CinematicIntro";
+import { ShopModal } from "@/components/shop/ShopModal";
 import { useGameStore } from "@/store/useGameStore";
 import { Board } from "@/components/board/Board";
 import { InitiativeTracker } from "@/components/InitiativeTracker";
@@ -47,6 +48,7 @@ export function Game() {
   const [selectedAttack, setSelectedAttack] = useState<Attack | undefined>();
   const [narration, setNarration] = useState<string | null>(null);
   const [started, setStarted] = useState(false);
+  const [showShop, setShowShop] = useState(false);
   const [showIntro, setShowIntro] = useState(() => {
     const key = `intro-played-${campaignId}`;
     return !sessionStorage.getItem(key);
@@ -347,6 +349,7 @@ export function Game() {
           onDialogue={() => act.mutate({ type: "DIALOGUE", text: "El grupo interactúa con la escena." })}
           onQuickRoll={(expression) => act.mutate({ type: "DICE", expression })}
           onDiceRequest={() => act.mutate({ type: "DICE", expression: "1d20" })}
+          onOpenShop={() => setShowShop(true)}
           mode={mode}
           onToggleMode={setMode}
         />
@@ -357,6 +360,9 @@ export function Game() {
 
       {/* Opening cinematic */}
       {showIntro && intro.data && <CinematicIntro intro={intro.data} onDone={dismissIntro} />}
+
+      {/* Shop */}
+      {showShop && <ShopModal campaignId={campaignId} onClose={() => setShowShop(false)} />}
 
       {/* Completion overlay */}
       <AnimatePresence>

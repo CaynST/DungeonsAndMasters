@@ -1,4 +1,4 @@
-import { Dices, Footprints, MessageSquare, MoveRight, Swords } from "lucide-react";
+import { Dices, Footprints, MessageSquare, MoveRight, Store, Swords } from "lucide-react";
 import type { Attack, PlayerCharacter } from "@/types/game";
 import { Button } from "@/components/ui/Button";
 import { formatModifier } from "@/lib/utils";
@@ -15,6 +15,7 @@ interface Props {
   onDialogue: () => void;
   onQuickRoll: (expression: string) => void;
   onDiceRequest: () => void;
+  onOpenShop: () => void;
   mode: "move" | "attack";
   onToggleMode: (mode: "move" | "attack") => void;
 }
@@ -31,6 +32,7 @@ export function ActionBar({
   onDialogue,
   onQuickRoll,
   onDiceRequest,
+  onOpenShop,
   mode,
   onToggleMode,
 }: Props) {
@@ -97,6 +99,9 @@ export function ActionBar({
         ))}
         <Button variant="ghost" size="sm" onClick={onDialogue}>
           <MessageSquare className="h-4 w-4" /> Hablar
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onOpenShop}>
+          <Store className="h-4 w-4" /> Tienda
         </Button>
         <Button variant="secondary" size="sm" disabled={!isMyTurn} onClick={onEndTurn}>
           <MoveRight className="h-4 w-4" /> Terminar turno
