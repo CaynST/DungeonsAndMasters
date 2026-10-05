@@ -93,9 +93,31 @@ public class OpenAiCompatibleProvider implements AIProvider {
             Map<String, Object> parsed = Json.readMap(response.body());
             List<Map<String, Object>> choices = (List<Map<String, Object>>) parsed.get("choices");
             Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-            return new AiResponse(String.valueOf(message.get("content")));
+            return new AiResponse(extractText(message));
         } catch (Exception e) {
             throw new IllegalStateException("AI completion failed for model " + model + ": " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Reasoning models sometimes return {@code content: null} with the actual text in
+     * {@code reasoning_content} or {@code reasoning}. Prefer the final answer, but never
+     * surface the literal string "null".
+     */
+    private String extractText(Map<String, Object> message) {
+        String content = stringOrNull(message.get("content"));
+        if (content != null && !content.isBlank()) {
+            return content;
+        }
+        String reasoningContent = stringOrNull(message.get("reasoning_content"));
+        if (reasoningContent != null && !reasoningContent.isBlank()) {
+            return reasoningContent;
+        }
+        String reasoning = stringOrNull(message.get("reasoning"));
+        return reasoning != null ? reasoning : "";
+    }
+
+    private String stringOrNull(Object value) {
+        return value instanceof String s ? s : null;
     }
 }
