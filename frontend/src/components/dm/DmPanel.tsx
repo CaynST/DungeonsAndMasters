@@ -75,30 +75,6 @@ export function DmPanel({ dmName, narration, events, providerId, spotlightName, 
           </div>
         )}
 
-        {pendingCheck && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="rounded-lg border border-gold/40 bg-gold/10 p-3"
-          >
-            <p className="mb-1 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-gold-soft">
-              <Sparkles className="h-3.5 w-3.5" /> Prueba solicitada
-            </p>
-            <p className="text-sm text-ink">
-              {pendingCheck.prompt ?? `Prueba de ${pendingCheck.skill}`}{" "}
-              <span className="text-gold-soft">· CD {pendingCheck.dc}</span>
-            </p>
-            <Button
-              variant="primary"
-              size="sm"
-              className="mt-2 w-full"
-              onClick={() => onRollCheck(pendingCheck.skill, pendingCheck.dc)}
-            >
-              <Dices className="h-4 w-4" /> Tirar dado
-            </Button>
-          </motion.div>
-        )}
-
         <div>
           <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
             <ScrollText className="h-3.5 w-3.5" /> Registro
@@ -138,6 +114,30 @@ export function DmPanel({ dmName, narration, events, providerId, spotlightName, 
             {events.length === 0 && <li className="text-xs text-muted">El registro aún está en blanco.</li>}
           </ul>
         </div>
+
+        {pendingCheck && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-lg border border-gold/40 bg-gold/10 p-3"
+          >
+            <p className="mb-1 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-gold-soft">
+              <Sparkles className="h-3.5 w-3.5" /> Prueba solicitada
+            </p>
+            <p className="text-sm text-ink">
+              {pendingCheck.prompt ?? `Prueba de ${pendingCheck.skill}`}{" "}
+              <span className="text-gold-soft">· CD {pendingCheck.dc}</span>
+            </p>
+            <Button
+              variant="primary"
+              size="sm"
+              className="mt-2 w-full"
+              onClick={() => onRollCheck(pendingCheck.skill, pendingCheck.dc)}
+            >
+              <Dices className="h-4 w-4" /> Tirar dado
+            </Button>
+          </motion.div>
+        )}
       </div>
 
       <form

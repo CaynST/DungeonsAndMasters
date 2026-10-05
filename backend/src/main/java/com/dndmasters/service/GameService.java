@@ -178,6 +178,9 @@ public class GameService {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("skill", skill);
         data.put("dc", dc);
+        // Same shape as a dice roll so the frontend can animate it identically.
+        data.put("expression", "1d20");
+        data.put("rolls", List.of(checkResult.dieRoll()));
         data.put("dieRoll", checkResult.dieRoll());
         data.put("modifier", checkResult.modifier());
         data.put("total", checkResult.total());

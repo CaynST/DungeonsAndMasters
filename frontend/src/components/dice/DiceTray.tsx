@@ -4,13 +4,12 @@ import { Environment, Lightformer } from "@react-three/drei";
 import { motion } from "framer-motion";
 import * as THREE from "three";
 import type { DiceRoll } from "@/types/game";
+import { outcomeOf, primarySides, type DiceOutcome as Outcome } from "@/lib/dice";
 
 interface DiceTrayProps {
   roll: DiceRoll;
   onComplete: () => void;
 }
-
-type Outcome = "crit" | "fail" | "max" | "normal";
 
 const OUTCOME_STYLE: Record<Outcome, { color: string; label: string }> = {
   crit: { color: "#E0B84A", label: "¡CRÍTICO!" },
@@ -28,18 +27,6 @@ const DIE_COLORS: Record<number, string> = {
   12: "#14B8A6", // turquesa
   20: "#C0392B", // rubí
 };
-
-function outcomeOf(roll: DiceRoll): Outcome {
-  if (roll.natural20) return "crit";
-  if (roll.natural1) return "fail";
-  const allMax = roll.rolls.length > 0 && roll.rolls.every((value) => value === 20);
-  return allMax ? "max" : "normal";
-}
-
-export function primarySides(expression: string): number {
-  const match = /(\d*)d(\d+)/i.exec(expression ?? "");
-  return match ? Number(match[2]) : 20;
-}
 
 interface Face {
   normal: THREE.Vector3;
@@ -211,8 +198,9 @@ export function DiceTray({ roll, onComplete }: DiceTrayProps) {
   const [rolling, setRolling] = useState(true);
   const outcome = useMemo(() => outcomeOf(roll), [roll]);
   const style = OUTCOME_STYLE[outcome];
-  const sides = primarySides(roll.expression);
-  const face = roll.rolls[0] ?? roll.total;
+  const sides = primarySides(roll.expression ?? "1d20");
+  const rolls = roll.rolls ?? [];
+  const face = rolls[0] ?? roll.total;
   const dieColor = outcome === "normal" ? DIE_COLORS[sides] ?? "#B9AE97" : style.color;
 
   useEffect(() => {
@@ -256,8 +244,8 @@ export function DiceTray({ roll, onComplete }: DiceTrayProps) {
             </span>
           </div>
           <p className="mt-1 text-sm text-muted">
-            {roll.expression} · [{roll.rolls.join(", ")}]
-            {roll.modifier !== 0 && ` ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)}`}
+            {roll.expression ?? "1d20"} · [{rolls.join(", ")}]
+            {roll.modifier ? ` ${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)}` : ""}
           </p>
           {style.label && (
             <motion.p

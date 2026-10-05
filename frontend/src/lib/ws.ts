@@ -18,12 +18,14 @@ export function connectCampaignSocket(
   let socket: WebSocket | null = null;
   let closed = false;
   let hasConnected = false;
+  let attempt = 0;
 
   const connect = () => {
     if (closed) return;
     socket = new WebSocket(WS_URL);
 
     socket.onopen = () => {
+      attempt = 0;
       // STOMP CONNECT frame.
       socket?.send("CONNECT\naccept-version:1.2\nheart-beat:0,0\n\n\u0000");
     };
@@ -54,9 +56,11 @@ export function connectCampaignSocket(
     };
 
     socket.onclose = () => {
-      if (!closed) {
-        setTimeout(connect, 2000);
-      }
+      if (closed) return;
+      // Exponential backoff so a restarting backend doesn't cause a reconnect storm.
+      attempt += 1;
+      const delay = Math.min(15000, 1000 * 2 ** Math.min(attempt, 4));
+      setTimeout(connect, delay);
     };
     socket.onerror = () => socket?.close();
   };

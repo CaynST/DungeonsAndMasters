@@ -154,7 +154,7 @@ export function Game() {
       if (result.narration) setNarration(result.narration);
       if (result.checkRequest) setPendingCheck(result.checkRequest);
 
-      if (result.roll) {
+      if (result.roll && result.roll.expression) {
         requestDice(result.roll.expression, result.roll, undefined, () => {});
       }
       if (result.attack && result.attack.hit && result.attack.damage) {
