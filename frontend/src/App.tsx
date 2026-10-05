@@ -4,6 +4,7 @@ import { Home } from "@/pages/Home";
 import { Login } from "@/pages/Login";
 import { Lobby } from "@/pages/Lobby";
 import { Game } from "@/pages/Game";
+import { CharacterCreation } from "@/pages/CharacterCreation";
 import { RequireAuth } from "@/components/RequireAuth";
 
 const queryClient = new QueryClient({
@@ -28,6 +29,14 @@ export default function App() {
               element={
                 <RequireAuth>
                   <Home />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/characters/new"
+              element={
+                <RequireAuth>
+                  <CharacterCreation />
                 </RequireAuth>
               }
             />

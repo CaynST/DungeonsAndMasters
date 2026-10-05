@@ -16,13 +16,14 @@ export function Home() {
   const queryClient = useQueryClient();
   const user = getStoredUser();
   const [newName, setNewName] = useState("");
+  const [newEdition, setNewEdition] = useState("dnd-5e-2014");
   const [showCreate, setShowCreate] = useState(false);
 
   const campaigns = useQuery({ queryKey: ["campaigns"], queryFn: api.campaigns });
   const characters = useQuery({ queryKey: ["characters"], queryFn: api.characters });
 
   const createCampaign = useMutation({
-    mutationFn: () => api.createCampaign(newName || "La Cripta de Valdros"),
+    mutationFn: () => api.createCampaign(newName || "La Cripta de Valdros", newEdition),
     onSuccess: (campaign) => {
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       navigate(`/campaign/${campaign.id}/lobby`);
@@ -71,6 +72,14 @@ export function Home() {
               placeholder="Nombre de la campaña (por defecto: La Cripta de Valdros)"
               className="h-10 flex-1 rounded-lg border border-parchment/15 bg-black/35 px-3 text-sm text-ink outline-none focus:border-gold/50"
             />
+            <select
+              value={newEdition}
+              onChange={(event) => setNewEdition(event.target.value)}
+              className="h-10 rounded-lg border border-parchment/15 bg-black/35 px-3 text-sm text-ink outline-none focus:border-gold/50"
+            >
+              <option value="dnd-5e-2014">D&D 5e (2014)</option>
+              <option value="dnd-5e-2024">D&D 5e (2024)</option>
+            </select>
             <Button
               variant="primary"
               onClick={() => createCampaign.mutate()}
@@ -97,9 +106,17 @@ export function Home() {
       </section>
 
       <section>
-        <h2 className="title-display mb-4 flex items-center gap-2 text-xl text-parchment">
-          <Swords className="h-5 w-5 text-crimson-soft" /> Héroes disponibles
-        </h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="title-display flex items-center gap-2 text-xl text-parchment">
+            <Swords className="h-5 w-5 text-crimson-soft" /> Tus héroes
+          </h2>
+          <Button variant="primary" size="sm" onClick={() => navigate("/characters/new")}>
+            <Plus className="h-4 w-4" /> Crear personaje
+          </Button>
+        </div>
+        <p className="mb-4 text-sm text-muted">
+          Los personajes se construyen con las reglas del SRD (raza, clase, trasfondo, puntos).
+        </p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {(characters.data ?? []).map((character) => (
             <HeroCard key={character.id} character={character} />

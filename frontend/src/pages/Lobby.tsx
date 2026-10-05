@@ -21,6 +21,11 @@ export function Lobby() {
 
   const campaign = useQuery({ queryKey: ["campaign", campaignId], queryFn: () => api.campaign(campaignId) });
   const characters = useQuery({ queryKey: ["characters"], queryFn: api.characters });
+  const ruleset = useQuery({
+    queryKey: ["ruleset", campaign.data?.edition],
+    queryFn: () => api.ruleset(campaign.data!.edition!),
+    enabled: Boolean(campaign.data?.edition),
+  });
 
   const join = useMutation({
     mutationFn: (characterId: number) => api.joinCampaign(campaignId, characterId),
@@ -48,6 +53,11 @@ export function Lobby() {
           {campaign.data?.name ?? "Cargando..."}
         </h1>
         <p className="mx-auto mt-2 max-w-2xl text-sm text-muted">{campaign.data?.setting}</p>
+        {ruleset.data && (
+          <div className="mt-3 flex justify-center">
+            <Badge tone="arcane">{ruleset.data.displayName}</Badge>
+          </div>
+        )}
       </header>
 
       <div className="relative z-10 grid gap-6 lg:grid-cols-[1.4fr_1fr]">

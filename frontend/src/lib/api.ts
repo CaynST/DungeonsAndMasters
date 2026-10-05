@@ -1,11 +1,13 @@
 import type {
   AuthResponse,
   Campaign,
+  CreateCharacterPayload,
   GameEvent,
   GameState,
   PlayerActionPayload,
   PlayerCharacter,
   ActionResult,
+  RulesetView,
   User,
 } from "@/types/game";
 
@@ -77,8 +79,8 @@ export const api = {
 
   campaign: (id: number) => request<Campaign>(`/api/campaigns/${id}`),
 
-  createCampaign: (name: string) =>
-    request<Campaign>("/api/campaigns", { method: "POST", body: JSON.stringify({ name }) }),
+  createCampaign: (name: string, edition?: string) =>
+    request<Campaign>("/api/campaigns", { method: "POST", body: JSON.stringify({ name, edition }) }),
 
   joinCampaign: (id: number, characterId?: number) =>
     request<Campaign>(`/api/campaigns/${id}/join`, {
@@ -100,4 +102,11 @@ export const api = {
     }),
 
   characters: () => request<PlayerCharacter[]>("/api/characters"),
+
+  createCharacter: (payload: CreateCharacterPayload) =>
+    request<PlayerCharacter>("/api/characters", { method: "POST", body: JSON.stringify(payload) }),
+
+  rulesets: () => request<RulesetView[]>("/api/rulesets"),
+
+  ruleset: (edition: string) => request<RulesetView>(`/api/rulesets/${edition}`),
 };

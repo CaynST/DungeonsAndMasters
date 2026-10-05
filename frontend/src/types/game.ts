@@ -148,6 +148,7 @@ export interface Campaign {
   phase: GamePhase;
   activeSceneId?: number;
   createdBy?: number;
+  edition?: string;
   members: CampaignMember[];
 }
 
@@ -225,6 +226,68 @@ export interface User {
   username: string;
   displayName: string;
   avatar?: string;
+}
+
+// ---- Character creation (SRD) ----
+
+export interface SpeciesView {
+  id: string;
+  name: string;
+  speed: number;
+  size: string;
+  abilityBonuses: Record<string, number>;
+  darkvision: boolean;
+  description: string;
+}
+
+export interface ClassView {
+  id: string;
+  name: string;
+  hitDie: string;
+  skillChoiceCount: number;
+  skillChoices: string[];
+  savingThrows: string[];
+  startingArmor: string;
+  weapons: string[];
+  primaryAbility: string;
+  description: string;
+}
+
+export interface BackgroundView {
+  id: string;
+  name: string;
+  skills: string[];
+  abilityBonuses: Record<string, number>;
+  description: string;
+}
+
+export interface RulesetView {
+  edition: string;
+  displayName: string;
+  species: SpeciesView[];
+  classes: ClassView[];
+  backgrounds: BackgroundView[];
+}
+
+export interface AbilityScores {
+  strength: number;
+  dexterity: number;
+  constitution: number;
+  intelligence: number;
+  wisdom: number;
+  charisma: number;
+}
+
+export interface CreateCharacterPayload {
+  name: string;
+  edition: string;
+  speciesId: string;
+  classId: string;
+  backgroundId: string;
+  scores: AbilityScores;
+  skills: string[];
+  armor?: string;
+  weapon?: string;
 }
 
 export interface AuthResponse {
