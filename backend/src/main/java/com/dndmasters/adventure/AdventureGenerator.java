@@ -35,7 +35,10 @@ public class AdventureGenerator {
     private static final String[] PLACES = {
             "la Cripta de Valdros", "el Bosque de Umbría", "las Ruinas de Khar", "el Pantano de Vael",
             "la Torre Quebrada", "las Cavernas de Zul", "el Monasterio Abandonado", "el Cementerio de Sal",
-            "las Minas de Ferro", "el Templo Sumergido", "el Paso de los Susurros", "la Ciudadela Helada"};
+            "las Minas de Ferro", "el Templo Sumergido", "el Paso de los Susurros", "la Ciudadela Helada",
+            "el Desierto de Ceniza", "la Garganta del Trueno", "el Templo de la Luna", "las Alcantarillas de Vess",
+            "el Glaciar Eterno", "la Forja del Volcán", "la Aldea de Roble Gris", "la Taberna del Cuervo Cojo",
+            "el Mercado de Sombras", "la Biblioteca Prohibida", "el Lago de Cristal", "las Catacumbas Reales"};
     private static final String[] VILLAINS = {
             "el Nigromante Sarthos", "la Reina Araña Zila", "el Guardián de Piedra", "el Dragón Carmesí",
             "el Culto del Eclipse", "el Señor de las Ratas", "la Bruja del Pantano", "el Caballero Caído",
@@ -92,7 +95,8 @@ public class AdventureGenerator {
                 }
                 Reglas: exactamente 3 escenas (una introductoria sin enemigos, una de combate, y una final de jefe BOSS).
                 Usa SOLO ids de este bestiario: %s
-                Los temas válidos son: crypt, forest, cave, ruins, dungeon, swamp.
+                Los temas válidos son: crypt, forest, cave, ruins, dungeon, swamp, desert, mountain,
+                temple, sewer, ice, volcano, village, tavern.
                 """.formatted(bestiary);
 
         AiRequest request = new AiRequest(system, "Genera una aventura nueva y original.", Map.of(), 1.0, 1200);
@@ -158,7 +162,8 @@ public class AdventureGenerator {
     }
 
     private boolean isTheme(String theme) {
-        return List.of("crypt", "forest", "cave", "ruins", "dungeon", "swamp").contains(theme);
+        return List.of("crypt", "forest", "cave", "ruins", "dungeon", "swamp",
+                "desert", "mountain", "temple", "sewer", "ice", "volcano", "village", "tavern").contains(theme);
     }
 
     private Bestiary.Monster pickBoss(Random random) {

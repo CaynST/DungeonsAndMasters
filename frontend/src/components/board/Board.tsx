@@ -1,33 +1,83 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import type { Cell, GameEntity, GameMap } from "@/types/game";
+import type { Cell, Decor, GameEntity, GameMap } from "@/types/game";
 import { cn } from "@/lib/utils";
 import { useGameStore } from "@/store/useGameStore";
 
-const DECOR_ICONS: Record<string, string> = {
-  torch: "🔥",
-  bones: "🦴",
-  rune: "✦",
-  skull: "☠",
-  shield: "🛡",
-  crosshair: "🎯",
-  sword: "⚔",
-  sparkles: "✨",
-  dagger: "🗡",
-  gem: "💎",
-  key: "🗝",
-  ghost: "👻",
-  flask: "🧪",
-  tree: "🌲",
-  rock: "🪨",
-  rubble: "🧱",
-  barrel: "🛢",
-  reed: "🌾",
-  club: "🏏",
-  paw: "🐾",
-  bug: "🕷",
-  flame: "🔥",
-};
+/** Location decor drawn as vector art (no emoji). */
+function DecorShape({ decor, cell, accent }: { decor: Decor; cell: number; accent: string }) {
+  const cx = decor.x * cell + cell / 2;
+  const cy = decor.y * cell + cell / 2;
+  const s = cell * 0.5;
+  switch (decor.kind) {
+    case "torch":
+      return (
+        <g>
+          <circle className="torch-glow" cx={cx} cy={cy} r={cell * 1.6} fill="url(#torch-glow)" />
+          <rect x={cx - s * 0.12} y={cy - s * 0.1} width={s * 0.24} height={s * 0.9} rx={2} fill="#3a2c1e" />
+          <ellipse cx={cx} cy={cy - s * 0.25} rx={s * 0.28} ry={s * 0.5} fill="#e0a83a" />
+          <ellipse cx={cx} cy={cy - s * 0.3} rx={s * 0.14} ry={s * 0.3} fill="#ffe08a" />
+        </g>
+      );
+    case "bones":
+      return (
+        <g stroke="#cbb98f" strokeWidth={cell * 0.08} strokeLinecap="round" opacity={0.8}>
+          <line x1={cx - s * 0.7} y1={cy - s * 0.5} x2={cx + s * 0.7} y2={cy + s * 0.5} />
+          <line x1={cx - s * 0.7} y1={cy + s * 0.5} x2={cx + s * 0.7} y2={cy - s * 0.5} />
+        </g>
+      );
+    case "tree":
+      return (
+        <g>
+          <rect x={cx - s * 0.12} y={cy} width={s * 0.24} height={s * 0.7} fill="#3a2c1e" />
+          <polygon points={`${cx},${cy - s} ${cx - s * 0.7},${cy + s * 0.2} ${cx + s * 0.7},${cy + s * 0.2}`} fill="#2f5a2a" />
+          <polygon points={`${cx},${cy - s * 0.6} ${cx - s * 0.55},${cy + s * 0.4} ${cx + s * 0.55},${cy + s * 0.4}`} fill="#3c6f34" />
+        </g>
+      );
+    case "rock":
+      return (
+        <polygon
+          points={`${cx - s * 0.7},${cy + s * 0.4} ${cx - s * 0.3},${cy - s * 0.5} ${cx + s * 0.4},${cy - s * 0.4} ${cx + s * 0.7},${cy + s * 0.4}`}
+          fill="#4a443c"
+        />
+      );
+    case "barrel":
+      return (
+        <g>
+          <rect x={cx - s * 0.5} y={cy - s * 0.7} width={s} height={s * 1.4} rx={s * 0.2} fill="#5a3f22" />
+          <rect x={cx - s * 0.55} y={cy - s * 0.45} width={s * 1.1} height={s * 0.12} fill="#8a6a34" />
+          <rect x={cx - s * 0.55} y={cy + s * 0.3} width={s * 1.1} height={s * 0.12} fill="#8a6a34" />
+        </g>
+      );
+    case "rubble":
+      return (
+        <g fill="#5a5148">
+          <polygon points={`${cx - s * 0.7},${cy + s * 0.5} ${cx - s * 0.2},${cy - s * 0.1} ${cx + s * 0.1},${cy + s * 0.5}`} />
+          <polygon points={`${cx - s * 0.1},${cy + s * 0.5} ${cx + s * 0.3},${cy - s * 0.4} ${cx + s * 0.7},${cy + s * 0.5}`} />
+        </g>
+      );
+    case "reed":
+      return (
+        <g stroke="#4f6b3a" strokeWidth={cell * 0.06} strokeLinecap="round">
+          <line x1={cx} y1={cy + s * 0.6} x2={cx - s * 0.3} y2={cy - s * 0.6} />
+          <line x1={cx} y1={cy + s * 0.6} x2={cx + s * 0.2} y2={cy - s * 0.5} />
+        </g>
+      );
+    default:
+      return (
+        <g>
+          <polygon
+            points={`${cx},${cy - s * 0.6} ${cx + s * 0.5},${cy} ${cx},${cy + s * 0.6} ${cx - s * 0.5},${cy}`}
+            fill="none"
+            stroke={accent}
+            strokeWidth={cell * 0.06}
+            opacity={0.85}
+          />
+          <circle cx={cx} cy={cy} r={cell * 0.08} fill={accent} opacity={0.8} />
+        </g>
+      );
+  }
+}
 
 interface Theme {
   floorA: string;
@@ -46,6 +96,14 @@ const THEMES: Record<string, Theme> = {
   ruins: { floorA: "#1a1712", floorB: "#1e1a14", wall: "#2a241b", wallEdge: "#3a3225", obstacle: "#3a3225", accent: "#d8c39a", fog: "#0c0b08" },
   dungeon: { floorA: "#161210", floorB: "#1a1512", wall: "#221a13", wallEdge: "#33261a", obstacle: "#33261a", accent: "#c9a227", fog: "#0b0908" },
   swamp: { floorA: "#121710", floorB: "#151c12", wall: "#1c2416", wallEdge: "#2a3620", obstacle: "#24301c", accent: "#6fd3a0", fog: "#090d08" },
+  desert: { floorA: "#2a2216", floorB: "#2f2619", wall: "#3a2e1c", wallEdge: "#4c3d24", obstacle: "#4a3a22", accent: "#e0b84a", fog: "#171208" },
+  mountain: { floorA: "#1b1b1f", floorB: "#1f1f24", wall: "#2a2a30", wallEdge: "#3a3a42", obstacle: "#33333a", accent: "#9bb4d6", fog: "#0c0c10" },
+  temple: { floorA: "#1c1710", floorB: "#201a12", wall: "#2e2417", wallEdge: "#463521", obstacle: "#3a2c1a", accent: "#e0c56a", fog: "#0d0a06" },
+  sewer: { floorA: "#141813", floorB: "#171c16", wall: "#20261d", wallEdge: "#2f3a29", obstacle: "#28301f", accent: "#8fae6a", fog: "#090c08" },
+  ice: { floorA: "#141b22", floorB: "#18212a", wall: "#22303c", wallEdge: "#33475a", obstacle: "#2b3d4c", accent: "#8fd0ff", fog: "#0a0f14" },
+  volcano: { floorA: "#1c1210", floorB: "#201512", wall: "#2c1a15", wallEdge: "#44261c", obstacle: "#3a2018", accent: "#ff7a3d", fog: "#0f0705" },
+  village: { floorA: "#1a1712", floorB: "#1e1a14", wall: "#2a2218", wallEdge: "#3d3121", obstacle: "#3a2c1c", accent: "#c9a227", fog: "#0c0a07" },
+  tavern: { floorA: "#241a10", floorB: "#2a1f13", wall: "#33261a", wallEdge: "#4a3520", obstacle: "#3d2b1a", accent: "#e0b84a", fog: "#0e0a06" },
 };
 
 function themeFor(name?: string): Theme {
@@ -96,6 +154,14 @@ export function Board({
         <pattern id="board-grid" width={cell} height={cell} patternUnits="userSpaceOnUse">
           <path d={`M ${cell} 0 L 0 0 0 ${cell}`} fill="none" stroke="rgba(255,255,255,0.035)" strokeWidth={1} />
         </pattern>
+        <pattern id="floor-cracks" width={cell * 2} height={cell * 2} patternUnits="userSpaceOnUse">
+          <path d={`M ${cell * 0.2} ${cell * 0.6} L ${cell * 0.7} ${cell * 0.9} L ${cell * 0.5} ${cell * 1.4}`}
+            stroke="rgba(0,0,0,0.22)" strokeWidth={1} fill="none" />
+          <path d={`M ${cell * 1.3} ${cell * 0.2} L ${cell * 1.5} ${cell * 0.6} L ${cell * 1.1} ${cell * 0.9}`}
+            stroke="rgba(0,0,0,0.16)" strokeWidth={1} fill="none" />
+          <rect x={cell * 1.2} y={cell * 1.2} width={cell * 0.4} height={cell * 0.25} rx={3}
+            fill="rgba(255,255,255,0.02)" stroke="rgba(0,0,0,0.2)" strokeWidth={0.5} />
+        </pattern>
         <radialGradient id="torch-glow" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor={theme.accent} stopOpacity="0.55" />
           <stop offset="100%" stopColor={theme.accent} stopOpacity="0" />
@@ -121,6 +187,7 @@ export function Board({
           ),
         )}
         <rect width={map.width * cell} height={map.height * cell} fill="url(#board-grid)" />
+        <rect width={map.width * cell} height={map.height * cell} fill="url(#floor-cracks)" />
 
         {/* Reachable highlight */}
         {Array.from(reachablePaths.keys()).map((k) => {
@@ -214,28 +281,9 @@ export function Board({
           />
         ))}
 
-        {/* Decor with torch glow */}
+        {/* Decor drawn as SVG (no emojis) */}
         {map.decor.map((decor, index) => (
-          <g key={`decor-${index}`}>
-            {decor.icon === "torch" && (
-              <circle
-                className="torch-glow"
-                cx={decor.x * cell + cell / 2}
-                cy={decor.y * cell + cell / 2}
-                r={cell * 1.6}
-                fill="url(#torch-glow)"
-              />
-            )}
-            <text
-              x={decor.x * cell + cell / 2}
-              y={decor.y * cell + cell / 2 + 5}
-              textAnchor="middle"
-              fontSize={cell * 0.5}
-              opacity={0.7}
-            >
-              {DECOR_ICONS[decor.icon] ?? "✦"}
-            </text>
-          </g>
+          <DecorShape key={`decor-${index}`} decor={decor} cell={cell} accent={theme.accent} />
         ))}
 
         {/* Entities */}

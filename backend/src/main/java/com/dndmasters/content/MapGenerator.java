@@ -137,10 +137,11 @@ public final class MapGenerator {
     private static String propFor(String theme) {
         return switch (theme) {
             case "forest" -> "tree";
-            case "cave" -> "rock";
+            case "cave", "mountain", "desert", "ice", "volcano" -> "rock";
             case "ruins" -> "rubble";
-            case "dungeon" -> "barrel";
+            case "dungeon", "sewer", "village", "tavern" -> "barrel";
             case "swamp" -> "reed";
+            case "temple" -> "rune";
             default -> "bones";
         };
     }
@@ -152,6 +153,14 @@ public final class MapGenerator {
             case "ruins" -> "Ruinas";
             case "dungeon" -> "Mazmorra";
             case "swamp" -> "Pantano";
+            case "desert" -> "Desierto";
+            case "mountain" -> "Montaña";
+            case "temple" -> "Templo";
+            case "sewer" -> "Alcantarillas";
+            case "ice" -> "Glaciar";
+            case "volcano" -> "Volcán";
+            case "village" -> "Aldea";
+            case "tavern" -> "Taberna";
             default -> "Cripta";
         };
     }

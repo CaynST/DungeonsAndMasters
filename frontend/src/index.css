@@ -4,6 +4,12 @@
 
 :root {
   color-scheme: dark;
+  --brass: #c9a227;
+  --brass-dark: #8c6e1b;
+  --wood: #241a12;
+  --wood-dark: #17110b;
+  --stone: #14110e;
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
 }
 
 * {
@@ -18,39 +24,70 @@ body,
 }
 
 body {
-  background-color: #0c0a08;
+  background-color: #0b0907;
   color: #e8e1d5;
   font-family: Inter, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Understated backdrop: a single warm light source, no heavy gradients. */
+/* Stone-walled backdrop with warm torchlight and a touch of grain. */
 .app-backdrop {
   background:
-    radial-gradient(900px 420px at 50% -12%, rgba(201, 162, 39, 0.06), transparent 65%),
-    #0c0a08;
+    radial-gradient(900px 460px at 50% -10%, rgba(201, 162, 39, 0.08), transparent 65%),
+    radial-gradient(700px 500px at 100% 110%, rgba(124, 92, 255, 0.05), transparent 60%),
+    var(--noise),
+    linear-gradient(180deg, #0d0b09 0%, #120e0a 60%, #0b0907 100%);
 }
 
-/* Panels read as solid game surfaces, not glass. */
+/* ---- Panels: carved wood with a brass trim and stone edge ---- */
 .panel {
-  background: #15110d;
-  border: 1px solid #2b2118;
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.18)),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.07) 0 2px, transparent 2px 7px),
+    linear-gradient(180deg, #241a12, #19120c);
+  border: 1px solid #3a2a1a;
   border-radius: 10px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.45),
+    0 14px 34px -16px rgba(0, 0, 0, 0.9);
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.55), transparent);
+  pointer-events: none;
 }
 
 .panel-raised {
-  background: #1b1510;
-  border: 1px solid #33271b;
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.2)),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.08) 0 2px, transparent 2px 8px),
+    linear-gradient(180deg, #2b1f14, #1d150e);
+  border: 1px solid #46331f;
   border-radius: 10px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 16px 40px -18px rgba(0, 0, 0, 0.95);
 }
 
 .panel-wood {
-  background: #1a130d;
-  border: 1px solid #3a2a1a;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.16)),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.06) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #261a10, #17110b);
+  border: 1px solid #3d2b1a;
   border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 14px 34px -16px rgba(0, 0, 0, 0.9);
 }
 
-/* A thin accent bar used to head sections, game-HUD style. */
+/* Riveted metal strip used for headers. */
 .hud-heading {
   display: flex;
   align-items: center;
@@ -63,10 +100,11 @@ body {
 
 .hud-heading::before {
   content: "";
-  width: 3px;
+  width: 4px;
   height: 1.05em;
   border-radius: 2px;
-  background: #c9a227;
+  background: linear-gradient(180deg, #e0c56a, #8c6e1b);
+  box-shadow: 0 0 6px rgba(201, 162, 39, 0.5);
 }
 
 .title-display {
@@ -76,25 +114,86 @@ body {
 
 .epic-title {
   font-family: Cinzel, Georgia, serif;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
 .text-glow-gold {
-  text-shadow: 0 0 22px rgba(201, 162, 39, 0.35);
+  text-shadow: 0 0 22px rgba(201, 162, 39, 0.4);
 }
 
 .divider {
   height: 1px;
-  background: #2b2118;
+  background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.4), transparent);
 }
 
+/* Small riveted chip used for stats. */
 .stat-chip {
-  border: 1px solid #2b2118;
-  background: #100d0a;
+  border: 1px solid #3a2a1a;
+  background: linear-gradient(180deg, #1b140e, #100c08);
   border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* Scrollbars fit the dark theme. */
+/* ---- Buttons: beveled, warm, tactile ---- */
+.btn {
+  position: relative;
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: transform 0.08s ease, filter 0.15s ease, box-shadow 0.15s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.35),
+    0 4px 10px -6px rgba(0, 0, 0, 0.8);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn-primary {
+  color: #2a1d06;
+  background: linear-gradient(180deg, #e6c766, #b98f22);
+  border: 1px solid #8c6e1b;
+}
+.btn-primary:hover {
+  filter: brightness(1.08);
+}
+.btn-secondary {
+  color: #e8e1d5;
+  background: linear-gradient(180deg, #2c2015, #1b130c);
+  border: 1px solid #4a3520;
+}
+.btn-secondary:hover {
+  border-color: rgba(201, 162, 39, 0.5);
+}
+.btn-ghost {
+  color: #9e9485;
+  background: transparent;
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+.btn-ghost:hover {
+  color: #e8e1d5;
+  background: rgba(255, 255, 255, 0.05);
+}
+.btn-danger {
+  color: #f4e6e9;
+  background: linear-gradient(180deg, #c04a5e, #8f2c3d);
+  border: 1px solid #6e1f2d;
+}
+.btn-arcane {
+  color: #f1ecff;
+  background: linear-gradient(180deg, #8b6cff, #5b3fd6);
+  border: 1px solid #3b2a80;
+}
+
+/* Wooden frame with metal corner rivets, for feature panels. */
+.frame {
+  position: relative;
+  border: 6px solid transparent;
+  border-image: repeating-linear-gradient(45deg, #2c2015 0 8px, #241a12 8px 16px) 6;
+}
+
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -103,11 +202,12 @@ body {
   background: #100d0a;
 }
 ::-webkit-scrollbar-thumb {
-  background: #33271b;
+  background: linear-gradient(180deg, #3d2b1a, #2a1d12);
   border-radius: 8px;
+  border: 1px solid #100d0a;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #453425;
+  background: #4c3a26;
 }
 
 .hp-bar {
@@ -124,19 +224,11 @@ body {
   75% { transform: translateX(5px); }
 }
 
-@keyframes cinematic-fade {
-  0% { opacity: 0; transform: translateY(8px); }
-  15% { opacity: 1; transform: translateY(0); }
-  85% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-8px); }
-}
-
 @keyframes torch-flicker {
   0%, 100% { opacity: 0.45; }
   40% { opacity: 0.85; }
   70% { opacity: 0.6; }
 }
-
 .torch-glow {
   animation: torch-flicker 1.8s ease-in-out infinite;
 }
