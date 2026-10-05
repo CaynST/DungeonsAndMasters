@@ -303,10 +303,18 @@ public class GameService {
     }
 
     private ActionResult dialogue(Long campaignId, Long userId, PlayerAction action) {
-        DmResponse dm = respond(campaignId, "DIALOGUE", action.getText() == null ? "El jugador habla." : action.getText(), null, null);
+        String text = action.getText() == null ? "El jugador habla." : action.getText();
+        GameEntity actor = resolveActor(campaignId, userId, action);
+        String actorName = actor != null ? actor.getName() : "El grupo";
+        // Record what the player said so it appears in the log and the chronicle.
+        GameEvent spoken = events.record(campaignId, activeSceneId(campaignId), "PLAYER_ACTION", actorName, text, Map.of());
+        DmResponse dm = respond(campaignId, "DIALOGUE", text, null, null);
         DmApplication application = applyDm(campaignId, userId, dm);
-        return new ActionResult(true, null, dm.narration(), application.events(), application.checkRequest(), null,
-                null, application.actions(), application.adventureEnded());
+        List<GameEvent> all = new ArrayList<>();
+        all.add(spoken);
+        all.addAll(application.events());
+        return new ActionResult(true, null, dm.narration(), all, application.checkRequest(), null, null,
+                application.actions(), application.adventureEnded());
     }
 
     private ActionResult narrate(Long campaignId, Long userId, PlayerAction action) {

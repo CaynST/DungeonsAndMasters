@@ -237,6 +237,25 @@ export function Game() {
     return () => clearTimeout(timer);
   }, [toast]);
 
+  // Derive the pending check from the event log so it survives reloads and reconnects.
+  const derivedCheck = useMemo(() => {
+    const events = gameState?.recentEvents ?? [];
+    for (let i = events.length - 1; i >= 0; i--) {
+      const event = events[i];
+      if (event.type === "CHECK") return null; // already rolled
+      if (event.type === "CHECK_REQUESTED") {
+        try {
+          const data = JSON.parse(event.dataJson) as { skill?: string; dc?: number };
+          if (!data.skill || data.dc == null) return null;
+          return { skill: data.skill, dc: data.dc, prompt: `Prueba de ${data.skill} (CD ${data.dc})` };
+        } catch {
+          return null;
+        }
+      }
+    }
+    return null;
+  }, [gameState?.recentEvents]);
+
   if (state.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-muted">
@@ -380,6 +399,7 @@ export function Game() {
                 providerId={provider.data?.aiProvider}
                 spotlightName={spotlightCharacter?.name}
                 busy={act.isPending}
+                pendingCheck={derivedCheck ?? pendingCheck}
                 onRollCheck={rollCheck}
                 onSay={(text) => act.mutate({ type: "DIALOGUE", text, actorEntityId: myEntity?.id })}
               />

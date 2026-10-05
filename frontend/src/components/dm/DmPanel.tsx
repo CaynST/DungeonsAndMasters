@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, Dices, ScrollText, Sparkles } from "lucide-react";
+import { BookOpen, Dices, ScrollText, Sparkles, User } from "lucide-react";
 import type { GameEvent } from "@/types/game";
-import { useGameStore } from "@/store/useGameStore";
+import { useGameStore, type PendingCheck } from "@/store/useGameStore";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 
@@ -13,6 +13,7 @@ interface Props {
   providerId?: string;
   spotlightName?: string;
   busy?: boolean;
+  pendingCheck?: PendingCheck | null;
   onRollCheck: (skill: string, dc: number) => void;
   onSay: (text: string) => void;
 }
@@ -32,9 +33,8 @@ const EVENT_TONE: Record<string, string> = {
   ADVENTURE_ENDED: "#C9A227",
 };
 
-export function DmPanel({ dmName, narration, events, providerId, spotlightName, busy, onRollCheck, onSay }: Props) {
+export function DmPanel({ dmName, narration, events, providerId, spotlightName, busy, pendingCheck, onRollCheck, onSay }: Props) {
   const dmThinking = useGameStore((state) => state.dmThinking);
-  const pendingCheck = useGameStore((state) => state.pendingCheck);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [text, setText] = useState("");
 
@@ -80,8 +80,23 @@ export function DmPanel({ dmName, narration, events, providerId, spotlightName, 
             <ScrollText className="h-3.5 w-3.5" /> Registro
           </p>
           <ul className="space-y-1.5">
-            {events.slice(-20).map((event) =>
-              event.type === "NARRATION" ? (
+            {events.slice(-20).map((event) => {
+              if (event.type === "PLAYER_ACTION") {
+                return (
+                  <motion.li
+                    key={event.id}
+                    initial={{ opacity: 0, x: 8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="ml-6 rounded-lg border border-[#c9a227]/40 bg-[#c9a227]/5 p-3"
+                  >
+                    <p className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[#e0b84a]">
+                      <User className="h-3 w-3" /> {event.actor ?? "Tú"}
+                    </p>
+                    <p className="text-[15px] leading-relaxed text-ink">{event.message}</p>
+                  </motion.li>
+                );
+              }
+              return event.type === "NARRATION" ? (
                 <motion.li
                   key={event.id}
                   initial={{ opacity: 0, y: 6 }}
@@ -109,8 +124,8 @@ export function DmPanel({ dmName, narration, events, providerId, spotlightName, 
                     {event.message}
                   </span>
                 </motion.li>
-              ),
-            )}
+              );
+            })}
             {events.length === 0 && <li className="text-xs text-muted">El registro aún está en blanco.</li>}
           </ul>
         </div>

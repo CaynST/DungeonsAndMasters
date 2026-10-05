@@ -25,6 +25,7 @@ const TONE: Record<string, string> = {
   TURN_CHANGED: "#8a7f6d",
   NPC_TURN: "#8a7f6d",
   PLAYER_JOINED: "#6fd3a0",
+  PLAYER_ACTION: "#c9a227",
 };
 
 /** Full chronicle of the campaign, so a latecomer can catch up on the story. */
