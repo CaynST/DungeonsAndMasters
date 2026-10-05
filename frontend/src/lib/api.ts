@@ -1,4 +1,7 @@
 import type {
+  AdminCampaign,
+  AdminCharacter,
+  AdminUser,
   AuthResponse,
   Campaign,
   CampaignIntro,
@@ -139,4 +142,34 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ slot }),
     }),
+
+  deleteCharacter: (id: number) => request<{ deleted: number }>(`/api/characters/${id}`, { method: "DELETE" }),
+
+  renameCharacter: (id: number, name: string) =>
+    request<PlayerCharacter>(`/api/characters/${id}`, { method: "PATCH", body: JSON.stringify({ name }) }),
+
+  deleteCampaign: (id: number) => request<{ deleted: number }>(`/api/campaigns/${id}`, { method: "DELETE" }),
+
+  uploadPortrait: async (characterId: number, file: File): Promise<PlayerCharacter> => {
+    const form = new FormData();
+    form.append("file", file);
+    const token = getToken();
+    const response = await fetch(`/api/characters/${characterId}/portrait`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new ApiError(response.status, body?.error ?? "No se pudo subir la imagen");
+    }
+    return response.json() as Promise<PlayerCharacter>;
+  },
+
+  adminUsers: () => request<AdminUser[]>("/api/admin/users"),
+  adminCampaigns: () => request<AdminCampaign[]>("/api/admin/campaigns"),
+  adminCharacters: () => request<AdminCharacter[]>("/api/admin/characters"),
+  adminDeleteUser: (id: number) => request(`/api/admin/users/${id}`, { method: "DELETE" }),
+  adminDeleteCampaign: (id: number) => request(`/api/admin/campaigns/${id}`, { method: "DELETE" }),
+  adminDeleteCharacter: (id: number) => request(`/api/admin/characters/${id}`, { method: "DELETE" }),
 };

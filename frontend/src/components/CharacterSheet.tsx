@@ -5,7 +5,15 @@ import { HealthBar } from "@/components/ui/HealthBar";
 import { Badge } from "@/components/ui/Badge";
 import { abilityModifier, formatModifier } from "@/lib/utils";
 
-export function CharacterSheet({ character, compact = false }: { character: PlayerCharacter; compact?: boolean }) {
+export function CharacterSheet({
+  character,
+  compact = false,
+  onUseItem,
+}: {
+  character: PlayerCharacter;
+  compact?: boolean;
+  onUseItem?: (item: string) => void;
+}) {
   const stats: [string, number][] = [
     ["FUE", character.stats.strength],
     ["DES", character.stats.dexterity],
@@ -84,15 +92,27 @@ export function CharacterSheet({ character, compact = false }: { character: Play
             </p>
             <div className="flex flex-wrap gap-1.5">
               {character.inventory.length === 0 && <span className="text-xs text-muted">Vacío</span>}
-              {character.inventory.map((item) => (
-                <span
-                  key={item.name}
-                  className="rounded-md border border-parchment/10 bg-black/30 px-2 py-1 text-xs text-muted"
-                  title={item.description}
-                >
-                  {item.name}
-                </span>
-              ))}
+              {character.inventory.map((item) => {
+                const consumable = /poción|pocion|elixir|vial/i.test(item.name);
+                return (
+                  <span
+                    key={item.name}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-parchment/10 bg-black/30 px-2 py-1 text-xs text-muted"
+                    title={item.description}
+                  >
+                    {item.name}
+                    {item.quantity > 1 && <span className="text-[10px] opacity-70">x{item.quantity}</span>}
+                    {consumable && onUseItem && (
+                      <button
+                        onClick={() => onUseItem(item.name)}
+                        className="rounded border border-[#3e9c6e]/40 px-1.5 py-0.5 text-[10px] text-[#6fd3a0] transition hover:bg-[#3e9c6e]/15"
+                      >
+                        Usar
+                      </button>
+                    )}
+                  </span>
+                );
+              })}
             </div>
           </div>
         </>

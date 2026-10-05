@@ -236,6 +236,7 @@ export interface User {
   username: string;
   displayName: string;
   avatar?: string;
+  role?: string;
 }
 
 // ---- Character creation (SRD) ----
@@ -323,6 +324,36 @@ export interface ShopView {
   copper: number;
   items: ShopItem[];
   inventory: InventoryItem[];
+}
+
+export interface AdminUser {
+  id: number;
+  username: string;
+  displayName: string;
+  role: string;
+  avatar?: string;
+  characterCount: number;
+}
+
+export interface AdminCampaign {
+  id: number;
+  name: string;
+  edition: string;
+  status: string;
+  memberCount: number;
+  owner: string;
+}
+
+export interface AdminCharacter {
+  id: number;
+  name: string;
+  race: string;
+  cls: string;
+  level: number;
+  hp: number;
+  maxHp: number;
+  predefined: boolean;
+  owner: string;
 }
 
 export interface CampaignIntro {

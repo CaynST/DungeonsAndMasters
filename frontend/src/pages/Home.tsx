@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Plus, Scroll, Swords, User } from "lucide-react";
+import { Camera, LogOut, Plus, Scroll, Shield, Swords, Trash2, User } from "lucide-react";
 import { api, clearSession, getStoredUser } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -35,6 +35,16 @@ export function Home() {
     navigate("/login", { replace: true });
   };
 
+  const deleteCharacter = useMutation({
+    mutationFn: (id: number) => api.deleteCharacter(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["characters"] }),
+  });
+
+  const uploadPortrait = useMutation({
+    mutationFn: ({ id, file }: { id: number; file: File }) => api.uploadPortrait(id, file),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["characters"] }),
+  });
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
       <header className="mb-8 flex items-center justify-between">
@@ -45,6 +55,11 @@ export function Home() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {user?.role === "ADMIN" && (
+            <Button variant="ghost" size="sm" onClick={() => navigate("/admin")}>
+              <Shield className="h-4 w-4" /> Administración
+            </Button>
+          )}
           <Badge tone="arcane">
             <User className="h-3 w-3" /> {user?.username ?? "invitado"}
           </Badge>
@@ -121,7 +136,20 @@ export function Home() {
           {characters.isLoading
             ? [0, 1, 2, 3].map((index) => <div key={index} className="panel h-64 animate-shimmer" />)
             : (characters.data ?? []).map((character) => (
-                <HeroCard key={character.id} character={character} />
+                <HeroCard
+                  key={character.id}
+                  character={character}
+                  onDelete={
+                    character.predefined
+                      ? undefined
+                      : () => deleteCharacter.mutate(character.id)
+                  }
+                  onUploadPortrait={
+                    character.predefined
+                      ? undefined
+                      : (file) => uploadPortrait.mutate({ id: character.id, file })
+                  }
+                />
               ))}
         </div>
       </section>
@@ -129,9 +157,53 @@ export function Home() {
   );
 }
 
-function HeroCard({ character }: { character: PlayerCharacter }) {
+function HeroCard({
+  character,
+  onDelete,
+  onUploadPortrait,
+}: {
+  character: PlayerCharacter;
+  onDelete?: () => void;
+  onUploadPortrait?: (file: File) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
   return (
-    <div className="panel overflow-hidden p-0">
+    <div className="panel relative overflow-hidden p-0">
+      {(onDelete || onUploadPortrait) && (
+        <div className="absolute right-2 top-2 z-10 flex gap-1">
+          {onUploadPortrait && (
+            <>
+              <button
+                onClick={() => fileRef.current?.click()}
+                title="Cambiar retrato"
+                className="rounded-md border border-[#3a2a1a] bg-[#100d0a]/85 p-1.5 text-muted transition hover:border-[#c9a227]/50 hover:text-[#e0b84a]"
+              >
+                <Camera className="h-3.5 w-3.5" />
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) onUploadPortrait(file);
+                  event.target.value = "";
+                }}
+              />
+            </>
+          )}
+          {onDelete && (
+            <button
+              onClick={onDelete}
+              title="Borrar personaje"
+              className="rounded-md border border-[#3a2a1a] bg-[#100d0a]/85 p-1.5 text-muted transition hover:border-[#d0566a]/50 hover:text-[#d0566a]"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      )}
       <div
         className="h-28 w-full"
         style={{
@@ -139,12 +211,21 @@ function HeroCard({ character }: { character: PlayerCharacter }) {
         }}
       >
         <div className="flex h-full items-center justify-center">
-          <span
-            className="title-display flex h-16 w-16 items-center justify-center rounded-full border text-2xl font-bold"
-            style={{ borderColor: character.color, color: character.color }}
-          >
-            {character.name.charAt(0)}
-          </span>
+          {character.portrait ? (
+            <img
+              src={character.portrait}
+              alt={character.name}
+              className="h-20 w-20 rounded-full border-2 object-cover"
+              style={{ borderColor: character.color ?? "#C9A227" }}
+            />
+          ) : (
+            <span
+              className="title-display flex h-16 w-16 items-center justify-center rounded-full border text-2xl font-bold"
+              style={{ borderColor: character.color, color: character.color }}
+            >
+              {character.name.charAt(0)}
+            </span>
+          )}
         </div>
       </div>
       <div className="space-y-3 p-4">

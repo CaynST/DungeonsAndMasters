@@ -419,7 +419,15 @@ export function Game() {
                   <p className="panel p-4 text-sm text-muted">Aún no hay personajes en la partida.</p>
                 )}
                 {gameState.party.map((character) => (
-                  <CharacterSheet key={character.id} character={character} />
+                  <CharacterSheet
+                    key={character.id}
+                    character={character}
+                    onUseItem={
+                      myEntity?.refId === character.id
+                        ? (item) => act.mutate({ type: "USE_ITEM", item, actorEntityId: myEntity.id })
+                        : undefined
+                    }
+                  />
                 ))}
               </div>
             )}
@@ -437,6 +445,9 @@ export function Game() {
           isMyTurn={isMyTurn}
           busy={actionBusy}
           checkPending={Boolean(checkPending)}
+          movementUsed={typeof myEntity?.data?.movementUsed === "number" ? myEntity.data.movementUsed : 0}
+          movementMax={myEntity?.speed ?? 0}
+          actionUsed={Boolean(myEntity?.data?.actionUsed)}
           selectedTargetName={mode === "attack" ? selectedEntity?.name : undefined}
           selectedAttack={selectedAttack}
           onSelectAttack={setSelectedAttack}
