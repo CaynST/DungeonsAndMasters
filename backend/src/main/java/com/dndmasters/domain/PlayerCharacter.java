@@ -1,7 +1,9 @@
 package com.dndmasters.domain;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,6 +32,7 @@ public class PlayerCharacter {
     private List<Attack> attacks = new ArrayList<>();
     private List<InventoryItem> inventory = new ArrayList<>();
     private boolean predefined;
+    private Map<String, Object> creationData = new HashMap<>();
 
     public boolean alive() {
         return hp > 0;

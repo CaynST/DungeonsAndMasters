@@ -41,6 +41,9 @@ public class CampaignEntity {
     @Column(nullable = false)
     private String phase = "INTRO";
 
+    @Column(nullable = false)
+    private String edition = "DND_5E_2014";
+
     @Column(name = "active_scene_id")
     private Long activeSceneId;
 

@@ -22,6 +22,7 @@ public class CampaignMapper {
         c.setPhase(GamePhase.valueOf(e.getPhase()));
         c.setActiveSceneId(e.getActiveSceneId());
         c.setCreatedBy(e.getCreatedBy());
+        c.setEdition(e.getEdition());
         c.setCreatedAt(e.getCreatedAt());
         c.setUpdatedAt(e.getUpdatedAt());
         return c;

@@ -31,6 +31,7 @@ public class CharacterMapper {
         c.setPortrait(e.getPortrait());
         c.setAttacks(Json.readList(e.getAttacksJson(), Attack.class));
         c.setInventory(Json.readList(e.getInventoryJson(), InventoryItem.class));
+        c.setCreationData(Json.readMap(e.getCreationDataJson()));
         c.setPredefined(e.isPredefined());
         return c;
     }
@@ -59,6 +60,7 @@ public class CharacterMapper {
         e.setPortrait(c.getPortrait());
         e.setAttacksJson(Json.write(c.getAttacks() == null ? List.of() : c.getAttacks()));
         e.setInventoryJson(Json.write(c.getInventory() == null ? List.of() : c.getInventory()));
+        e.setCreationDataJson(Json.write(c.getCreationData() == null ? java.util.Map.of() : c.getCreationData()));
         e.setPredefined(c.isPredefined());
         return e;
     }

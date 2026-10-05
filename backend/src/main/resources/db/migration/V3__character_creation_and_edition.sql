@@ -1,0 +1,2 @@
+ALTER TABLE characters ADD COLUMN creation_data_json TEXT NOT NULL DEFAULT '{}';
+ALTER TABLE campaigns ADD COLUMN edition TEXT NOT NULL DEFAULT 'DND_5E_2014';

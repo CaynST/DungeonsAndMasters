@@ -1,10 +1,13 @@
 package com.dndmasters.web;
 
 import com.dndmasters.domain.PlayerCharacter;
+import com.dndmasters.engine.character.CharacterBuildRequest;
 import com.dndmasters.persistence.mapper.CharacterMapper;
 import com.dndmasters.persistence.repository.CharacterRepository;
+import com.dndmasters.rules.Edition;
 import com.dndmasters.security.SecurityUtils;
-import java.time.Instant;
+import com.dndmasters.service.CharacterService;
+import com.dndmasters.web.dto.CharacterDtos.CreateCharacterRequest;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,10 +22,13 @@ public class CharacterController {
 
     private final CharacterRepository characters;
     private final CharacterMapper mapper;
+    private final CharacterService characterService;
 
-    public CharacterController(CharacterRepository characters, CharacterMapper mapper) {
+    public CharacterController(CharacterRepository characters, CharacterMapper mapper,
+                              CharacterService characterService) {
         this.characters = characters;
         this.mapper = mapper;
+        this.characterService = characterService;
     }
 
     @GetMapping
@@ -37,14 +43,18 @@ public class CharacterController {
     }
 
     @PostMapping
-    public PlayerCharacter create(@RequestBody PlayerCharacter request) {
+    public PlayerCharacter create(@RequestBody CreateCharacterRequest request) {
         Long userId = SecurityUtils.requireUserId();
-        request.setId(null);
-        request.setOwnerId(userId);
-        request.setPredefined(false);
-        var entity = mapper.toEntity(request);
-        entity.setCreatedAt(Instant.now().toString());
-        characters.save(entity);
-        return mapper.toDomain(entity);
+        CharacterBuildRequest build = new CharacterBuildRequest(
+                request.name(),
+                Edition.fromId(request.edition()),
+                request.speciesId(),
+                request.classId(),
+                request.backgroundId(),
+                request.scores() == null ? com.dndmasters.engine.character.PointBuy.standardArray() : request.scores().toMap(),
+                request.skills(),
+                request.armor(),
+                request.weapon());
+        return characterService.create(userId, build);
     }
 }

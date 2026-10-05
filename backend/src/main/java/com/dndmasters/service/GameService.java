@@ -85,7 +85,11 @@ public class GameService {
     }
 
     public Campaign createCampaign(Long userId, String name) {
-        return campaigns.create(userId, name);
+        return campaigns.create(userId, name, null);
+    }
+
+    public Campaign createCampaign(Long userId, String name, String edition) {
+        return campaigns.create(userId, name, edition);
     }
 
     public Campaign joinCampaign(Long campaignId, Long userId, Long characterId) {

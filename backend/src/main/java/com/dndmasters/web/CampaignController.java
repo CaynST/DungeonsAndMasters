@@ -23,7 +23,7 @@ public class CampaignController {
         this.game = game;
     }
 
-    public record CreateCampaignRequest(String name) {
+    public record CreateCampaignRequest(String name, String edition) {
     }
 
     public record JoinRequest(Long characterId) {
@@ -37,7 +37,8 @@ public class CampaignController {
     @PostMapping
     public Campaign create(@RequestBody(required = false) CreateCampaignRequest request) {
         Long userId = SecurityUtils.requireUserId();
-        return game.createCampaign(userId, request == null ? null : request.name());
+        return game.createCampaign(userId, request == null ? null : request.name(),
+                request == null ? null : request.edition());
     }
 
     @GetMapping("/{id}")

@@ -54,6 +54,9 @@ public class CharacterEntity {
     @Column(name = "inventory_json", nullable = false)
     private String inventoryJson = "[]";
 
+    @Column(name = "creation_data_json", nullable = false)
+    private String creationDataJson = "{}";
+
     private boolean predefined;
 
     @Column(name = "created_at", nullable = false)

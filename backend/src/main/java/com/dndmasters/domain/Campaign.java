@@ -24,6 +24,7 @@ public class Campaign {
     private GamePhase phase = GamePhase.INTRO;
     private Long activeSceneId;
     private Long createdBy;
+    private String edition = "DND_5E_2014";
     private String createdAt;
     private String updatedAt;
 

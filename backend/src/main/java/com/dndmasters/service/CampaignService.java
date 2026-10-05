@@ -45,6 +45,7 @@ import com.dndmasters.persistence.repository.MapEntityRepository;
 import com.dndmasters.persistence.repository.NpcTemplateRepository;
 import com.dndmasters.persistence.repository.SceneRepository;
 import com.dndmasters.persistence.repository.UserRepository;
+import com.dndmasters.rules.Edition;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -133,8 +134,9 @@ public class CampaignService {
 
     /** Creates a new campaign pre-populated with the Valdros one-shot content. */
     @Transactional
-    public Campaign create(Long userId, String name) {
+    public Campaign create(Long userId, String name, String editionId) {
         AdventureDefinition adventure = ValdrosAdventure.build();
+        Edition edition = Edition.fromId(editionId);
         String now = Instant.now().toString();
 
         CampaignEntity campaign = new CampaignEntity();
@@ -146,6 +148,7 @@ public class CampaignService {
         campaign.setImage("/images/campaigns/valdros.png");
         campaign.setStatus(CampaignStatus.LOBBY.name());
         campaign.setPhase(GamePhase.INTRO.name());
+        campaign.setEdition(edition.name());
         campaign.setCreatedBy(userId);
         campaign.setCreatedAt(now);
         campaign.setUpdatedAt(now);
