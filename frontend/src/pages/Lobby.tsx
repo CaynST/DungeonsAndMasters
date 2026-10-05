@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Check, Clock3, Crown, Flame, Play, Repeat } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
 import { Badge } from "@/components/ui/Badge";
 import { HealthBar } from "@/components/ui/HealthBar";
 import { abilityModifier } from "@/lib/utils";
@@ -42,6 +43,14 @@ export function Lobby() {
   return (
     <div className="relative mx-auto max-w-6xl px-6 py-8">
       <Fireflies />
+
+      {campaign.isLoading && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/70">
+          <div className="flex items-center gap-3 text-muted">
+            <Spinner /> Entrando en la taberna...
+          </div>
+        </div>
+      )}
 
       <header className="relative z-10 mb-8 text-center">
         <div className="mb-2 flex items-center justify-center gap-2 text-gold">
@@ -125,11 +134,11 @@ export function Lobby() {
                   variant="arcane"
                   size="lg"
                   className="w-full"
+                  loading={start.isPending}
                   onClick={() => start.mutate()}
-                  disabled={start.isPending}
                 >
                   <Play className="h-4 w-4" />
-                  {start.isPending ? "Abriendo la cripta..." : "Comenzar aventura"}
+                  Comenzar aventura
                 </Button>
                 {start.isError && (
                   <p className="mt-2 text-xs text-crimson-soft">{(start.error as Error).message}</p>
@@ -141,11 +150,12 @@ export function Lobby() {
                   variant="primary"
                   size="lg"
                   className="w-full"
-                  disabled={!selectedCharacter || join.isPending}
+                  loading={join.isPending}
+                  disabled={!selectedCharacter}
                   onClick={() => selectedCharacter && join.mutate(selectedCharacter)}
                 >
                   <Repeat className="h-4 w-4" />
-                  {join.isPending ? "Uniéndose..." : "Unirme a la partida"}
+                  Unirme a la partida
                 </Button>
                 {!selectedCharacter && (
                   <p className="mt-2 text-center text-xs text-muted">Selecciona un héroe para continuar.</p>

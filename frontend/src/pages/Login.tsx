@@ -107,8 +107,8 @@ export function Login() {
               </p>
             )}
 
-            <Button type="submit" variant="primary" size="lg" className="w-full" disabled={mutation.isPending}>
-              {mutation.isPending ? "Invocando..." : mode === "login" ? "Entrar a la taberna" : "Forjar aventurero"}
+            <Button type="submit" variant="primary" size="lg" className="w-full" loading={mutation.isPending}>
+              {mode === "login" ? "Entrar a la taberna" : "Forjar aventurero"}
             </Button>
           </form>
         </div>

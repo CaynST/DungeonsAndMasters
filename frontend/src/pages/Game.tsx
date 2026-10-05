@@ -9,6 +9,7 @@ import { findPath, reachableCells } from "@/lib/pathfinding";
 import { CinematicIntro } from "@/components/intro/CinematicIntro";
 import { ShopModal } from "@/components/shop/ShopModal";
 import { Chronicle } from "@/components/Chronicle";
+import { Spinner } from "@/components/ui/Spinner";
 import { useGameStore } from "@/store/useGameStore";
 import { Board } from "@/components/board/Board";
 import { InitiativeTracker } from "@/components/InitiativeTracker";
@@ -256,9 +257,13 @@ export function Game() {
     return null;
   }, [gameState?.recentEvents]);
 
+  const checkPending = derivedCheck ?? pendingCheck;
+  const actionBusy = act.isPending;
+
   if (state.isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-muted">
+      <div className="flex min-h-screen items-center justify-center gap-3 text-muted">
+        <Spinner />
         <motion.p animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.6, repeat: Infinity }}>
           Despertando a la compañía...
         </motion.p>
@@ -399,7 +404,7 @@ export function Game() {
                 providerId={provider.data?.aiProvider}
                 spotlightName={spotlightCharacter?.name}
                 busy={act.isPending}
-                pendingCheck={derivedCheck ?? pendingCheck}
+                pendingCheck={checkPending}
                 onRollCheck={rollCheck}
                 onSay={(text) => act.mutate({ type: "DIALOGUE", text, actorEntityId: myEntity?.id })}
               />
@@ -430,6 +435,8 @@ export function Game() {
           character={gameState.party.find((c) => c.id === myEntity?.refId)}
           canAct={canAct}
           isMyTurn={isMyTurn}
+          busy={actionBusy}
+          checkPending={Boolean(checkPending)}
           selectedTargetName={mode === "attack" ? selectedEntity?.name : undefined}
           selectedAttack={selectedAttack}
           onSelectAttack={setSelectedAttack}

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
 import { cn } from "@/lib/utils";
 import type { ShopItem } from "@/types/game";
 
@@ -72,7 +73,11 @@ export function ShopModal({ campaignId, onClose }: { campaignId: number; onClose
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-0 overflow-hidden md:grid-cols-[1.6fr_1fr]">
           {/* Catalogue */}
           <div className="min-h-0 overflow-y-auto p-4">
-            {shop.isLoading && <p className="text-sm text-muted">Abriendo el mercado...</p>}
+            {shop.isLoading && (
+              <p className="flex items-center gap-2 text-sm text-muted">
+                <Spinner /> Abriendo el mercado...
+              </p>
+            )}
             {Object.entries(grouped).map(([kind, items]) => (
               <div key={kind} className="mb-4">
                 <p className="hud-heading mb-2 text-sm">{KIND_LABELS[kind] ?? kind}</p>
@@ -95,6 +100,7 @@ export function ShopModal({ campaignId, onClose }: { campaignId: number; onClose
                           <Button
                             size="sm"
                             variant="secondary"
+                            loading={buy.isPending && buy.variables === item.id}
                             disabled={!affordable || buy.isPending}
                             onClick={() => buy.mutate(item.id)}
                           >
@@ -127,11 +133,23 @@ export function ShopModal({ campaignId, onClose }: { campaignId: number; onClose
                   </span>
                   <div className="flex items-center gap-1">
                     {equippable.has(item.name) && (
-                      <Button size="sm" variant="secondary" disabled={equip.isPending} onClick={() => equip.mutate(item.name)}>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        loading={equip.isPending && equip.variables === item.name}
+                        disabled={equip.isPending}
+                        onClick={() => equip.mutate(item.name)}
+                      >
                         Equipar
                       </Button>
                     )}
-                    <Button size="sm" variant="ghost" disabled={sell.isPending} onClick={() => sell.mutate(item.name)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      loading={sell.isPending && sell.variables === item.name}
+                      disabled={sell.isPending}
+                      onClick={() => sell.mutate(item.name)}
+                    >
                       Vender
                     </Button>
                   </div>

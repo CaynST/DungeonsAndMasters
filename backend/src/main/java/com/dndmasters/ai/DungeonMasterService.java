@@ -23,8 +23,10 @@ public class DungeonMasterService {
               "sceneChanged": false,
               "imagePrompt": null
             }
-            Usa REQUEST_CHECK solo cuando tenga sentido pedir una tirada. Habilidades válidas:
-            perception, investigation, stealth, athletics, arcana, insight, persuasion, intimidation.
+            Usa REQUEST_CHECK solo cuando tenga sentido pedir una tirada, y explica en la narración
+            QUÉ están intentando y POR QUÉ hace falta la tirada (una frase clara, sin tecnicismos).
+            Habilidades válidas: perception, investigation, stealth, athletics, arcana, insight,
+            persuasion, intimidation.
             Si el contexto incluye "spotlight" (el personaje al que le toca decidir), dirígete a él
             por su nombre y pregúntale qué quiere hacer, sin decidir por el jugador.
             Usa OPEN_SHOP SOLO cuando aparezca un mercader o el grupo busque comerciar.

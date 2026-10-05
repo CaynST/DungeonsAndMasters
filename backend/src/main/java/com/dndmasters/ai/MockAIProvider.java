@@ -40,7 +40,8 @@ public class MockAIProvider implements AIProvider {
         return DmResponse.of(
                 "Las escaleras de Valdros descienden hacia un silencio húmedo. Antorchas moribundas dibujan sombras "
                         + "que parecen respirar. En la penumbra, una figura espectral hojea un tomo encadenado: el "
-                        + "Archivista. «Habéis llegado... por fin. La cripta os esperaba.»",
+                        + "Archivista. «Habéis llegado... por fin. La cripta os esperaba.» Algo se mueve más allá de la "
+                        + "luz de las antorchas: conviene estar atentos antes de dar un paso más.",
                 List.of(DmAction.requestCheck("perception", 10)));
     }
 

@@ -160,13 +160,15 @@ export function DmPanel({ dmName, narration, events, providerId, spotlightName, 
         onSubmit={(event) => {
           event.preventDefault();
           const value = text.trim();
-          if (!value || busy) return;
+          if (!value || busy || pendingCheck) return;
           onSay(value);
           setText("");
         }}
       >
         <p className="mb-1.5 text-[11px] text-muted">
-          {spotlightName ? (
+          {pendingCheck ? (
+            <span className="text-gold-soft">Resuelve la prueba antes de actuar.</span>
+          ) : spotlightName ? (
             <>
               Dile al Dungeon Master qué hace <span className="text-parchment">{spotlightName}</span>:
             </>
@@ -182,17 +184,18 @@ export function DmPanel({ dmName, narration, events, providerId, spotlightName, 
               if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
                 const value = text.trim();
-                if (!value || busy) return;
+                if (!value || busy || pendingCheck) return;
                 onSay(value);
                 setText("");
               }
             }}
             rows={2}
+            disabled={busy || Boolean(pendingCheck)}
             placeholder="Ej: registro el altar en busca de trampas, o le pregunto al espectro por el relicario..."
-            className="min-h-[2.75rem] flex-1 resize-none rounded-md border border-parchment/15 bg-black/40 px-3 py-2 text-sm text-ink outline-none focus:border-gold/50"
+            className="min-h-[2.75rem] flex-1 resize-none rounded-md border border-parchment/15 bg-black/40 px-3 py-2 text-sm text-ink outline-none focus:border-gold/50 disabled:opacity-50"
           />
-          <Button type="submit" variant="primary" size="sm" disabled={busy || !text.trim()}>
-            {busy ? "..." : "Enviar"}
+          <Button type="submit" variant="primary" size="sm" loading={busy} disabled={!text.trim() || Boolean(pendingCheck)}>
+            Enviar
           </Button>
         </div>
       </form>

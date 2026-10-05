@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Dices, Sparkles } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Spinner";
 import { Badge } from "@/components/ui/Badge";
 import { cn, formatModifier } from "@/lib/utils";
 import { PointBuyPanel } from "@/components/character/PointBuyPanel";
@@ -132,7 +133,13 @@ export function CharacterCreation() {
       <Stepper current={stepIndex} />
 
       <div className="panel mt-6 min-h-[420px] p-6">
-        {step === "edition" && (
+        {ruleset.isLoading && step !== "edition" ? (
+          <div className="flex h-80 items-center justify-center gap-3 text-muted">
+            <Spinner /> Consultando las reglas...
+          </div>
+        ) : (
+          <>
+            {step === "edition" && (
           <EditionStep
             value={editionId}
             onChange={(id) => {
@@ -179,6 +186,8 @@ export function CharacterCreation() {
             edition={ruleset.data}
           />
         )}
+          </>
+        )}
       </div>
 
       <footer className="mt-4 flex items-center justify-between">
@@ -189,11 +198,12 @@ export function CharacterCreation() {
           <Button
             variant="primary"
             size="lg"
-            disabled={!canAdvance || create.isPending}
+            loading={create.isPending}
+            disabled={!canAdvance}
             onClick={submit}
           >
             <Sparkles className="h-4 w-4" />
-            {create.isPending ? "Forjando..." : "Crear personaje"}
+            Crear personaje
           </Button>
         ) : (
           <Button variant="primary" onClick={goNext} disabled={!canAdvance}>

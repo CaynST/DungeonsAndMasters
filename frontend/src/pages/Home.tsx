@@ -83,9 +83,9 @@ export function Home() {
             <Button
               variant="primary"
               onClick={() => createCampaign.mutate()}
-              disabled={createCampaign.isPending}
+              loading={createCampaign.isPending}
             >
-              {createCampaign.isPending ? "Creando..." : "Crear y entrar"}
+              Crear y entrar
             </Button>
           </div>
         )}
@@ -118,9 +118,11 @@ export function Home() {
           Los personajes se construyen con las reglas del SRD (raza, clase, trasfondo, puntos).
         </p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {(characters.data ?? []).map((character) => (
-            <HeroCard key={character.id} character={character} />
-          ))}
+          {characters.isLoading
+            ? [0, 1, 2, 3].map((index) => <div key={index} className="panel h-64 animate-shimmer" />)
+            : (characters.data ?? []).map((character) => (
+                <HeroCard key={character.id} character={character} />
+              ))}
         </div>
       </section>
     </div>

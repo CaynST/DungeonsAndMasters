@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen } from "lucide-react";
 import { api } from "@/lib/api";
+import { Spinner } from "@/components/ui/Spinner";
 import type { GameEvent } from "@/types/game";
 
 const TONE: Record<string, string> = {
@@ -42,7 +43,11 @@ export function Chronicle({ campaignId }: { campaignId: number }) {
         <h3 className="title-display text-sm font-semibold text-ink">Crónica de la aventura</h3>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        {events.isLoading && <p className="text-sm text-muted">Recuperando la crónica...</p>}
+        {events.isLoading && (
+          <p className="flex items-center gap-2 text-sm text-muted">
+            <Spinner /> Recuperando la crónica...
+          </p>
+        )}
         {events.data && events.data.length === 0 && (
           <p className="text-sm text-muted">La historia aún no ha comenzado.</p>
         )}
