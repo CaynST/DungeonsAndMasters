@@ -35,14 +35,15 @@ public final class MapGenerator {
         map.setTileSize(48);
 
         List<Cell> walls = new ArrayList<>();
-        // Border.
+        java.util.Set<Cell> seenWalls = new java.util.HashSet<>();
+        // Border (deduplicated: corners would otherwise be added twice).
         for (int x = 0; x < width; x++) {
-            walls.add(new Cell(x, 0));
-            walls.add(new Cell(x, height - 1));
+            addWall(walls, seenWalls, new Cell(x, 0));
+            addWall(walls, seenWalls, new Cell(x, height - 1));
         }
         for (int y = 0; y < height; y++) {
-            walls.add(new Cell(0, y));
-            walls.add(new Cell(width - 1, y));
+            addWall(walls, seenWalls, new Cell(0, y));
+            addWall(walls, seenWalls, new Cell(width - 1, y));
         }
 
         List<Cell> obstacles = new ArrayList<>();
@@ -54,8 +55,8 @@ public final class MapGenerator {
         for (int i = 0; i < clusters; i++) {
             int cx = 3 + random.nextInt(Math.max(1, width - 7));
             int cy = 2 + random.nextInt(Math.max(1, height - 5));
-            // Keep the horizontal corridor (middle row band) clear.
-            if (Math.abs(cy - height / 2) <= 1) {
+            // Keep the horizontal corridor (middle band) clear for the party spawn.
+            if (Math.abs(cy - height / 2) <= 2) {
                 continue;
             }
             for (int dx = -1; dx <= 1; dx++) {
@@ -74,7 +75,7 @@ public final class MapGenerator {
         int scattered = 3 + random.nextInt(4);
         for (int i = 0; i < scattered; i++) {
             Cell c = new Cell(2 + random.nextInt(width - 4), 2 + random.nextInt(height - 4));
-            if (inBounds(c, width, height) && !obstacles.contains(c) && Math.abs(c.y() - height / 2) > 1) {
+            if (inBounds(c, width, height) && !obstacles.contains(c) && Math.abs(c.y() - height / 2) > 2) {
                 obstacles.add(c);
             }
         }
@@ -125,6 +126,12 @@ public final class MapGenerator {
 
     private static boolean inBounds(Cell c, int width, int height) {
         return c.x() > 0 && c.y() > 0 && c.x() < width - 1 && c.y() < height - 1;
+    }
+
+    private static void addWall(List<Cell> walls, java.util.Set<Cell> seen, Cell cell) {
+        if (seen.add(cell)) {
+            walls.add(cell);
+        }
     }
 
     private static String propFor(String theme) {

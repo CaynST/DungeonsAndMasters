@@ -80,8 +80,10 @@ export function Board({
   const offset = padding * cell;
   const theme = themeFor(map.theme);
 
-  const walls = useMemo(() => new Set(map.walls.map(key)), [map.walls]);
-  const obstacles = useMemo(() => new Set(map.obstacles.map(key)), [map.obstacles]);
+  const uniqueWalls = useMemo(() => dedupe(map.walls), [map.walls]);
+  const uniqueObstacles = useMemo(() => dedupe(map.obstacles), [map.obstacles]);
+  const walls = useMemo(() => new Set(uniqueWalls.map(key)), [uniqueWalls]);
+  const obstacles = useMemo(() => new Set(uniqueObstacles.map(key)), [uniqueObstacles]);
   const doors = useMemo(() => new Map(map.doors.map((door) => [key(door), door])), [map.doors]);
 
   return (
@@ -159,7 +161,7 @@ export function Board({
         )}
 
         {/* Walls with depth */}
-        {map.walls.map((wall) => (
+        {uniqueWalls.map((wall) => (
           <g key={`w-${key(wall)}`}>
             <rect x={wall.x * cell} y={wall.y * cell} width={cell} height={cell} fill="url(#wall-face)" />
             <rect x={wall.x * cell} y={wall.y * cell} width={cell} height={4} fill={theme.wallEdge} opacity={0.9} />
@@ -175,7 +177,7 @@ export function Board({
         ))}
 
         {/* Obstacles */}
-        {map.obstacles.map((obstacle) => (
+        {uniqueObstacles.map((obstacle) => (
           <g key={`o-${key(obstacle)}`}>
             <rect
               x={obstacle.x * cell + 4}
@@ -351,4 +353,18 @@ function Token({
 
 function key(cell: Cell) {
   return `${cell.x},${cell.y}`;
+}
+
+/** Removes duplicate cells, keeping first occurrence (defends against bad persisted maps). */
+function dedupe(cells: Cell[]): Cell[] {
+  const seen = new Set<string>();
+  const result: Cell[] = [];
+  for (const cell of cells) {
+    const k = key(cell);
+    if (!seen.has(k)) {
+      seen.add(k);
+      result.push(cell);
+    }
+  }
+  return result;
 }

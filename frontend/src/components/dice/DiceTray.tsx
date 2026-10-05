@@ -19,6 +19,16 @@ const OUTCOME_STYLE: Record<Outcome, { color: string; label: string }> = {
   normal: { color: "#B9AE97", label: "" },
 };
 
+/** Gem-tone colour per die type (used for normal rolls). */
+const DIE_COLORS: Record<number, string> = {
+  4: "#E2725B", // coral
+  6: "#2E9E6B", // esmeralda
+  8: "#3A7BD5", // zafiro
+  10: "#8B5CF6", // amatista
+  12: "#14B8A6", // turquesa
+  20: "#C0392B", // rubí
+};
+
 function outcomeOf(roll: DiceRoll): Outcome {
   if (roll.natural20) return "crit";
   if (roll.natural1) return "fail";
@@ -154,7 +164,14 @@ function Die({ sides, color, faceValue, rolling }: { sides: number; color: strin
   const geometry = useMemo(() => buildGeometry(sides), [sides]);
   const faces = useMemo(() => extractFaces(geometry), [geometry]);
   const material = useMemo(
-    () => new THREE.MeshStandardMaterial({ color, metalness: 0.2, roughness: 0.5, flatShading: true }),
+    () =>
+      new THREE.MeshStandardMaterial({
+        color,
+        metalness: 0.4,
+        roughness: 0.22,
+        flatShading: true,
+        emissive: new THREE.Color(color).multiplyScalar(0.14),
+      }),
     [color],
   );
 
@@ -196,6 +213,7 @@ export function DiceTray({ roll, onComplete }: DiceTrayProps) {
   const style = OUTCOME_STYLE[outcome];
   const sides = primarySides(roll.expression);
   const face = roll.rolls[0] ?? roll.total;
+  const dieColor = outcome === "normal" ? DIE_COLORS[sides] ?? "#B9AE97" : style.color;
 
   useEffect(() => {
     setRolling(true);
@@ -211,16 +229,16 @@ export function DiceTray({ roll, onComplete }: DiceTrayProps) {
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/75">
       <motion.div initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} className="w-[min(92vw,460px)]">
-        <div className="panel-raised overflow-hidden p-1" style={{ borderColor: `${style.color}66` }}>
+        <div className="panel-raised overflow-hidden p-1" style={{ borderColor: `${dieColor}66` }}>
           <div className="h-60 w-full rounded-md bg-[#0c0a08]">
             <Canvas shadows camera={{ position: [0, 0.6, 3.6], fov: 42 }}>
               <ambientLight intensity={0.7} />
               <directionalLight position={[3, 5, 4]} intensity={1.5} castShadow />
               <directionalLight position={[-3, -2, -3]} intensity={0.5} />
               <Environment resolution={64}>
-                <Lightformer intensity={1.4} position={[0, 3, 2]} scale={5} color={style.color} />
+                <Lightformer intensity={1.4} position={[0, 3, 2]} scale={5} color={dieColor} />
               </Environment>
-              <Die sides={sides} color={style.color} faceValue={face} rolling={rolling} />
+              <Die sides={sides} color={dieColor} faceValue={face} rolling={rolling} />
             </Canvas>
           </div>
         </div>
@@ -233,7 +251,7 @@ export function DiceTray({ roll, onComplete }: DiceTrayProps) {
         >
           <div className="flex items-baseline justify-center gap-3">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">d{sides}</span>
-            <span className="title-display text-4xl font-bold" style={{ color: style.color }}>
+            <span className="title-display text-4xl font-bold" style={{ color: dieColor }}>
               {roll.total}
             </span>
           </div>
@@ -247,7 +265,7 @@ export function DiceTray({ roll, onComplete }: DiceTrayProps) {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 1.1, type: "spring", stiffness: 320 }}
               className="title-display mt-2 text-xl font-extrabold tracking-widest"
-              style={{ color: style.color }}
+              style={{ color: dieColor }}
             >
               {style.label}
             </motion.p>

@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { StrictMode } from "react";
 import { Board } from "@/components/board/Board";
@@ -77,6 +77,34 @@ describe("Board", () => {
     // Tokens render the first letter of each entity name.
     expect(screen.getByText("K")).toBeInTheDocument();
     expect(screen.getByText("G")).toBeInTheDocument();
+  });
+
+  it("does not duplicate walls when the map has repeated cells (regression)", () => {
+    const duplicated: GameMap = {
+      ...map,
+      // Corners added twice, as the old generator did.
+      walls: [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 5, y: 0 }, { x: 5, y: 0 }, { x: 0, y: 5 }],
+    };
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(
+      <StrictMode>
+        <Board
+          map={duplicated}
+          entities={entities}
+          activeEntityId={null}
+          reachablePaths={new Map()}
+          selectedEntityId={null}
+          targetableEntityIds={new Set()}
+          onCellClick={() => {}}
+          onEntityClick={() => {}}
+        />
+      </StrictMode>,
+    );
+    const duplicateKeyWarning = spy.mock.calls.some((call) =>
+      String(call[0]).includes("same key"),
+    );
+    expect(duplicateKeyWarning).toBe(false);
+    spy.mockRestore();
   });
 
   it("does not loop when floating texts change (regression: getSnapshot caching)", () => {

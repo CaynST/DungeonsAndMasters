@@ -134,7 +134,7 @@ public final class ValdrosAdventure {
         map.setWidth(width);
         map.setHeight(height);
         map.setTileSize(48);
-        List<Cell> walls = new ArrayList<>();
+        java.util.LinkedHashSet<Cell> walls = new java.util.LinkedHashSet<>();
         for (int x = 0; x < width; x++) {
             walls.add(new Cell(x, 0));
             walls.add(new Cell(x, height - 1));
@@ -143,7 +143,7 @@ public final class ValdrosAdventure {
             walls.add(new Cell(0, y));
             walls.add(new Cell(width - 1, y));
         }
-        map.setWalls(walls);
+        map.setWalls(new ArrayList<>(walls));
         return map;
     }
 }
