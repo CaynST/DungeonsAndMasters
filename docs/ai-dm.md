@@ -28,14 +28,19 @@ Si no hay `AI_API_KEY`, siempre se usa el Mock (la partida nunca se rompe por fa
 ```dotenv
 AI_PROVIDER=opencode-go
 AI_API_KEY=<tu clave de https://opencode.ai/auth>
-AI_MODEL=space-bunny-free
-AI_FALLBACK_MODELS=deepseek-v4-flash,mimo-v2.5,glm-5.3-flash
+AI_MODEL=mimo-v2.6-flash
+AI_FALLBACK_MODELS=longcat-2.5-preview-free,space-bunny-free,muse-spark-1.3-contributor
 ```
 
-- Modelo por defecto: **`space-bunny-free`** (gratuito, ilimitado de momento).
-- **Cadena de fallback**: si un modelo falla (p. ej. 429), se prueba el siguiente en orden.
+- Modelo por defecto: **`mimo-v2.6-flash`** (barato, ~1M de contexto).
+- **Cadena de fallback**: si un modelo falla (p. ej. 429 o restricción de región), se
+  prueba el siguiente en orden. `muse-spark-1.3-contributor` exige activar
+  "Allow paid endpoints that train on request data" en los ajustes de privacidad del
+  workspace y una región soportada.
 - Se envían los headers recomendados: `User-Agent` propio y `x-opencode-session`
   (este último es **obligatorio** para OpenCode Go).
+- El `.env` se carga automáticamente al arrancar (ver README); las variables de entorno
+  reales tienen prioridad y los tests nunca lo cargan.
 
 ### Robustez del parseo
 

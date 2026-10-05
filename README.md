@@ -52,18 +52,27 @@ pnpm dev
 
 Todas opcionales. Sin ellas la app funciona usando los proveedores Mock.
 
+El backend **carga automáticamente** un archivo `.env` (en la raíz del repo o en `backend/`)
+al arrancar, así que basta con `mvn spring-boot:run`. Copia `.env.example` a `.env` y
+rellena lo que necesites:
+
+```bash
+cp .env.example .env
+```
+
 ```dotenv
 # Backend
-AI_PROVIDER=mock            # mock | opencode-go | opencode-zen | openai-compatible
-AI_API_KEY=
-AI_MODEL=space-bunny-free
-AI_FALLBACK_MODELS=deepseek-v4-flash,mimo-v2.5,glm-5.3-flash
+AI_PROVIDER=opencode-go     # mock | opencode-go | opencode-zen | openai-compatible
+AI_API_KEY=                 # tu clave de https://opencode.ai/auth
+AI_MODEL=mimo-v2.6-flash
+AI_FALLBACK_MODELS=longcat-2.5-preview-free,space-bunny-free,muse-spark-1.3-contributor
 AI_BASE_URL=                # vacío = URL por defecto del proveedor
 IMAGE_PROVIDER=placeholder  # placeholder | (futuro proveedor real)
 JWT_SECRET=change-me-in-production
 ```
 
-Ver `.env.example` para una plantilla completa.
+Las variables de entorno reales siempre tienen prioridad sobre el `.env`, y los tests
+nunca cargan el `.env` (corren siempre offline con el Mock).
 
 ## Flujo de la demo
 
