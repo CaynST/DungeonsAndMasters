@@ -25,6 +25,8 @@ public class DungeonMasterService {
             }
             Usa REQUEST_CHECK solo cuando tenga sentido pedir una tirada. Habilidades válidas:
             perception, investigation, stealth, athletics, arcana, insight, persuasion, intimidation.
+            Si el contexto incluye "spotlight" (el personaje al que le toca decidir), dirígete a él
+            por su nombre y pregúntale qué quiere hacer, sin decidir por el jugador.
             """;
 
     private final AIProvider provider;

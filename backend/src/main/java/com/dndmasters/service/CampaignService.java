@@ -81,6 +81,8 @@ public class CampaignService {
     private final GameEntityMapper entityMapper;
     private final CombatMapper combatMapper;
     private final GameEventService events;
+    private final com.dndmasters.adventure.AdventureGenerator adventureGenerator;
+    private final java.util.Random random = new java.util.Random();
 
     public CampaignService(CampaignRepository campaigns, CampaignMemberRepository members,
                            CharacterRepository characters, UserRepository users, SceneRepository scenes,
@@ -88,7 +90,8 @@ public class CampaignService {
                            EnemyTemplateRepository enemies, ItemRepository items, CombatStateRepository combatStates,
                            CombatParticipantRepository combatParticipants, CampaignMapper campaignMapper,
                            CharacterMapper characterMapper, MapMapper mapMapper, GameEntityMapper entityMapper,
-                           CombatMapper combatMapper, GameEventService events) {
+                           CombatMapper combatMapper, GameEventService events,
+                           com.dndmasters.adventure.AdventureGenerator adventureGenerator) {
         this.campaigns = campaigns;
         this.members = members;
         this.characters = characters;
@@ -107,6 +110,7 @@ public class CampaignService {
         this.entityMapper = entityMapper;
         this.combatMapper = combatMapper;
         this.events = events;
+        this.adventureGenerator = adventureGenerator;
     }
 
     @Transactional(readOnly = true)
@@ -135,7 +139,7 @@ public class CampaignService {
     /** Creates a new campaign pre-populated with the Valdros one-shot content. */
     @Transactional
     public Campaign create(Long userId, String name, String editionId) {
-        AdventureDefinition adventure = ValdrosAdventure.build();
+        AdventureDefinition adventure = adventureGenerator.materialize(adventureGenerator.generate(random), random);
         Edition edition = Edition.fromId(editionId);
         String now = Instant.now().toString();
 
@@ -149,6 +153,9 @@ public class CampaignService {
         campaign.setStatus(CampaignStatus.LOBBY.name());
         campaign.setPhase(GamePhase.INTRO.name());
         campaign.setEdition(edition.name());
+        campaign.setPremise(adventure.premise() == null ? null : String.join("\n", adventure.premise()));
+        campaign.setVillain(adventure.villain());
+        campaign.setObjective(adventure.objective());
         campaign.setCreatedBy(userId);
         campaign.setCreatedAt(now);
         campaign.setUpdatedAt(now);
@@ -335,21 +342,38 @@ public class CampaignService {
 
         ensurePartyInScene(campaignId, first.getId());
         events.record(campaignId, first.getId(), "CAMPAIGN_STARTED", "Sistema",
-                "La compañía desciende a la Cripta de Valdros.", Map.of());
+                "La compañía llega a " + campaign.getName() + ".", Map.of());
         return state(campaignId);
+    }
+
+    /** Free cells near the left-middle of the scene's map, used to place the party. */
+    private List<Cell> freeSpawnCells(SceneEntity scene) {
+        GameMap map = scene.getMapId() == null ? null
+                : maps.findById(scene.getMapId()).map(mapMapper::toDomain).orElse(null);
+        if (map == null) {
+            return List.of(new Cell(1, 1));
+        }
+        int midY = map.getHeight() / 2;
+        List<Cell> result = new ArrayList<>();
+        for (int dx = 1; dx < 5 && result.size() < 6; dx++) {
+            for (int dy = -2; dy <= 2 && result.size() < 6; dy++) {
+                Cell c = new Cell(dx, midY + dy);
+                if (map.inBounds(c) && !map.blocksMovement(c) && !result.contains(c)) {
+                    result.add(c);
+                }
+            }
+        }
+        if (result.isEmpty()) {
+            result.add(new Cell(1, midY));
+        }
+        return result;
     }
 
     /** Creates a player/ally token for every party member that is missing from the scene. */
     @Transactional
     public void ensurePartyInScene(Long campaignId, Long sceneId) {
-        AdventureDefinition adventure = ValdrosAdventure.build();
         SceneEntity scene = scenes.findById(sceneId).orElseThrow();
-        SceneDefinition def = adventure.scenes().stream()
-                .filter(s -> s.orderIndex() == scene.getOrderIndex()).findFirst().orElse(null);
-        if (def == null) {
-            return;
-        }
-        List<Cell> spawns = def.partySpawn();
+        List<Cell> spawns = freeSpawnCells(scene);
         Map<Long, String> controllerByCharacter = controllerByCharacter(campaignId);
         List<PlayerCharacter> party = partyCharacters(campaignId);
         List<BoardEntity> existing = boardEntities.findBySceneIdOrderByIdAsc(sceneId);
@@ -408,7 +432,7 @@ public class CampaignService {
         state.setParty(party);
         state.setCombat(combat);
         state.setRecentEvents(events.recent(campaignId));
-        state.setObjective(ValdrosAdventure.build().objective());
+        state.setObjective(campaign.getObjective());
         return state;
     }
 
@@ -535,6 +559,28 @@ public class CampaignService {
     public Long characterIdForUser(Long campaignId, Long userId) {
         return members.findByCampaignIdAndUserId(campaignId, userId)
                 .map(CampaignMemberEntity::getCharacterId).orElse(null);
+    }
+
+    /** Advances the narrative spotlight to the next party member and returns its index. */
+    @Transactional
+    public int rotateSpotlight(Long campaignId) {
+        CampaignEntity campaign = requireCampaign(campaignId);
+        int size = Math.max(1, partyCharacters(campaignId).size());
+        int next = (campaign.getSpotlightIndex() + 1) % size;
+        campaign.setSpotlightIndex(next);
+        campaigns.save(campaign);
+        return next;
+    }
+
+    @Transactional(readOnly = true)
+    public String spotlightName(Long campaignId) {
+        List<PlayerCharacter> party = partyCharacters(campaignId);
+        if (party.isEmpty()) {
+            return null;
+        }
+        CampaignEntity campaign = requireCampaign(campaignId);
+        int idx = Math.floorMod(campaign.getSpotlightIndex(), party.size());
+        return party.get(idx).getName();
     }
 
     private List<Campaign.CampaignMember> memberViews(Long campaignId) {

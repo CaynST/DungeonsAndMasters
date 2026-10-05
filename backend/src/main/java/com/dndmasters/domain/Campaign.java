@@ -25,6 +25,10 @@ public class Campaign {
     private Long activeSceneId;
     private Long createdBy;
     private String edition = "DND_5E_2014";
+    private String premise;
+    private String villain;
+    private String objective;
+    private int spotlightIndex;
     private String createdAt;
     private String updatedAt;
 

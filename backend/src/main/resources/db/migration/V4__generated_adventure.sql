@@ -1,0 +1,5 @@
+ALTER TABLE campaigns ADD COLUMN premise TEXT;
+ALTER TABLE campaigns ADD COLUMN villain TEXT;
+ALTER TABLE campaigns ADD COLUMN objective TEXT;
+ALTER TABLE campaigns ADD COLUMN spotlight_index INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE maps ADD COLUMN theme TEXT NOT NULL DEFAULT 'crypt';

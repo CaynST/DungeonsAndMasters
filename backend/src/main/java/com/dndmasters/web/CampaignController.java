@@ -62,4 +62,9 @@ public class CampaignController {
     public GameState state(@PathVariable Long id) {
         return game.state(id);
     }
+
+    @GetMapping("/{id}/intro")
+    public java.util.Map<String, Object> intro(@PathVariable Long id) {
+        return game.intro(id);
+    }
 }

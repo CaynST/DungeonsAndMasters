@@ -26,6 +26,7 @@ public class DmContext {
     private boolean combatActive;
     private int round;
     private String currentTurn;
+    private String spotlight;
     private String lastAction;
     private String skill;
     private Boolean checkSuccess;
@@ -48,6 +49,7 @@ public class DmContext {
         map.put("combatActive", combatActive);
         map.put("round", round);
         map.put("currentTurn", currentTurn);
+        map.put("spotlight", spotlight);
         map.put("lastAction", lastAction);
         map.put("skill", skill);
         map.put("checkSuccess", checkSuccess);

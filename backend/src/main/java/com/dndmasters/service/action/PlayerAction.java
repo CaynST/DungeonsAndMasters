@@ -21,6 +21,7 @@ public class PlayerAction {
     public static final String NARRATE = "NARRATE";
     public static final String DICE = "DICE";
     public static final String USE_ITEM = "USE_ITEM";
+    public static final String PASS = "PASS";
 
     private String type;
     private Long actorEntityId;

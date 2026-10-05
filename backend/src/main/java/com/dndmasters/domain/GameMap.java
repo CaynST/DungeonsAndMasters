@@ -18,6 +18,7 @@ public class GameMap {
     private int width;
     private int height;
     private int tileSize = 48;
+    private String theme = "crypt";
     private List<Cell> walls = new ArrayList<>();
     private List<Door> doors = new ArrayList<>();
     private List<Cell> obstacles = new ArrayList<>();

@@ -13,6 +13,8 @@ public record AdventureDefinition(
         String setting,
         String description,
         String dmName,
+        String villain,
+        List<String> premise,
         String objective,
         List<EnemyDefinition> enemies,
         List<NpcDefinition> npcs,

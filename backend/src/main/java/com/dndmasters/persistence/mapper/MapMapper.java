@@ -18,6 +18,7 @@ public class MapMapper {
         m.setWidth(e.getWidth());
         m.setHeight(e.getHeight());
         m.setTileSize(e.getTileSize());
+        m.setTheme(e.getTheme());
         m.setWalls(Json.readList(e.getWallsJson(), Cell.class));
         m.setDoors(Json.readList(e.getDoorsJson(), Door.class));
         m.setObstacles(Json.readList(e.getObstaclesJson(), Cell.class));
@@ -33,6 +34,7 @@ public class MapMapper {
         e.setWidth(m.getWidth());
         e.setHeight(m.getHeight());
         e.setTileSize(m.getTileSize());
+        e.setTheme(m.getTheme() == null ? "crypt" : m.getTheme());
         e.setWallsJson(Json.write(m.getWalls()));
         e.setDoorsJson(Json.write(m.getDoors()));
         e.setObstaclesJson(Json.write(m.getObstacles()));

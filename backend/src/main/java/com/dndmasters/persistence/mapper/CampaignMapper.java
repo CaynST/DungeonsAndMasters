@@ -23,6 +23,10 @@ public class CampaignMapper {
         c.setActiveSceneId(e.getActiveSceneId());
         c.setCreatedBy(e.getCreatedBy());
         c.setEdition(e.getEdition());
+        c.setPremise(e.getPremise());
+        c.setVillain(e.getVillain());
+        c.setObjective(e.getObjective());
+        c.setSpotlightIndex(e.getSpotlightIndex());
         c.setCreatedAt(e.getCreatedAt());
         c.setUpdatedAt(e.getUpdatedAt());
         return c;

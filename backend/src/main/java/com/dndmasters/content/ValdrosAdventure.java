@@ -29,6 +29,11 @@ public final class ValdrosAdventure {
                 "Una antigua cripta bajo las ruinas de Valdros, sellada hace siglos.",
                 "Una pequeña compañía de aventureros desciende a la cripta de Valdros tras la pista de un relicario perdido.",
                 "El Archivista",
+                "El Guardián de Valdros",
+                List.of(
+                        "Érase una vez una cripta que nadie osaba nombrar, sepultada bajo las ruinas de Valdros.",
+                        "Siglos atrás, sus guardianes sellaron un relicario para que jamás viera la luz.",
+                        "Ahora, el sello se debilita... y alguien tiene que bajar."),
                 "Recupera el Relicario de Valdros y sella la cripta.",
                 enemies(),
                 npcs(),

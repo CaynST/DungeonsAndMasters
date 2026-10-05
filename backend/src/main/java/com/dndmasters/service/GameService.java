@@ -133,6 +133,7 @@ public class GameService {
             case PlayerAction.DIALOGUE -> dialogue(campaignId, userId, action);
             case PlayerAction.NARRATE -> narrate(campaignId, userId, action);
             case PlayerAction.USE_ITEM -> useItem(campaignId, userId, action);
+            case PlayerAction.PASS -> pass(campaignId, userId, action);
             default -> ActionResult.error("Tipo de acción desconocido: " + action.getType());
         };
     }
@@ -317,6 +318,40 @@ public class GameService {
                 null, application.actions(), application.adventureEnded());
     }
 
+    private ActionResult pass(Long campaignId, Long userId, PlayerAction action) {
+        campaigns.rotateSpotlight(campaignId);
+        String name = campaigns.spotlightName(campaignId);
+        DmResponse dm = respond(campaignId, "SPOTLIGHT", "El grupo cede el turno a " + name + ".", null, null);
+        DmApplication application = applyDm(campaignId, userId, dm);
+        return new ActionResult(true, null, dm.narration(), application.events(), application.checkRequest(),
+                null, null, application.actions(), application.adventureEnded());
+    }
+
+    /** Cinematic intro data: title, premise lines and the party. */
+    public java.util.Map<String, Object> intro(Long campaignId) {
+        GameState state = campaigns.state(campaignId);
+        java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("title", state.getCampaign().getName());
+        out.put("setting", state.getCampaign().getSetting());
+        out.put("villain", state.getCampaign().getVillain());
+        out.put("objective", state.getCampaign().getObjective());
+        String premise = state.getCampaign().getPremise();
+        out.put("premise", premise == null ? java.util.List.of() : java.util.List.of(premise.split("\n")));
+        java.util.List<java.util.Map<String, Object>> party = new java.util.ArrayList<>();
+        for (PlayerCharacter character : state.getParty()) {
+            java.util.Map<String, Object> view = new java.util.LinkedHashMap<>();
+            view.put("name", character.getName());
+            view.put("race", character.getRace());
+            view.put("cls", character.getCls());
+            view.put("color", character.getColor());
+            view.put("portrait", character.getPortrait());
+            party.add(view);
+        }
+        out.put("party", party);
+        out.put("spotlight", campaigns.spotlightName(campaignId));
+        return out;
+    }
+
     private ActionResult useItem(Long campaignId, Long userId, PlayerAction action) {
         GameEntity actor = resolveActor(campaignId, userId, action);
         if (actor == null) {
@@ -370,6 +405,9 @@ public class GameService {
             if (active.currentParticipant() != null) {
                 context.setCurrentTurn(active.currentParticipant().getName());
             }
+        }
+        if (!context.isCombatActive()) {
+            context.setSpotlight(campaigns.spotlightName(campaignId));
         }
         for (GameEntity entity : state.getEntities()) {
             Map<String, Object> view = new LinkedHashMap<>();

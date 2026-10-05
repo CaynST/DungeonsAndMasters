@@ -47,4 +47,7 @@ public class MapEntity {
 
     @Column(name = "decor_json", nullable = false)
     private String decorJson = "[]";
+
+    @Column(nullable = false)
+    private String theme = "crypt";
 }

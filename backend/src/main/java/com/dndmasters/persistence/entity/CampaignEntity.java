@@ -44,6 +44,13 @@ public class CampaignEntity {
     @Column(nullable = false)
     private String edition = "DND_5E_2014";
 
+    private String premise;
+    private String villain;
+    private String objective;
+
+    @Column(name = "spotlight_index", nullable = false)
+    private int spotlightIndex;
+
     @Column(name = "active_scene_id")
     private Long activeSceneId;
 
