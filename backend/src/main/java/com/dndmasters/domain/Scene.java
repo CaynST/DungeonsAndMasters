@@ -8,5 +8,6 @@ public record Scene(
         String description,
         String kind,
         String imagePrompt,
-        String imageUrl) {
+        String imageUrl,
+        Long mapId) {
 }

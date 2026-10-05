@@ -1,0 +1,1 @@
+ALTER TABLE scenes ADD COLUMN map_id INTEGER;

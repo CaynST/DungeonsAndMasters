@@ -40,4 +40,7 @@ public class SceneEntity {
 
     @Column(name = "image_url")
     private String imageUrl;
+
+    @Column(name = "map_id")
+    private Long mapId;
 }

@@ -1,0 +1,29 @@
+package com.dndmasters.persistence.mapper;
+
+import com.dndmasters.domain.Campaign;
+import com.dndmasters.domain.CampaignStatus;
+import com.dndmasters.domain.GamePhase;
+import com.dndmasters.persistence.entity.CampaignEntity;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CampaignMapper {
+
+    public Campaign toDomain(CampaignEntity e) {
+        Campaign c = new Campaign();
+        c.setId(e.getId());
+        c.setName(e.getName());
+        c.setSetting(e.getSetting());
+        c.setDescription(e.getDescription());
+        c.setDmName(e.getDmName());
+        c.setDmAvatar(e.getDmAvatar());
+        c.setImage(e.getImage());
+        c.setStatus(CampaignStatus.valueOf(e.getStatus()));
+        c.setPhase(GamePhase.valueOf(e.getPhase()));
+        c.setActiveSceneId(e.getActiveSceneId());
+        c.setCreatedBy(e.getCreatedBy());
+        c.setCreatedAt(e.getCreatedAt());
+        c.setUpdatedAt(e.getUpdatedAt());
+        return c;
+    }
+}
