@@ -36,6 +36,26 @@ public final class RuleSet2014 {
                 Map.of("strength", 2, "constitution", 1), true, "Fuertes y tenaces; +2 FUE, +1 CON."));
         register(map, new Species("tiefling", "Tiefling", 30, "Mediano",
                 Map.of("charisma", 2, "intelligence", 1), true, "Linaje infernal; +2 CAR, +1 INT, visión en la oscuridad."));
+        register(map, new Species("dragonborn", "Dracónido", 30, "Mediano",
+                Map.of("strength", 2, "charisma", 1), false, "Sangre de dragón; +2 FUE, +1 CAR y aliento elemental."));
+        register(map, new Species("gnome", "Gnomo", 25, "Pequeño",
+                Map.of("intelligence", 2), true, "Ingenioso y curioso; +2 INT, visión en la oscuridad."));
+        register(map, new Species("forest-gnome", "Gnomo del bosque", 25, "Pequeño",
+                Map.of("intelligence", 2, "dexterity", 1), true, "Gnomo silvestre; +2 INT, +1 DES."));
+        register(map, new Species("rock-gnome", "Gnomo de las rocas", 25, "Pequeño",
+                Map.of("intelligence", 2, "constitution", 1), true, "Gnomo artificiero; +2 INT, +1 CON."));
+        register(map, new Species("wood-elf", "Elfo del bosque", 35, "Mediano",
+                Map.of("dexterity", 2, "wisdom", 1), true, "Elfo salvaje y veloz; +2 DES, +1 SAB, velocidad 35."));
+        register(map, new Species("drow", "Elfo oscuro (Drow)", 30, "Mediano",
+                Map.of("dexterity", 2, "charisma", 1), true, "Elfo del inframundo; +2 DES, +1 CAR, visión superior."));
+        register(map, new Species("hill-dwarf", "Enano de las colinas", 25, "Mediano",
+                Map.of("constitution", 2, "wisdom", 1), true, "Enano resistente; +2 CON, +1 SAB, +1 HP por nivel."));
+        register(map, new Species("mountain-dwarf", "Enano de las montañas", 25, "Mediano",
+                Map.of("constitution", 2, "strength", 2), true, "Enano guerrero; +2 CON, +2 FUE, armadura enana."));
+        register(map, new Species("lightfoot-halfling", "Mediano piesligeros", 25, "Pequeño",
+                Map.of("dexterity", 2, "charisma", 1), false, "Mediano sigiloso; +2 DES, +1 CAR."));
+        register(map, new Species("stout-halfling", "Mediano fornido", 25, "Pequeño",
+                Map.of("dexterity", 2, "constitution", 1), false, "Mediano robusto; +2 DES, +1 CON, resistencia veneno."));
         return map;
     }
 

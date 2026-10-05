@@ -57,6 +57,15 @@ public class CharacterEntity {
     @Column(name = "creation_data_json", nullable = false)
     private String creationDataJson = "{}";
 
+    @Column(nullable = false)
+    private int gold;
+
+    @Column(nullable = false)
+    private int silver;
+
+    @Column(nullable = false)
+    private int copper;
+
     private boolean predefined;
 
     @Column(name = "created_at", nullable = false)

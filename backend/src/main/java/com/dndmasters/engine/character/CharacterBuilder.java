@@ -99,6 +99,7 @@ public class CharacterBuilder {
         character.setIcon(iconFor(characterClass.id()));
         character.setAttacks(List.of(attack));
         character.setInventory(startingInventory(characterClass, armor, weapon));
+        character.setGold(startingGold(characterClass.id()));
         character.setPredefined(false);
 
         // Store creation metadata for later (level-up, re-render, verification).
@@ -202,6 +203,18 @@ public class CharacterBuilder {
         items.add(InventoryItem.of("Poción de Curación", "Recupera 2d4+2 HP."));
         items.add(InventoryItem.of("Mochila de aventurero", "Raciones, antorcha y yesca."));
         return items;
+    }
+
+    private int startingGold(String classId) {
+        return switch (classId) {
+            case "fighter", "paladin" -> 120;
+            case "rogue", "cleric" -> 110;
+            case "bard", "ranger", "warlock" -> 100;
+            case "wizard", "druid", "sorcerer" -> 90;
+            case "barbarian" -> 80;
+            case "monk" -> 20;
+            default -> 100;
+        };
     }
 
     private int hitDieValue(String hitDie) {

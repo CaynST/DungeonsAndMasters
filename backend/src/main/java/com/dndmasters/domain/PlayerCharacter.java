@@ -33,6 +33,14 @@ public class PlayerCharacter {
     private List<InventoryItem> inventory = new ArrayList<>();
     private boolean predefined;
     private Map<String, Object> creationData = new HashMap<>();
+    private int gold;
+    private int silver;
+    private int copper;
+
+    /** Total wealth expressed in gold pieces (1 gp = 10 sp = 100 cp). */
+    public double totalGold() {
+        return gold + silver / 10.0 + copper / 100.0;
+    }
 
     public boolean alive() {
         return hp > 0;

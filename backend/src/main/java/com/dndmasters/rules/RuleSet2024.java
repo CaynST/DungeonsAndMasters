@@ -40,6 +40,10 @@ public final class RuleSet2024 {
                 "Impetuosos y resistentes, con visión en la oscuridad."));
         register(map, new Species("tiefling", "Tiefling", 30, "Mediano", Map.of(), true,
                 "Linaje infernal que otorga magia innata y visión en la oscuridad."));
+        register(map, new Species("dragonborn", "Dracónido", 30, "Mediano", Map.of(), false,
+                "Sangre de dragón: aliento elemental y resistencia al daño."));
+        register(map, new Species("gnome", "Gnomo", 30, "Pequeño", Map.of(), true,
+                "Curioso e ingenioso, con visión en la oscuridad."));
         return map;
     }
 
