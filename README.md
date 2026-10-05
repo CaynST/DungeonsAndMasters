@@ -71,6 +71,10 @@ Home → Lobby → elegir personaje → comenzar aventura
      → daño → enemigos → jefe → victoria → final del one-shot
 ```
 
+El Dungeon Master usa un guion offline (`MockAIProvider`) mientras `AI_PROVIDER=mock`,
+de modo que la partida completa es jugable sin API. Para conectar un modelo real:
+`AI_PROVIDER=openai-compatible AI_API_KEY=... AI_MODEL=...`.
+
 ## Tests
 
 ```bash
@@ -86,3 +90,4 @@ cd frontend && pnpm test
 - [`docs/database.md`](docs/database.md)
 - [`docs/decisions.md`](docs/decisions.md)
 - [`docs/roadmap.md`](docs/roadmap.md)
+- [`docs/walkthrough.md`](docs/walkthrough.md)
