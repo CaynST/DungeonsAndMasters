@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BookOpen, Dices, ScrollText, Sparkles } from "lucide-react";
 import type { GameEvent } from "@/types/game";
@@ -11,7 +11,10 @@ interface Props {
   narration: string | null;
   events: GameEvent[];
   providerId?: string;
+  spotlightName?: string;
+  busy?: boolean;
   onRollCheck: (skill: string, dc: number) => void;
+  onSay: (text: string) => void;
 }
 
 const EVENT_TONE: Record<string, string> = {
@@ -29,10 +32,11 @@ const EVENT_TONE: Record<string, string> = {
   ADVENTURE_ENDED: "#C9A227",
 };
 
-export function DmPanel({ dmName, narration, events, providerId, onRollCheck }: Props) {
+export function DmPanel({ dmName, narration, events, providerId, spotlightName, busy, onRollCheck, onSay }: Props) {
   const dmThinking = useGameStore((state) => state.dmThinking);
   const pendingCheck = useGameStore((state) => state.pendingCheck);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [text, setText] = useState("");
 
   useEffect(() => {
     scrollRef.current?.scrollTo?.({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -129,6 +133,48 @@ export function DmPanel({ dmName, narration, events, providerId, onRollCheck }: 
           </ul>
         </div>
       </div>
+
+      <form
+        className="border-t border-gold/15 p-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const value = text.trim();
+          if (!value || busy) return;
+          onSay(value);
+          setText("");
+        }}
+      >
+        <p className="mb-1.5 text-[11px] text-muted">
+          {spotlightName ? (
+            <>
+              Dile al Dungeon Master qué hace <span className="text-parchment">{spotlightName}</span>:
+            </>
+          ) : (
+            "Dile al Dungeon Master qué hacéis:"
+          )}
+        </p>
+        <div className="flex items-end gap-2">
+          <textarea
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                const value = text.trim();
+                if (!value || busy) return;
+                onSay(value);
+                setText("");
+              }
+            }}
+            rows={2}
+            placeholder="Ej: registro el altar en busca de trampas, o le pregunto al espectro por el relicario..."
+            className="min-h-[2.75rem] flex-1 resize-none rounded-md border border-parchment/15 bg-black/40 px-3 py-2 text-sm text-ink outline-none focus:border-gold/50"
+          />
+          <Button type="submit" variant="primary" size="sm" disabled={busy || !text.trim()}>
+            {busy ? "..." : "Enviar"}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }

@@ -25,6 +25,7 @@ describe("DmPanel", () => {
         events={events}
         providerId="mock"
         onRollCheck={() => {}}
+        onSay={() => {}}
       />,
     );
     expect(screen.getByText("El Archivista")).toBeInTheDocument();
@@ -40,6 +41,7 @@ describe("DmPanel", () => {
         narration="..."
         events={[]}
         onRollCheck={() => {}}
+        onSay={() => {}}
       />,
     );
     // No pending check in the store by default.

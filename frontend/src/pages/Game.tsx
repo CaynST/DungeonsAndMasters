@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Crown, Flag } from "lucide-react";
 import { api } from "@/lib/api";
 import { connectCampaignSocket } from "@/lib/ws";
+import { findPath, reachableCells } from "@/lib/pathfinding";
 import { CinematicIntro } from "@/components/intro/CinematicIntro";
 import { ShopModal } from "@/components/shop/ShopModal";
 import { useGameStore } from "@/store/useGameStore";
@@ -49,6 +50,8 @@ export function Game() {
   const [narration, setNarration] = useState<string | null>(null);
   const [started, setStarted] = useState(false);
   const [showShop, setShowShop] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [pendingAttack, setPendingAttack] = useState<{ targetId: number; targetName: string } | null>(null);
   const [showIntro, setShowIntro] = useState(() => {
     const key = `intro-played-${campaignId}`;
     return !sessionStorage.getItem(key);
@@ -141,6 +144,9 @@ export function Game() {
     onMutate: () => setDmThinking(true),
     onSuccess: (result) => {
       setDmThinking(false);
+      if (!result.ok) {
+        setToast(result.message ?? "No puedes hacer eso ahora mismo");
+      }
       if (result.narration) setNarration(result.narration);
       if (result.checkRequest) setPendingCheck(result.checkRequest);
 
@@ -168,35 +174,64 @@ export function Game() {
     [act, myEntity?.id, setPendingCheck],
   );
 
+  const occupiedExcept = useCallback(
+    (actorId: number) => {
+      const set = new Set<string>();
+      gameState?.entities.forEach((e) => {
+        if (e.id !== actorId && e.alive && (e.kind === "PLAYER" || e.kind === "ENEMY")) {
+          set.add(`${e.x},${e.y}`);
+        }
+      });
+      return set;
+    },
+    [gameState],
+  );
+
   const onCellClick = useCallback(
     (cell: Cell) => {
-      if (!canAct || !myEntity || mode !== "move") return;
-      act.mutate({ type: "MOVE", actorEntityId: myEntity.id, path: [cell] });
+      if (!canAct || !myEntity || !gameState?.map) return;
+      if (mode !== "move") {
+        setToast("Estás en modo atacar. Cambia a Mover para desplazarte.");
+        return;
+      }
+      const path = findPath(gameState.map, { x: myEntity.x, y: myEntity.y }, cell, occupiedExcept(myEntity.id));
+      if (!path) {
+        setToast("No puedes llegar ahí: el camino está bloqueado.");
+        return;
+      }
+      if (path.length > myEntity.speed) {
+        setToast(`No puedes moverte tan lejos: necesitas ${path.length} casillas y solo tienes ${myEntity.speed}.`);
+        return;
+      }
+      act.mutate({ type: "MOVE", actorEntityId: myEntity.id, path });
     },
-    [act, canAct, mode, myEntity],
+    [act, canAct, gameState, mode, myEntity, occupiedExcept],
   );
 
   const onEntityClick = useCallback(
     (entity: { id: number; kind: string }) => {
       selectEntity(entity.id);
-      if (mode === "attack" && entity.kind === "ENEMY") {
-        selectEntity(entity.id);
-      }
     },
-    [mode, selectEntity],
+    [selectEntity],
   );
 
   const confirmAttack = useCallback(() => {
     if (!myEntity || !selectedEntity || !canAct) return;
-    act.mutate({
-      type: "ATTACK",
-      actorEntityId: myEntity.id,
-      targetEntityId: selectedEntity.id,
-      attack: selectedAttack?.name,
-    });
-  }, [act, canAct, myEntity, selectedAttack?.name, selectedEntity]);
+    setPendingAttack({ targetId: selectedEntity.id, targetName: selectedEntity.name });
+  }, [canAct, myEntity, selectedEntity]);
 
-  const reachablePaths = useMemo(() => new Map<string, Cell[]>(), []);
+  const reachablePaths = useMemo(() => {
+    if (!gameState?.map || !myEntity || !canAct || mode !== "move") {
+      return new Map<string, Cell[]>();
+    }
+    return reachableCells(gameState.map, { x: myEntity.x, y: myEntity.y }, occupiedExcept(myEntity.id), myEntity.speed);
+  }, [gameState, myEntity, canAct, mode, occupiedExcept]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 4200);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   if (state.isLoading) {
     return (
@@ -330,7 +365,10 @@ export function Game() {
             narration={narration}
             events={gameState.recentEvents}
             providerId={provider.data?.aiProvider}
+            spotlightName={spotlightCharacter?.name}
+            busy={act.isPending}
             onRollCheck={rollCheck}
+            onSay={(text) => act.mutate({ type: "DIALOGUE", text, actorEntityId: myEntity?.id })}
           />
         </div>
       </div>
@@ -363,6 +401,81 @@ export function Game() {
 
       {/* Shop */}
       {showShop && <ShopModal campaignId={campaignId} onClose={() => setShowShop(false)} />}
+
+      {/* Attack confirmation */}
+      <AnimatePresence>
+        {pendingAttack && myEntity && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4"
+            onClick={() => setPendingAttack(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.94, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              className="panel-raised w-[min(92vw,420px)] p-5"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <h3 className="title-display text-lg font-semibold text-ink">Confirmar ataque</h3>
+              <p className="mt-3 text-sm text-muted">
+                <span className="text-ink">{myEntity.name}</span> ataca a{" "}
+                <span className="text-[#e06a7a]">{pendingAttack.targetName}</span>
+              </p>
+              <div className="mt-3 space-y-1.5 rounded-md border border-[#2b2118] bg-[#100d0a] p-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted">Arma</span>
+                  <span className="text-ink">{selectedAttack?.name ?? "Golpe"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted">Bonificador</span>
+                  <span className="text-ink">
+                    {selectedAttack ? (selectedAttack.attackBonus >= 0 ? "+" : "") + selectedAttack.attackBonus : "+2"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted">Daño</span>
+                  <span className="text-ink">{selectedAttack?.damageExpression ?? "1d4"}</span>
+                </div>
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setPendingAttack(null)}>
+                  Cancelar
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={() => {
+                    act.mutate({
+                      type: "ATTACK",
+                      actorEntityId: myEntity.id,
+                      targetEntityId: pendingAttack.targetId,
+                      attack: selectedAttack?.name,
+                    });
+                    setPendingAttack(null);
+                  }}
+                >
+                  Atacar
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="absolute left-1/2 top-16 z-50 -translate-x-1/2 rounded-lg border border-[#d0566a]/50 bg-[#2a1218] px-4 py-2 text-sm text-[#e8b7c0] shadow-lg"
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Completion overlay */}
       <AnimatePresence>
