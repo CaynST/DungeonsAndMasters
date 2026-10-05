@@ -54,13 +54,16 @@ Todas opcionales. Sin ellas la app funciona usando los proveedores Mock.
 
 ```dotenv
 # Backend
-AI_PROVIDER=mock            # mock | openai-compatible
+AI_PROVIDER=mock            # mock | opencode-go | opencode-zen | openai-compatible
 AI_API_KEY=
-AI_MODEL=gpt-4o-mini
-AI_BASE_URL=https://api.openai.com/v1
+AI_MODEL=space-bunny-free
+AI_FALLBACK_MODELS=deepseek-v4-flash,mimo-v2.5,glm-5.3-flash
+AI_BASE_URL=                # vacío = URL por defecto del proveedor
 IMAGE_PROVIDER=placeholder  # placeholder | (futuro proveedor real)
 JWT_SECRET=change-me-in-production
 ```
+
+Ver `.env.example` para una plantilla completa.
 
 ## Flujo de la demo
 

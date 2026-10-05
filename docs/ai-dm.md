@@ -14,10 +14,35 @@ public interface AIProvider {
 
 Selección por entorno (`AiConfig`):
 
-| `AI_PROVIDER` | Implementación |
-|---------------|----------------|
-| `mock` (default) | `MockAIProvider` — guion consciente del estado, sin red |
-| `openai-compatible` | `OpenAiCompatibleProvider` — usa `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL` |
+| `AI_PROVIDER` | Implementación | Base URL |
+|---------------|----------------|----------|
+| `mock` (default) | `MockAIProvider` — guion consciente del estado, sin red | — |
+| `opencode-go` | `OpenAiCompatibleProvider` — OpenCode Go | `https://opencode.ai/zen/go/v1` |
+| `opencode-zen` | `OpenAiCompatibleProvider` — OpenCode Zen | `https://opencode.ai/zen/v1` |
+| `openai-compatible` | `OpenAiCompatibleProvider` — endpoint propio | `AI_BASE_URL` |
+
+Si no hay `AI_API_KEY`, siempre se usa el Mock (la partida nunca se rompe por falta de API).
+
+### OpenCode Go
+
+```dotenv
+AI_PROVIDER=opencode-go
+AI_API_KEY=<tu clave de https://opencode.ai/auth>
+AI_MODEL=space-bunny-free
+AI_FALLBACK_MODELS=deepseek-v4-flash,mimo-v2.5,glm-5.3-flash
+```
+
+- Modelo por defecto: **`space-bunny-free`** (gratuito, ilimitado de momento).
+- **Cadena de fallback**: si un modelo falla (p. ej. 429), se prueba el siguiente en orden.
+- Se envían los headers recomendados: `User-Agent` propio y `x-opencode-session`
+  (este último es **obligatorio** para OpenCode Go).
+
+### Robustez del parseo
+
+Los modelos reales a veces devuelven JSON envuelto en ``` o truncado por `max_tokens`
+(`finish_reason=length`). `DungeonMasterService.parse` recupera la narración incluso de un
+JSON incompleto y, si no hay JSON, trata todo el texto como narración. Ante cualquier error
+del proveedor se cae al `MockAIProvider`.
 
 ## Contexto de entrada (`DmContext`)
 
@@ -65,4 +90,10 @@ Una acción inválida se descarta con motivo; el engine nunca confía en el LLM.
 
 `MockAIProvider` implementa el guion del one-shot como una máquina de estados por
 escena/fase, de modo que la demo completa es reproducible **sin API**. Esto es
-deliberado: la experiencia no debe depender de un servicio externo.
+deliberado: la experiencia no debe depender de un servicio externo. Con una clave de
+OpenCode Go, el DM real narra libremente dentro del mismo contrato estructurado.
+
+## Tests
+
+`OpenAiCompatibleProviderTest` (cadena de fallback y errores), `AiConfigTest` (selección de
+proveedor) y `DmResponseParsingTest` (JSON simple, con cercas, truncado y fallo del proveedor).
