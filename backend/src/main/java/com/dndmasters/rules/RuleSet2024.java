@@ -18,7 +18,24 @@ public final class RuleSet2024 {
     }
 
     public static RuleSet build() {
-        return new RuleSet(Edition.DND_5E_2024, species(), classes(), backgrounds());
+        return new RuleSet(Edition.DND_5E_2024, species(), classes(), backgrounds(), subclasses());
+    }
+
+    private static Map<String, List<String>> subclasses() {
+        Map<String, List<String>> map = new LinkedHashMap<>();
+        map.put("fighter", List.of("Campeón", "Maestro de batalla", "Caballero psi"));
+        map.put("wizard", List.of("Evocador", "Abjurador", "Adivino"));
+        map.put("rogue", List.of("Ladrón", "Asesino", "Tramposo arcano"));
+        map.put("cleric", List.of("Dominio de la Vida", "Dominio de la Luz", "Dominio de la Guerra"));
+        map.put("barbarian", List.of("Sendero del Berserker", "Sendero del Árbol del Mundo"));
+        map.put("bard", List.of("Colegio del Saber", "Colegio del Valor", "Colegio de la Danza"));
+        map.put("druid", List.of("Círculo de la Tierra", "Círculo de la Luna", "Círculo del Mar"));
+        map.put("monk", List.of("Guerrero de la Mano Abierta", "Guerrero de la Sombra"));
+        map.put("paladin", List.of("Juramento de Devoción", "Juramento de los Ancestros", "Juramento de Gloria"));
+        map.put("ranger", List.of("Cazador", "Señor de las bestias", "Errante feérico"));
+        map.put("sorcerer", List.of("Hechicería dracónica", "Hechicería salvaje"));
+        map.put("warlock", List.of("Patrón Infernal", "Patrón Archifae", "Patrón Celestial"));
+        return map;
     }
 
     private static Map<String, Species> species() {

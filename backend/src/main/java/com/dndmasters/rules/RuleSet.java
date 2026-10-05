@@ -1,5 +1,6 @@
 package com.dndmasters.rules;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -10,7 +11,12 @@ public record RuleSet(
         Edition edition,
         Map<String, Species> species,
         Map<String, CharacterClass> classes,
-        Map<String, Background> backgrounds) {
+        Map<String, Background> backgrounds,
+        Map<String, List<String>> subclasses) {
+
+    public List<String> subclassesOf(String classId) {
+        return subclasses.getOrDefault(normalize(classId), List.of());
+    }
 
     public Species speciesOrThrow(String id) {
         Species value = species.get(normalize(id));

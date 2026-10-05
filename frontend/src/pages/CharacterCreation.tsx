@@ -48,6 +48,7 @@ export function CharacterCreation() {
   const [background, setBackground] = useState<BackgroundView | null>(null);
   const [scores, setScores] = useState<AbilityScores>(BASE);
   const [skills, setSkills] = useState<string[]>([]);
+  const [subclass, setSubclass] = useState("");
 
   const ruleset = useQuery({
     queryKey: ["ruleset", editionId],
@@ -97,6 +98,7 @@ export function CharacterCreation() {
       edition: editionId,
       speciesId: species.id,
       classId: klass.id,
+      subclass: subclass || undefined,
       backgroundId: background.id,
       scores,
       skills,
@@ -172,6 +174,8 @@ export function CharacterCreation() {
             background={background}
             scores={scores}
             skills={skills}
+            subclass={subclass}
+            setSubclass={setSubclass}
             edition={ruleset.data}
           />
         )}
@@ -438,6 +442,8 @@ function ReviewStep({
   background,
   scores,
   skills,
+  subclass,
+  setSubclass,
   edition,
 }: {
   name: string;
@@ -447,6 +453,8 @@ function ReviewStep({
   background: BackgroundView;
   scores: AbilityScores;
   skills: string[];
+  subclass: string;
+  setSubclass: (value: string) => void;
   edition: RulesetView;
 }) {
   // Preview of final scores with bonuses applied (mirrors backend logic).
@@ -462,6 +470,26 @@ function ReviewStep({
           className="h-10 w-full rounded-lg border border-parchment/15 bg-black/35 px-3 text-ink outline-none focus:border-gold/50"
         />
       </label>
+
+      {klass.subclasses.length > 0 && (
+        <label className="mb-5 block max-w-sm">
+          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted">
+            Subclase de {klass.name}
+          </span>
+          <select
+            value={subclass}
+            onChange={(event) => setSubclass(event.target.value)}
+            className="h-10 w-full rounded-lg border border-parchment/15 bg-black/35 px-3 text-ink outline-none focus:border-gold/50"
+          >
+            <option value="">Elige una subclase...</option>
+            {klass.subclasses.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="space-y-3">

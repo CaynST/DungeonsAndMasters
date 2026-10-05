@@ -101,6 +101,36 @@ class ShopApiTest {
     }
 
     @Test
+    void equippingArmorChangesAc() throws Exception {
+        String token = token();
+        long characterId = createCharacter(token);
+        MvcResult campaign = mockMvc.perform(post("/api/campaigns")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Armería\"}"))
+                .andReturn();
+        long campaignId = objectMapper.readTree(campaign.getResponse().getContentAsString()).get("id").asLong();
+        mockMvc.perform(post("/api/campaigns/" + campaignId + "/join")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("characterId", characterId))))
+                .andExpect(status().isOk());
+
+        // Buy chain mail (75 gp) then equip it → flat AC 16.
+        mockMvc.perform(post("/api/campaigns/" + campaignId + "/shop/buy")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"itemId\":\"chain\",\"quantity\":1}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/campaigns/" + campaignId + "/shop/equip")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"itemName\":\"Cota de mallas\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ac").value(16));
+    }
+
+    @Test
     void rejectsPurchaseWithoutEnoughGold() throws Exception {
         String token = token();
         long characterId = createCharacter(token);

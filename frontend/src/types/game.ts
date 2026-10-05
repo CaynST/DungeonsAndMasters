@@ -40,6 +40,10 @@ export interface PlayerCharacter {
   attacks: Attack[];
   inventory: InventoryItem[];
   predefined: boolean;
+  creationData?: Record<string, unknown>;
+  gold?: number;
+  silver?: number;
+  copper?: number;
 }
 
 export type EntityKind = "PLAYER" | "ENEMY" | "NPC" | "ITEM";
@@ -257,6 +261,7 @@ export interface ClassView {
   weapons: string[];
   primaryAbility: string;
   description: string;
+  subclasses: string[];
 }
 
 export interface BackgroundView {
@@ -289,6 +294,7 @@ export interface CreateCharacterPayload {
   edition: string;
   speciesId: string;
   classId: string;
+  subclass?: string;
   backgroundId: string;
   scores: AbilityScores;
   skills: string[];

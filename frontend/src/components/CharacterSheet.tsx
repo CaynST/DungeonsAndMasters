@@ -28,6 +28,7 @@ export function CharacterSheet({ character, compact = false }: { character: Play
           <h3 className="title-display truncate text-lg font-semibold text-parchment">{character.name}</h3>
           <p className="text-[11px] uppercase tracking-wider text-muted">
             {character.race} · {character.cls}
+            {typeof character.creationData?.subclass === "string" && ` · ${character.creationData.subclass}`}
           </p>
         </div>
         <Badge tone="arcane" className="ml-auto">

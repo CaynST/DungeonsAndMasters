@@ -29,6 +29,14 @@ export function ShopModal({ campaignId, onClose }: { campaignId: number; onClose
     mutationFn: (itemName: string) => api.sell(campaignId, itemName, 1),
     onSuccess: refresh,
   });
+  const equip = useMutation({
+    mutationFn: (itemName: string) => api.equip(campaignId, itemName),
+    onSuccess: refresh,
+  });
+
+  const equippable = new Set(
+    (shop.data?.items ?? []).filter((i) => i.kind === "WEAPON" || i.kind === "ARMOR").map((i) => i.name),
+  );
 
   const grouped = (shop.data?.items ?? []).reduce<Record<string, ShopItem[]>>((acc, item) => {
     (acc[item.kind] ??= []).push(item);
@@ -117,9 +125,16 @@ export function ShopModal({ campaignId, onClose }: { campaignId: number; onClose
                     {item.name}
                     {item.quantity > 1 && <span className="ml-1 text-xs text-muted">x{item.quantity}</span>}
                   </span>
-                  <Button size="sm" variant="ghost" disabled={sell.isPending} onClick={() => sell.mutate(item.name)}>
-                    Vender
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    {equippable.has(item.name) && (
+                      <Button size="sm" variant="secondary" disabled={equip.isPending} onClick={() => equip.mutate(item.name)}>
+                        Equipar
+                      </Button>
+                    )}
+                    <Button size="sm" variant="ghost" disabled={sell.isPending} onClick={() => sell.mutate(item.name)}>
+                      Vender
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

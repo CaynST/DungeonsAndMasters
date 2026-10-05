@@ -41,6 +41,7 @@ public final class CharacterDtos {
             String edition,
             String speciesId,
             String classId,
+            String subclass,
             String backgroundId,
             AbilityScores scores,
             List<String> skills,
@@ -60,7 +61,8 @@ public final class CharacterDtos {
 
     public record ClassView(String id, String name, String hitDie, int skillChoiceCount,
                             List<String> skillChoices, List<String> savingThrows, String startingArmor,
-                            List<String> weapons, String primaryAbility, String description) {
+                            List<String> weapons, String primaryAbility, String description,
+                            List<String> subclasses) {
     }
 
     public record BackgroundView(String id, String name, List<String> skills,
@@ -74,7 +76,8 @@ public final class CharacterDtos {
                 .toList();
         List<ClassView> classes = set.classes().values().stream()
                 .map(c -> new ClassView(c.id(), c.name(), c.hitDie(), c.skillChoiceCount(), c.skillChoices(),
-                        c.savingThrows(), c.startingArmor(), c.weapons(), c.primaryAbility(), c.description()))
+                        c.savingThrows(), c.startingArmor(), c.weapons(), c.primaryAbility(), c.description(),
+                        set.subclassesOf(c.id())))
                 .toList();
         List<BackgroundView> backgrounds = set.backgrounds().values().stream()
                 .map(b -> new BackgroundView(b.id(), b.name(), b.skills(), b.abilityBonuses(), b.description()))

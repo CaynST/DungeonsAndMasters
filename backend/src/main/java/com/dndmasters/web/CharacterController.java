@@ -55,6 +55,6 @@ public class CharacterController {
                 request.skills(),
                 request.armor(),
                 request.weapon());
-        return characterService.create(userId, build);
+        return characterService.create(userId, build, request.subclass());
     }
 }

@@ -127,4 +127,16 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ itemName, quantity }),
     }),
+
+  equip: (id: number, itemName: string) =>
+    request<PlayerCharacter>(`/api/campaigns/${id}/shop/equip`, {
+      method: "POST",
+      body: JSON.stringify({ itemName }),
+    }),
+
+  unequip: (id: number, slot: string) =>
+    request<PlayerCharacter>(`/api/campaigns/${id}/shop/unequip`, {
+      method: "POST",
+      body: JSON.stringify({ slot }),
+    }),
 };
