@@ -32,6 +32,9 @@ public class UserEntity {
 
     private String avatar;
 
+    @Column(nullable = false)
+    private String role = "USER";
+
     @Column(name = "created_at", nullable = false)
     private String createdAt;
 }

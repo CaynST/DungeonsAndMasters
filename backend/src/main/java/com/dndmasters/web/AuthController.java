@@ -49,6 +49,8 @@ public class AuthController {
         user.setDisplayName(request.displayName() == null || request.displayName().isBlank()
                 ? request.username() : request.displayName().trim());
         user.setAvatar("/images/avatars/default.png");
+        // The very first registered user becomes the administrator.
+        user.setRole(users.count() == 0 ? "ADMIN" : "USER");
         user.setCreatedAt(Instant.now().toString());
         users.save(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseFor(user));
@@ -75,6 +77,6 @@ public class AuthController {
     }
 
     private UserView view(UserEntity user) {
-        return new UserView(user.getId(), user.getUsername(), user.getDisplayName(), user.getAvatar());
+        return new UserView(user.getId(), user.getUsername(), user.getDisplayName(), user.getAvatar(), user.getRole());
     }
 }

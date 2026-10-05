@@ -6,6 +6,7 @@ import com.dndmasters.security.SecurityUtils;
 import com.dndmasters.service.GameService;
 import com.dndmasters.service.action.ActionResult;
 import java.util.List;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -66,5 +67,12 @@ public class CampaignController {
     @GetMapping("/{id}/intro")
     public java.util.Map<String, Object> intro(@PathVariable Long id) {
         return game.intro(id);
+    }
+
+    @DeleteMapping("/{id}")
+    public java.util.Map<String, Object> delete(@PathVariable Long id) {
+        Long userId = SecurityUtils.requireUserId();
+        game.deleteCampaign(id, userId);
+        return java.util.Map.of("deleted", id);
     }
 }

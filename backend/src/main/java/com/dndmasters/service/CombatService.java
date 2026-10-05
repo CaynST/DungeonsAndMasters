@@ -79,6 +79,8 @@ public class CombatService {
         }
         CombatState state = combatEngine.start(campaignId, sceneId, combatants);
         persist(state);
+        // Fresh turn economy for everyone at the start of combat.
+        state.getParticipants().forEach(p -> campaigns.resetTurnUsage(p.getEntityId()));
         campaigns.updateCampaignPhase(campaignId, GamePhase.COMBAT, sceneId);
 
         List<Map<String, Object>> order = state.getParticipants().stream()
@@ -147,6 +149,7 @@ public class CombatService {
         CombatParticipant next = turns.advance(state);
         if (next != null) {
             persist(state);
+            campaigns.resetTurnUsage(next.getEntityId());
             events.record(campaignId, state.getSceneId(), "TURN_CHANGED", next.getName(),
                     "Turno de " + next.getName() + " (ronda " + state.getRound() + ").",
                     Map.of("entityId", next.getEntityId(), "round", state.getRound()));
@@ -189,6 +192,10 @@ public class CombatService {
                         "Turno de " + next.getName() + " (ronda " + state.getRound() + ").",
                         Map.of("entityId", next.getEntityId(), "round", state.getRound())));
             }
+        }
+        // Control is back with a human player: give them a fresh turn economy.
+        if (state.isActive() && state.currentParticipant() != null) {
+            campaigns.resetTurnUsage(state.currentParticipant().getEntityId());
         }
         return recorded;
     }

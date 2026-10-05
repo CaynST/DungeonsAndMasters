@@ -17,7 +17,7 @@ public final class AuthDtos {
     public record LoginRequest(@NotBlank String username, @NotBlank String password) {
     }
 
-    public record UserView(Long id, String username, String displayName, String avatar) {
+    public record UserView(Long id, String username, String displayName, String avatar, String role) {
     }
 
     public record AuthResponse(String token, UserView user) {

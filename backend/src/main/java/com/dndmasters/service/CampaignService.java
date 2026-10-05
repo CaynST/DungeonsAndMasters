@@ -494,6 +494,17 @@ public class CampaignService {
         boardEntities.save(entityMapper.toEntity(gameEntity));
     }
 
+    /** Resets the per-turn action economy counters for an entity. */
+    @Transactional
+    public void resetTurnUsage(Long entityId) {
+        entity(entityId).ifPresent(e -> {
+            e.getData().put("actionUsed", false);
+            e.getData().put("movementUsed", 0);
+            e.getData().put("bonusUsed", false);
+            saveEntity(e);
+        });
+    }
+
     @Transactional
     public void saveEntities(List<GameEntity> gameEntities) {
         gameEntities.forEach(this::saveEntity);
@@ -559,6 +570,19 @@ public class CampaignService {
     public Long characterIdForUser(Long campaignId, Long userId) {
         return members.findByCampaignIdAndUserId(campaignId, userId)
                 .map(CampaignMemberEntity::getCharacterId).orElse(null);
+    }
+
+    /** Deletes a campaign the caller created (or an admin). */
+    @Transactional
+    public void delete(Long campaignId, Long userId) {
+        CampaignEntity campaign = requireCampaign(campaignId);
+        boolean admin = users.findById(userId).map(UserEntity::getRole).map("ADMIN"::equals).orElse(false);
+        boolean owner = campaign.getCreatedBy() != null && campaign.getCreatedBy().equals(userId);
+        if (!admin && !owner) {
+            throw new IllegalStateException("No puedes borrar esa campaña");
+        }
+        members.findByCampaignIdOrderByIdAsc(campaignId).forEach(member -> members.deleteById(member.getId()));
+        campaigns.deleteById(campaignId);
     }
 
     /** Opens or closes the merchant for the campaign (driven by DM events). */

@@ -96,6 +96,10 @@ public class GameService {
         return campaigns.join(campaignId, userId, characterId);
     }
 
+    public void deleteCampaign(Long campaignId, Long userId) {
+        campaigns.delete(campaignId, userId);
+    }
+
     public GameState state(Long campaignId) {
         return campaigns.state(campaignId);
     }
@@ -226,7 +230,14 @@ public class GameService {
         if (!result.ok()) {
             return ActionResult.error(result.reason());
         }
+        // Cumulative movement this turn must respect the creature's speed.
+        int used = actor.getData().get("movementUsed") instanceof Number n ? n.intValue() : 0;
+        if (used + result.cost() > actor.getSpeed()) {
+            return ActionResult.error(
+                    "No te queda movimiento: llevas " + used + " de " + actor.getSpeed() + " casillas este turno.");
+        }
         actor.moveTo(action.getPath().get(action.getPath().size() - 1));
+        actor.getData().put("movementUsed", used + result.cost());
         campaigns.saveEntity(actor);
         GameEvent event = events.record(campaignId, activeSceneId(campaignId), "MOVE", actor.getName(),
                 actor.getName() + " se mueve " + result.cost() + " casilla(s).",
@@ -253,9 +264,14 @@ public class GameService {
         if (state != null && state.isActive() && !state.isCombatantTurn(actor.getId())) {
             return ActionResult.error("No es tu turno");
         }
+        if (Boolean.TRUE.equals(actor.getData().get("actionUsed"))) {
+            return ActionResult.error("Ya has usado tu acción este turno. Termina el turno para volver a actuar.");
+        }
         Attack chosen = chooseAttack(actor, action.getAttack());
         CombatState eventState = state != null ? state : transientState(campaignId);
         List<GameEvent> recorded = new ArrayList<>(combat.attack(campaignId, eventState, actor, target, chosen));
+        actor.getData().put("actionUsed", true);
+        campaigns.saveEntity(actor);
 
         Map<String, Object> attackData = recorded.stream()
                 .filter(e -> "ATTACK".equals(e.type()) || "ATTACK_MISS".equals(e.type()))
@@ -326,6 +342,13 @@ public class GameService {
 
     private ActionResult pass(Long campaignId, Long userId, PlayerAction action) {
         campaigns.rotateSpotlight(campaignId);
+        // Fresh turn economy when the narrative spotlight moves on.
+        Long sceneId = activeSceneId(campaignId);
+        if (sceneId != null) {
+            campaigns.entitiesInScene(sceneId).stream()
+                    .filter(entity -> entity.getKind() == EntityKind.PLAYER)
+                    .forEach(entity -> campaigns.resetTurnUsage(entity.getId()));
+        }
         String name = campaigns.spotlightName(campaignId);
         DmResponse dm = respond(campaignId, "SPOTLIGHT", "El grupo cede el turno a " + name + ".", null, null);
         DmApplication application = applyDm(campaignId, userId, dm);
@@ -363,12 +386,16 @@ public class GameService {
         if (actor == null) {
             return ActionResult.error("No se encontró el personaje activo");
         }
+        if (Boolean.TRUE.equals(actor.getData().get("actionUsed"))) {
+            return ActionResult.error("Ya has usado tu acción este turno.");
+        }
         if (action.getItem() != null && action.getItem().toLowerCase().contains("poción")) {
             DiceRollResult heal = dice.roll("2d4+2");
             int maxHp = actor.getMaxHp();
             int newHp = Math.min(maxHp, actor.getHp() + heal.total());
             actor.setHp(newHp);
             actor.setAlive(true);
+            actor.getData().put("actionUsed", true);
             campaigns.saveEntity(actor);
             GameEvent event = events.record(campaignId, activeSceneId(campaignId), "HEAL", actor.getName(),
                     actor.getName() + " bebe una poción y recupera " + heal.total() + " HP.",

@@ -48,7 +48,7 @@ public class SecurityConfig {
                                 org.springframework.http.HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/health",
-                                "/ws/**", "/images/**", "/error").permitAll()
+                                "/ws/**", "/images/**", "/uploads/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/campaigns", "/api/campaigns/**", "/api/characters",
                                 "/api/rulesets", "/api/rulesets/**").permitAll()
                         .anyRequest().authenticated())
