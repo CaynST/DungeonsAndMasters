@@ -163,7 +163,11 @@ function Token({
   targetable: boolean;
   onClick: () => void;
 }) {
-  const floating = useGameStore((state) => state.floatingTexts.filter((f) => f.entityId === entity.id));
+  // IMPORTANT: select the stable array reference and filter outside the selector.
+  // A selector that returns a new array on every call makes useSyncExternalStore
+  // loop forever ("The result of getSnapshot should be cached").
+  const floatingTexts = useGameStore((state) => state.floatingTexts);
+  const floating = floatingTexts.filter((f) => f.entityId === entity.id);
   const dead = !entity.alive;
   const x = entity.x * cell + cell / 2;
   const y = entity.y * cell + cell / 2;
