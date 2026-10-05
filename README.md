@@ -28,24 +28,20 @@ en la base de datos: produce acciones estructuradas que el *rules engine* valida
 
 ## Ejecución
 
-### Backend
+### Scripts (recomendado)
 
 ```bash
-cd backend
-mvn spring-boot:run
-# API en http://localhost:8080  (health: /api/health)
+./scripts/dev.sh            # backend + frontend juntos
+./scripts/start-backend.sh  # solo backend (:8080)
+./scripts/start-frontend.sh # solo frontend (:5173)
+./scripts/stop.sh           # detiene ambos
 ```
 
-La base de datos SQLite se crea en `backend/data/dnd.db` y Flyway aplica el esquema
-al arrancar.
-
-### Frontend
+### Manual
 
 ```bash
-cd frontend
-pnpm install
-pnpm dev
-# App en http://localhost:5173
+cd backend && mvn spring-boot:run     # API en http://localhost:8080
+cd frontend && pnpm install && pnpm dev
 ```
 
 ## Variables de entorno

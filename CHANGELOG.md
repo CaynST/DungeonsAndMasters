@@ -7,6 +7,21 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/) y
 
 ### Added
 
+**Aventuras generadas**
+- Cada campaña crea una **historia nueva**: el DM (IA) genera título, premisa, villano,
+  escenas y enemigos; sin IA, un generador procedural crea igual una distinta.
+- **Bestiario** de ~20 criaturas por tiers y **mapas procedurales** por temática.
+- **Introducción cinematográfica**: premisa "érase una vez", presentación de la compañía y
+  título épico, con opción de saltar.
+- **Foco narrativo por turnos** fuera de combate: el DM se dirige a cada miembro.
+
+**Economía e inventario**
+- Monedas (oro/plata/cobre) con oro inicial por clase y **tienda** para comprar/vender.
+
+**Frontend**
+- Rediseño con tipografía legible (Sora + Inter; Cinzel solo para el título épico).
+- **Dados 3D reales** por tipo (d4–d20) con el resultado visible y **tablero atmosférico**.
+
 **Personajes y ediciones**
 - Creación de personajes con reglas **SRD de nivel 1**: especie/raza, clase, trasfondo,
   compra de puntos (27), habilidades; el backend calcula HP, CA, modificadores, salvaciones
