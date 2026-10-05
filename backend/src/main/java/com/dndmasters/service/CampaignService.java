@@ -561,6 +561,14 @@ public class CampaignService {
                 .map(CampaignMemberEntity::getCharacterId).orElse(null);
     }
 
+    /** Opens or closes the merchant for the campaign (driven by DM events). */
+    @Transactional
+    public void setShopOpen(Long campaignId, boolean open) {
+        CampaignEntity campaign = requireCampaign(campaignId);
+        campaign.setShopOpen(open);
+        campaigns.save(campaign);
+    }
+
     /** Advances the narrative spotlight to the next party member and returns its index. */
     @Transactional
     public int rotateSpotlight(Long campaignId) {

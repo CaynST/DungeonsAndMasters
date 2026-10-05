@@ -154,6 +154,7 @@ export interface Campaign {
   villain?: string;
   objective?: string;
   spotlightIndex?: number;
+  shopOpen?: boolean;
   members: CampaignMember[];
 }
 

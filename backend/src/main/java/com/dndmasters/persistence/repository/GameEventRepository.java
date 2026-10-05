@@ -10,6 +10,8 @@ public interface GameEventRepository extends JpaRepository<GameEventEntity, Long
 
     List<GameEventEntity> findTop40ByCampaignIdOrderBySequenceDesc(Long campaignId);
 
+    List<GameEventEntity> findByCampaignIdOrderBySequenceAsc(Long campaignId);
+
     @Query("select coalesce(max(e.sequence), 0) from GameEventEntity e where e.campaignId = :campaignId")
     long maxSequence(@Param("campaignId") Long campaignId);
 }

@@ -29,6 +29,7 @@ public class Campaign {
     private String villain;
     private String objective;
     private int spotlightIndex;
+    private boolean shopOpen;
     private String createdAt;
     private String updatedAt;
 

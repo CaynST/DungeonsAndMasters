@@ -30,4 +30,8 @@ public record DmAction(
     public static DmAction endAdventure() {
         return new DmAction("END_ADVENTURE", null, null, null, null, null, null, null);
     }
+
+    public static DmAction openShop() {
+        return new DmAction("OPEN_SHOP", null, null, null, null, null, null, null);
+    }
 }

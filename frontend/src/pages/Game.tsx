@@ -8,6 +8,7 @@ import { connectCampaignSocket } from "@/lib/ws";
 import { findPath, reachableCells } from "@/lib/pathfinding";
 import { CinematicIntro } from "@/components/intro/CinematicIntro";
 import { ShopModal } from "@/components/shop/ShopModal";
+import { Chronicle } from "@/components/Chronicle";
 import { useGameStore } from "@/store/useGameStore";
 import { Board } from "@/components/board/Board";
 import { InitiativeTracker } from "@/components/InitiativeTracker";
@@ -52,6 +53,7 @@ export function Game() {
   const [showShop, setShowShop] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [pendingAttack, setPendingAttack] = useState<{ targetId: number; targetName: string } | null>(null);
+  const [tab, setTab] = useState<"dm" | "party" | "chronicle">("dm");
   const [showIntro, setShowIntro] = useState(() => {
     const key = `intro-played-${campaignId}`;
     return !sessionStorage.getItem(key);
@@ -343,33 +345,60 @@ export function Game() {
               </motion.div>
             </AnimatePresence>
           </div>
-
-          {/* Initiative + party */}
-          <div className="grid gap-3 lg:grid-cols-2">
-            {gameState.combat?.active && (
-              <InitiativeTracker combat={gameState.combat} entities={gameState.entities} />
-            )}
-            {myEntity && gameState.party.find((c) => c.id === myEntity.refId) && (
-              <CharacterSheet
-                character={gameState.party.find((c) => c.id === myEntity.refId)!}
-                compact={gameState.combat?.active}
-              />
-            )}
-          </div>
         </div>
 
-        {/* DM panel */}
-        <div className="min-h-0">
-          <DmPanel
-            dmName={gameState.campaign.dmName}
-            narration={narration}
-            events={gameState.recentEvents}
-            providerId={provider.data?.aiProvider}
-            spotlightName={spotlightCharacter?.name}
-            busy={act.isPending}
-            onRollCheck={rollCheck}
-            onSay={(text) => act.mutate({ type: "DIALOGUE", text, actorEntityId: myEntity?.id })}
-          />
+        {/* Right sidebar with tabs */}
+        <div className="flex min-h-0 flex-col gap-2">
+          <div className="flex gap-1 rounded-lg border border-[#2b2118] bg-[#100d0a] p-1">
+            {(
+              [
+                ["dm", "Dungeon Master"],
+                ["party", "Grupo"],
+                ["chronicle", "Crónica"],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                onClick={() => setTab(id)}
+                className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition ${
+                  tab === id ? "bg-[#c9a227]/15 text-[#e0b84a]" : "text-muted hover:text-ink"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {tab === "dm" && (
+              <DmPanel
+                dmName={gameState.campaign.dmName}
+                narration={narration}
+                events={gameState.recentEvents}
+                providerId={provider.data?.aiProvider}
+                spotlightName={spotlightCharacter?.name}
+                busy={act.isPending}
+                onRollCheck={rollCheck}
+                onSay={(text) => act.mutate({ type: "DIALOGUE", text, actorEntityId: myEntity?.id })}
+              />
+            )}
+
+            {tab === "party" && (
+              <div className="h-full space-y-3 overflow-y-auto pr-1">
+                {gameState.combat?.active && (
+                  <InitiativeTracker combat={gameState.combat} entities={gameState.entities} />
+                )}
+                {gameState.party.length === 0 && (
+                  <p className="panel p-4 text-sm text-muted">Aún no hay personajes en la partida.</p>
+                )}
+                {gameState.party.map((character) => (
+                  <CharacterSheet key={character.id} character={character} />
+                ))}
+              </div>
+            )}
+
+            {tab === "chronicle" && <Chronicle campaignId={campaignId} />}
+          </div>
         </div>
       </div>
 
@@ -388,6 +417,7 @@ export function Game() {
           onQuickRoll={(expression) => act.mutate({ type: "DICE", expression })}
           onDiceRequest={() => act.mutate({ type: "DICE", expression: "1d20" })}
           onOpenShop={() => setShowShop(true)}
+          shopOpen={gameState.campaign.shopOpen}
           mode={mode}
           onToggleMode={setMode}
         />

@@ -18,7 +18,7 @@ public class DungeonMasterService {
             sin texto antes ni después, con esta forma exacta:
             {
               "narration": "texto narrativo breve",
-              "actions": [ { "type": "REQUEST_CHECK|START_COMBAT|SPAWN_ENEMY|SHIFT_SCENE|GRANT_REWARD|END_ADVENTURE|NARRATE",
+              "actions": [ { "type": "REQUEST_CHECK|START_COMBAT|SPAWN_ENEMY|SHIFT_SCENE|GRANT_REWARD|END_ADVENTURE|OPEN_SHOP|NARRATE",
                              "skill": "perception", "dc": 12, "sceneOrder": 1, "enemyName": null, "itemName": null } ],
               "sceneChanged": false,
               "imagePrompt": null
@@ -27,6 +27,7 @@ public class DungeonMasterService {
             perception, investigation, stealth, athletics, arcana, insight, persuasion, intimidation.
             Si el contexto incluye "spotlight" (el personaje al que le toca decidir), dirígete a él
             por su nombre y pregúntale qué quiere hacer, sin decidir por el jugador.
+            Usa OPEN_SHOP SOLO cuando aparezca un mercader o el grupo busque comerciar.
             """;
 
     private final AIProvider provider;

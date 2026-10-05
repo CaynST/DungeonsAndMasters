@@ -27,6 +27,7 @@ public class CampaignMapper {
         c.setVillain(e.getVillain());
         c.setObjective(e.getObjective());
         c.setSpotlightIndex(e.getSpotlightIndex());
+        c.setShopOpen(e.isShopOpen());
         c.setCreatedAt(e.getCreatedAt());
         c.setUpdatedAt(e.getUpdatedAt());
         return c;

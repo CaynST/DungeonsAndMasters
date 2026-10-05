@@ -27,7 +27,7 @@ public class MockAIProvider implements AIProvider {
 
         DmResponse response = switch (trigger) {
             case "START" -> intro();
-            case "DIALOGUE" -> sceneOrder == 0 ? dialogue() : narrate(sceneOrder, ctx);
+            case "DIALOGUE" -> dialogue(ctx);
             case "CHECK_RESULT" -> checkResult(sceneOrder, skill, checkSuccess);
             case "COMBAT_VICTORY" -> victory(sceneOrder);
             case "COMBAT_DEFEAT" -> defeat();
@@ -44,7 +44,15 @@ public class MockAIProvider implements AIProvider {
                 List.of(DmAction.requestCheck("perception", 10)));
     }
 
-    private DmResponse dialogue() {
+    private DmResponse dialogue(Map<String, Object> ctx) {
+        String last = str(ctx.get("lastAction")).toLowerCase();
+        if (last.contains("mercader") || last.contains("tienda") || last.contains("comprar")
+                || last.contains("vender") || last.contains("comerciar")) {
+            return DmResponse.of(
+                    "Un mercader de capa raída aparta una cortina y despliega su mercancía sobre un paño. "
+                            + "«Echad un vistazo, pero nada de regatear.»",
+                    List.of(DmAction.openShop()));
+        }
         return DmResponse.of(
                 "El Archivista cierra el tomo con un golpe seco. «El Relicario duerme tras la puerta sellada, pero "
                         + "los goblins han profanado la antesala y el sello se debilita. Buscad la llave de hueso entre "

@@ -33,7 +33,7 @@ public class GameController {
 
     @GetMapping("/events")
     public List<GameEvent> events(@PathVariable Long id) {
-        return events.recent(id);
+        return events.history(id);
     }
 
     @GetMapping("/provider")

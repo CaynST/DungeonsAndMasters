@@ -14,7 +14,8 @@ import org.springframework.stereotype.Component;
 public class DmActionValidator {
 
     private static final Set<String> KNOWN_TYPES = Set.of(
-            "NARRATE", "REQUEST_CHECK", "START_COMBAT", "SPAWN_ENEMY", "SHIFT_SCENE", "GRANT_REWARD", "END_ADVENTURE");
+            "NARRATE", "REQUEST_CHECK", "START_COMBAT", "SPAWN_ENEMY", "SHIFT_SCENE", "GRANT_REWARD",
+            "END_ADVENTURE", "OPEN_SHOP");
 
     private static final int MIN_DC = 1;
     private static final int MAX_DC = 30;

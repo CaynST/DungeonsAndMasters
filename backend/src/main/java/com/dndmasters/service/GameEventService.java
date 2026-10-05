@@ -49,4 +49,10 @@ public class GameEventService {
         // Query returns newest first; expose oldest-first for narration flow.
         return events.stream().map(mapper::toDomain).sorted(java.util.Comparator.comparingLong(GameEvent::sequence)).toList();
     }
+
+    /** The full chronicle of the campaign, oldest first. */
+    @Transactional(readOnly = true)
+    public List<GameEvent> history(Long campaignId) {
+        return repository.findByCampaignIdOrderBySequenceAsc(campaignId).stream().map(mapper::toDomain).toList();
+    }
 }

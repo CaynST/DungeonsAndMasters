@@ -51,6 +51,9 @@ public class CampaignEntity {
     @Column(name = "spotlight_index", nullable = false)
     private int spotlightIndex;
 
+    @Column(name = "shop_open", nullable = false)
+    private boolean shopOpen;
+
     @Column(name = "active_scene_id")
     private Long activeSceneId;
 

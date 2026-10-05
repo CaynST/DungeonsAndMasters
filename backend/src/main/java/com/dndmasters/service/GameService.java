@@ -455,6 +455,7 @@ public class GameService {
                         sceneId = target;
                         sceneOrder = action.sceneOrder();
                         campaigns.updateCampaignPhase(campaignId, phaseForScene(target, campaignId), target);
+                        campaigns.setShopOpen(campaignId, false);
                         campaigns.ensurePartyInScene(campaignId, target);
                         eventsOut.add(events.record(campaignId, target, "SCENE_CHANGED", "Dungeon Master",
                                 "La escena cambia.", Map.of("sceneOrder", sceneOrder)));
@@ -491,6 +492,12 @@ public class GameService {
                             "La aventura ha concluido.", Map.of()));
                     actionsOut.add("END_ADVENTURE");
                     adventureEnded = true;
+                }
+                case "OPEN_SHOP" -> {
+                    campaigns.setShopOpen(campaignId, true);
+                    eventsOut.add(events.record(campaignId, sceneId, "SHOP_OPENED", "Dungeon Master",
+                            "Un mercader despliega su mercancía ante vosotros.", Map.of()));
+                    actionsOut.add("OPEN_SHOP");
                 }
                 default -> {
                     // NARRATE / SPAWN_ENEMY are non-mechanical for this prototype.

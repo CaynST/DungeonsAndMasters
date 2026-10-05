@@ -16,6 +16,7 @@ interface Props {
   onQuickRoll: (expression: string) => void;
   onDiceRequest: () => void;
   onOpenShop: () => void;
+  shopOpen?: boolean;
   mode: "move" | "attack";
   onToggleMode: (mode: "move" | "attack") => void;
 }
@@ -33,6 +34,7 @@ export function ActionBar({
   onQuickRoll,
   onDiceRequest,
   onOpenShop,
+  shopOpen,
   mode,
   onToggleMode,
 }: Props) {
@@ -100,7 +102,7 @@ export function ActionBar({
         <Button variant="ghost" size="sm" onClick={onDialogue}>
           <MessageSquare className="h-4 w-4" /> Hablar
         </Button>
-        <Button variant="ghost" size="sm" onClick={onOpenShop}>
+        <Button variant="ghost" size="sm" onClick={onOpenShop} disabled={!shopOpen}>
           <Store className="h-4 w-4" /> Tienda
         </Button>
         <Button variant="secondary" size="sm" disabled={!isMyTurn} onClick={onEndTurn}>
