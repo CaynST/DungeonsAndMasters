@@ -7,6 +7,20 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/) y
 
 ### Added
 
+**Personajes y ediciones**
+- Creación de personajes con reglas **SRD de nivel 1**: especie/raza, clase, trasfondo,
+  compra de puntos (27), habilidades; el backend calcula HP, CA, modificadores, salvaciones
+  y ataques. Catálogo por edición en `GET /api/rulesets/{edition}`.
+- Dos ediciones por campaña: **D&D 5e (2014)** y **D&D 5e (2024)**. En 2024 las características
+  provienen del trasfondo y "raza" pasa a ser "especie".
+- Asistente de creación de personaje en el frontend (7 pasos) y lobby consciente de la edición.
+
+**IA (OpenCode Go)**
+- Proveedor **`opencode-go`** (`https://opencode.ai/zen/go/v1`) con modelo por defecto
+  **`space-bunny-free`** y cadena de fallback barata (`deepseek-v4-flash`, `mimo-v2.5`,
+  `glm-5.3-flash`). Headers `User-Agent` y `x-opencode-session`.
+- Parseo robusto de la salida del DM: JSON simple, con cercas markdown o **truncado**.
+
 **Backend**
 - Scaffold Spring Boot 3.5 + Java 21 + Maven con SQLite, Hibernate y Flyway.
 - Modelo de dominio puro y migraciones `V1`/`V2` (usuarios, personajes, campañas,
@@ -33,6 +47,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/) y
 - Sincronización en vivo por WebSocket con resync al reconectar.
 
 **Docs / proceso**
-- `README.md`, `AGENTS.md`, `CHANGELOG.md`, `docs/` (arquitectura, motor, IA, base de
-  datos, decisiones, roadmap), spec y plan de implementación.
-- Tests: 45 backend (dados, reglas, movimiento, combate, auth, flujo completo), 10 frontend.
+- `README.md`, `AGENTS.md`, `CHANGELOG.md`, `docs/` (arquitectura, motor, creación de
+  personajes, IA, base de datos, decisiones, roadmap), spec y plan de implementación.
+- Tests: 61 backend (dados, reglas, movimiento, combate, creación de personaje, ediciones,
+  auth, IA y flujo completo), 16 frontend.
+
+### Fixed
+- Bucle infinito de render por un selector de Zustand que devolvía un array nuevo
+  (tablero con textos flotantes).
