@@ -7,6 +7,21 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/) y
 
 ### Added
 
+**Interacción y tablero**
+- Cuadro de texto para **decirle al DM qué haces** (en tu turno); el DM responde a esa acción.
+- **Movimiento con validación**: se calcula el camino, se muestran las casillas alcanzables y se
+  avisa si el destino está bloqueado o queda más lejos que tus pasos.
+- **Confirmación de ataque** (atacante, arma, bonificador y daño) antes de resolver.
+- Pestañas **Dungeon Master / Grupo / Crónica**; el tablero ocupa ahora la mayor parte de la pantalla.
+- **Crónica** completa de la campaña desde el principio (para quien se pierda la intro).
+- **Dados 3D con el número en cada cara**, orientando la cara del resultado hacia la cámara.
+
+**Reglas y economía**
+- **Subclases** por clase en ambas ediciones, elegibles al crear el personaje.
+- **Equipo que afecta a las estadísticas**: equipar armadura recalcula la CA y equipar un arma
+  recalcula el ataque (comprar/vender/equipar desde la tienda).
+- La **tienda solo se abre por evento del DM** (acción `OPEN_SHOP`); se cierra al cambiar de escena.
+
 **Aventuras generadas**
 - Cada campaña crea una **historia nueva**: el DM (IA) genera título, premisa, villano,
   escenas y enemigos; sin IA, un generador procedural crea igual una distinta.
