@@ -1,6 +1,7 @@
 import type {
   AuthResponse,
   Campaign,
+  CampaignIntro,
   CreateCharacterPayload,
   GameEvent,
   GameState,
@@ -109,4 +110,6 @@ export const api = {
   rulesets: () => request<RulesetView[]>("/api/rulesets"),
 
   ruleset: (edition: string) => request<RulesetView>(`/api/rulesets/${edition}`),
+
+  intro: (id: number) => request<CampaignIntro>(`/api/campaigns/${id}/intro`),
 };

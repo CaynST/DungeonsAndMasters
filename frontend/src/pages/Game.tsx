@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Crown, Flag } from "lucide-react";
 import { api } from "@/lib/api";
 import { connectCampaignSocket } from "@/lib/ws";
+import { CinematicIntro } from "@/components/intro/CinematicIntro";
 import { useGameStore } from "@/store/useGameStore";
 import { Board } from "@/components/board/Board";
 import { InitiativeTracker } from "@/components/InitiativeTracker";
@@ -46,6 +47,21 @@ export function Game() {
   const [selectedAttack, setSelectedAttack] = useState<Attack | undefined>();
   const [narration, setNarration] = useState<string | null>(null);
   const [started, setStarted] = useState(false);
+  const [showIntro, setShowIntro] = useState(() => {
+    const key = `intro-played-${campaignId}`;
+    return !sessionStorage.getItem(key);
+  });
+
+  const intro = useQuery({
+    queryKey: ["intro", campaignId],
+    queryFn: () => api.intro(campaignId),
+    enabled: showIntro,
+  });
+
+  const dismissIntro = useCallback(() => {
+    sessionStorage.setItem(`intro-played-${campaignId}`, "1");
+    setShowIntro(false);
+  }, [campaignId]);
 
   const gameState = state.data;
   const provider = useQuery({
@@ -99,6 +115,14 @@ export function Game() {
 
   const isMyTurn = !combat?.active || currentParticipant?.entityId === myEntity?.id;
   const canAct = Boolean(myEntity?.alive) && isMyTurn;
+
+  const spotlightCharacter =
+    !combat?.active && gameState && gameState.party.length > 0
+      ? gameState.party[
+          (((gameState.campaign.spotlightIndex ?? 0) % gameState.party.length) + gameState.party.length) %
+            gameState.party.length
+        ]
+      : null;
 
   const selectedEntity = gameState?.entities.find((entity) => entity.id === selectedEntityId);
   const targetableIds = useMemo(() => {
@@ -231,6 +255,29 @@ export function Game() {
             )}
           </div>
 
+          {/* Narrative spotlight: whose decision it is out of combat */}
+          {spotlightCharacter && (
+            <div className="panel-raised flex items-center justify-between gap-3 px-4 py-2.5">
+              <div className="flex items-center gap-3">
+                <span
+                  className="title-display flex h-8 w-8 items-center justify-center rounded-full border text-sm font-bold"
+                  style={{
+                    borderColor: spotlightCharacter.color ?? "#C9A227",
+                    color: spotlightCharacter.color ?? "#C9A227",
+                  }}
+                >
+                  {spotlightCharacter.name.charAt(0)}
+                </span>
+                <span className="text-sm text-muted">
+                  Es el turno de <span className="font-semibold text-ink">{spotlightCharacter.name}</span>. ¿Qué hace?
+                </span>
+              </div>
+              <Button variant="secondary" size="sm" onClick={() => act.mutate({ type: "PASS" })}>
+                Pasar turno
+              </Button>
+            </div>
+          )}
+
           {/* Board */}
           <div className="panel relative min-h-0 flex-1 overflow-hidden">
             <AnimatePresence mode="wait">
@@ -307,6 +354,9 @@ export function Game() {
 
       {/* Dice overlay */}
       {diceRequest && <DiceTray roll={diceRequest.result} onComplete={clearDice} />}
+
+      {/* Opening cinematic */}
+      {showIntro && intro.data && <CinematicIntro intro={intro.data} onDone={dismissIntro} />}
 
       {/* Completion overlay */}
       <AnimatePresence>

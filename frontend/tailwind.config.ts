@@ -34,8 +34,9 @@ export default {
         },
       },
       fontFamily: {
-        display: ["Cinzel", "Georgia", "serif"],
+        display: ["Sora", "system-ui", "sans-serif"],
         sans: ["Inter", "system-ui", "sans-serif"],
+        epic: ["Cinzel", "Georgia", "serif"],
       },
       boxShadow: {
         panel: "0 12px 40px -12px rgba(0,0,0,0.8)",

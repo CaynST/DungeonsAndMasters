@@ -149,6 +149,10 @@ export interface Campaign {
   activeSceneId?: number;
   createdBy?: number;
   edition?: string;
+  premise?: string;
+  villain?: string;
+  objective?: string;
+  spotlightIndex?: number;
   members: CampaignMember[];
 }
 
@@ -293,6 +297,16 @@ export interface CreateCharacterPayload {
 export interface AuthResponse {
   token: string;
   user: User;
+}
+
+export interface CampaignIntro {
+  title: string;
+  setting?: string;
+  villain?: string;
+  objective?: string;
+  premise: string[];
+  party: { name: string; race: string; cls: string; color?: string; portrait?: string }[];
+  spotlight?: string;
 }
 
 export interface PlayerActionPayload {

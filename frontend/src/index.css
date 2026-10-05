@@ -18,45 +18,80 @@ body,
 }
 
 body {
-  background-color: #0d0b09;
+  background-color: #0c0a08;
   color: #e8e1d5;
   font-family: Inter, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Ambient tavern/crypt backdrop used across screens. */
+/* Understated backdrop: a single warm light source, no heavy gradients. */
 .app-backdrop {
   background:
-    radial-gradient(1200px 600px at 50% -10%, rgba(201, 162, 39, 0.09), transparent 60%),
-    radial-gradient(900px 500px at 100% 110%, rgba(124, 92, 255, 0.08), transparent 60%),
-    linear-gradient(180deg, #0d0b09 0%, #14100c 55%, #0d0b09 100%);
+    radial-gradient(900px 420px at 50% -12%, rgba(201, 162, 39, 0.06), transparent 65%),
+    #0c0a08;
 }
 
+/* Panels read as solid game surfaces, not glass. */
 .panel {
-  background: linear-gradient(180deg, rgba(33, 26, 20, 0.92), rgba(23, 19, 15, 0.94));
-  border: 1px solid rgba(216, 195, 154, 0.12);
-  border-radius: 0.9rem;
-  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(6px);
+  background: #15110d;
+  border: 1px solid #2b2118;
+  border-radius: 10px;
+}
+
+.panel-raised {
+  background: #1b1510;
+  border: 1px solid #33271b;
+  border-radius: 10px;
 }
 
 .panel-wood {
-  background: linear-gradient(180deg, rgba(42, 29, 20, 0.95), rgba(26, 18, 13, 0.96));
-  border: 1px solid rgba(201, 162, 39, 0.16);
+  background: #1a130d;
+  border: 1px solid #3a2a1a;
+  border-radius: 10px;
+}
+
+/* A thin accent bar used to head sections, game-HUD style. */
+.hud-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: Sora, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #e8e1d5;
+}
+
+.hud-heading::before {
+  content: "";
+  width: 3px;
+  height: 1.05em;
+  border-radius: 2px;
+  background: #c9a227;
 }
 
 .title-display {
-  font-family: Cinzel, Georgia, serif;
-  letter-spacing: 0.02em;
+  font-family: Sora, system-ui, sans-serif;
+  letter-spacing: -0.01em;
 }
 
-.divider-gold {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.6), transparent);
+.epic-title {
+  font-family: Cinzel, Georgia, serif;
+  letter-spacing: 0.04em;
 }
 
 .text-glow-gold {
-  text-shadow: 0 0 18px rgba(201, 162, 39, 0.45);
+  text-shadow: 0 0 22px rgba(201, 162, 39, 0.35);
+}
+
+.divider {
+  height: 1px;
+  background: #2b2118;
+}
+
+.stat-chip {
+  border: 1px solid #2b2118;
+  background: #100d0a;
+  border-radius: 8px;
 }
 
 /* Scrollbars fit the dark theme. */
@@ -65,14 +100,14 @@ body {
   height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #12100c;
+  background: #100d0a;
 }
 ::-webkit-scrollbar-thumb {
-  background: #3a2c1e;
+  background: #33271b;
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #4c3a26;
+  background: #453425;
 }
 
 .hp-bar {
@@ -87,4 +122,11 @@ body {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-5px); }
   75% { transform: translateX(5px); }
+}
+
+@keyframes cinematic-fade {
+  0% { opacity: 0; transform: translateY(8px); }
+  15% { opacity: 1; transform: translateY(0); }
+  85% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-8px); }
 }
