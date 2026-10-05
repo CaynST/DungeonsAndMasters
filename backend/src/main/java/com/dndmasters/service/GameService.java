@@ -502,9 +502,11 @@ public class GameService {
                 }
                 case "START_COMBAT" -> {
                     try {
-                        combat.startCombat(campaignId, sceneId);
+                        CombatState started = combat.startCombat(campaignId, sceneId);
                         campaigns.updateCampaignPhase(campaignId, phaseForScene(sceneId, campaignId), sceneId);
                         actionsOut.add("START_COMBAT");
+                        // If the first turn belongs to an enemy or ally, resolve until a player's turn.
+                        eventsOut.addAll(combat.runAutomaticTurns(campaignId, started));
                     } catch (RuntimeException e) {
                         actionsOut.add("START_COMBAT_FAILED");
                     }
