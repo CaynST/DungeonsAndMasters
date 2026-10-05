@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background-color: #0d0b09;
+  color: #e8e1d5;
+  font-family: Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ambient tavern/crypt backdrop used across screens. */
+.app-backdrop {
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(201, 162, 39, 0.09), transparent 60%),
+    radial-gradient(900px 500px at 100% 110%, rgba(124, 92, 255, 0.08), transparent 60%),
+    linear-gradient(180deg, #0d0b09 0%, #14100c 55%, #0d0b09 100%);
+}
+
+.panel {
+  background: linear-gradient(180deg, rgba(33, 26, 20, 0.92), rgba(23, 19, 15, 0.94));
+  border: 1px solid rgba(216, 195, 154, 0.12);
+  border-radius: 0.9rem;
+  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(6px);
+}
+
+.panel-wood {
+  background: linear-gradient(180deg, rgba(42, 29, 20, 0.95), rgba(26, 18, 13, 0.96));
+  border: 1px solid rgba(201, 162, 39, 0.16);
+}
+
+.title-display {
+  font-family: Cinzel, Georgia, serif;
+  letter-spacing: 0.02em;
+}
+
+.divider-gold {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.6), transparent);
+}
+
+.text-glow-gold {
+  text-shadow: 0 0 18px rgba(201, 162, 39, 0.45);
+}
+
+/* Scrollbars fit the dark theme. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #12100c;
+}
+::-webkit-scrollbar-thumb {
+  background: #3a2c1e;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4c3a26;
+}
+
+.hp-bar {
+  transition: width 0.5s ease;
+}
+
+.shake {
+  animation: shake 0.35s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
