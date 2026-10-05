@@ -98,9 +98,11 @@ export function Game() {
   useEffect(() => {
     const socket = connectCampaignSocket(campaignId, (_event: GameEvent) => {
       queryClient.invalidateQueries({ queryKey: ["state", campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["chronicle", campaignId] });
     }, () => {
       // Reconnection: resync full state to avoid divergence.
       queryClient.invalidateQueries({ queryKey: ["state", campaignId] });
+      queryClient.invalidateQueries({ queryKey: ["chronicle", campaignId] });
     });
     return () => socket.close();
   }, [campaignId, queryClient]);

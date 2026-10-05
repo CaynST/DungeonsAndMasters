@@ -107,14 +107,9 @@ public class GameService {
     @Transactional
     public ActionResult start(Long campaignId, Long userId) {
         GameState state = campaigns.start(campaignId, userId);
-        Long sceneId = state.getScene() == null ? null : state.getScene().id();
-        GameEvent intro = events.record(campaignId, sceneId, "NARRATION", "Dungeon Master",
-                "La aventura comienza.", Map.of());
         DmResponse dm = respond(campaignId, "START", "La compañía inicia la aventura.", null, null);
         DmApplication application = applyDm(campaignId, userId, dm);
-        List<GameEvent> all = new ArrayList<>();
-        all.add(intro);
-        all.addAll(application.events());
+        List<GameEvent> all = new ArrayList<>(application.events());
         return new ActionResult(true, null, dm.narration(), all, application.checkRequest(), null, null,
                 application.actions(), application.adventureEnded());
     }
@@ -443,6 +438,11 @@ public class GameService {
         boolean adventureEnded = false;
         Long sceneId = activeSceneId(campaignId);
         int sceneOrder = campaigns.sceneOrder(sceneId).intValue();
+
+        // Persist the DM's narration so it appears in the event history and the chronicle.
+        if (dm.narration() != null && !dm.narration().isBlank()) {
+            eventsOut.add(events.record(campaignId, sceneId, "NARRATION", "Dungeon Master", dm.narration(), Map.of()));
+        }
 
         List<DmAction> ordered = new ArrayList<>(dm.actions());
         ordered.sort(Comparator.comparingInt(a -> actionPriority(a.type())));

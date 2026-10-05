@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { BookOpen, Dices, ScrollText, Sparkles } from "lucide-react";
 import type { GameEvent } from "@/types/game";
 import { useGameStore } from "@/store/useGameStore";
@@ -67,21 +67,13 @@ export function DmPanel({ dmName, narration, events, providerId, spotlightName, 
       </div>
 
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
-        <AnimatePresence initial={false}>
-          <motion.div
-            key={narration ?? "intro"}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-lg border border-arcane/20 bg-arcane/5 p-3"
-          >
-            <p className="mb-1 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-arcane-soft">
-              <BookOpen className="h-3.5 w-3.5" /> Narración
-            </p>
-            <p className="font-serif text-[15px] leading-relaxed text-ink">
+        {events.length === 0 && (
+          <div className="rounded-lg border border-[#3b2a80]/40 bg-[#7C5CFF]/5 p-3">
+            <p className="text-[15px] leading-relaxed text-ink">
               {narration ?? "El Dungeon Master aguarda vuestro primer movimiento."}
             </p>
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        )}
 
         {pendingCheck && (
           <motion.div
@@ -109,27 +101,41 @@ export function DmPanel({ dmName, narration, events, providerId, spotlightName, 
 
         <div>
           <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
-            <ScrollText className="h-3.5 w-3.5" /> Crónica
+            <ScrollText className="h-3.5 w-3.5" /> Registro
           </p>
           <ul className="space-y-1.5">
-            {events.slice(-14).map((event) => (
-              <motion.li
-                key={event.id}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex gap-2 rounded-md bg-black/20 px-2.5 py-1.5 text-xs leading-relaxed"
-              >
-                <span
-                  className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: EVENT_TONE[event.type] ?? "#9E9485" }}
-                />
-                <span className="text-muted">
-                  {event.actor && <span className="text-parchment">{event.actor}: </span>}
-                  {event.message}
-                </span>
-              </motion.li>
-            ))}
-            {events.length === 0 && <li className="text-xs text-muted">La crónica aún está en blanco.</li>}
+            {events.slice(-20).map((event) =>
+              event.type === "NARRATION" ? (
+                <motion.li
+                  key={event.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-lg border border-[#3b2a80]/40 bg-[#7C5CFF]/5 p-3"
+                >
+                  <p className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[#a88cff]">
+                    <BookOpen className="h-3 w-3" /> Dungeon Master
+                  </p>
+                  <p className="text-[15px] leading-relaxed text-ink">{event.message}</p>
+                </motion.li>
+              ) : (
+                <motion.li
+                  key={event.id}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex gap-2 rounded-md bg-black/20 px-2.5 py-1.5 text-xs leading-relaxed"
+                >
+                  <span
+                    className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: EVENT_TONE[event.type] ?? "#9E9485" }}
+                  />
+                  <span className="text-muted">
+                    {event.actor && <span className="text-parchment">{event.actor}: </span>}
+                    {event.message}
+                  </span>
+                </motion.li>
+              ),
+            )}
+            {events.length === 0 && <li className="text-xs text-muted">El registro aún está en blanco.</li>}
           </ul>
         </div>
       </div>
