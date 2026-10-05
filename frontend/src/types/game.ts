@@ -84,6 +84,7 @@ export interface GameMap {
   width: number;
   height: number;
   tileSize: number;
+  theme?: string;
   walls: Cell[];
   doors: Door[];
   obstacles: Cell[];

@@ -4,7 +4,7 @@ import type { Cell, GameEntity, GameMap } from "@/types/game";
 import { cn } from "@/lib/utils";
 import { useGameStore } from "@/store/useGameStore";
 
-const ICONS: Record<string, string> = {
+const DECOR_ICONS: Record<string, string> = {
   torch: "🔥",
   bones: "🦴",
   rune: "✦",
@@ -18,7 +18,39 @@ const ICONS: Record<string, string> = {
   key: "🗝",
   ghost: "👻",
   flask: "🧪",
+  tree: "🌲",
+  rock: "🪨",
+  rubble: "🧱",
+  barrel: "🛢",
+  reed: "🌾",
+  club: "🏏",
+  paw: "🐾",
+  bug: "🕷",
+  flame: "🔥",
 };
+
+interface Theme {
+  floorA: string;
+  floorB: string;
+  wall: string;
+  wallEdge: string;
+  obstacle: string;
+  accent: string;
+  fog: string;
+}
+
+const THEMES: Record<string, Theme> = {
+  crypt: { floorA: "#1a140f", floorB: "#1d1611", wall: "#241a12", wallEdge: "#33261a", obstacle: "#3a2c1e", accent: "#c9a227", fog: "#0c0a08" },
+  forest: { floorA: "#141a12", floorB: "#171f14", wall: "#1e2a1a", wallEdge: "#2c3d26", obstacle: "#24361f", accent: "#7bbf6a", fog: "#0a0f09" },
+  cave: { floorA: "#16130f", floorB: "#1a1611", wall: "#241f19", wallEdge: "#342c22", obstacle: "#3a3228", accent: "#a88cff", fog: "#0b0908" },
+  ruins: { floorA: "#1a1712", floorB: "#1e1a14", wall: "#2a241b", wallEdge: "#3a3225", obstacle: "#3a3225", accent: "#d8c39a", fog: "#0c0b08" },
+  dungeon: { floorA: "#161210", floorB: "#1a1512", wall: "#221a13", wallEdge: "#33261a", obstacle: "#33261a", accent: "#c9a227", fog: "#0b0908" },
+  swamp: { floorA: "#121710", floorB: "#151c12", wall: "#1c2416", wallEdge: "#2a3620", obstacle: "#24301c", accent: "#6fd3a0", fog: "#090d08" },
+};
+
+function themeFor(name?: string): Theme {
+  return THEMES[name ?? "crypt"] ?? THEMES.crypt;
+}
 
 interface BoardProps {
   map: GameMap;
@@ -46,6 +78,7 @@ export function Board({
   const width = (map.width + padding * 2) * cell;
   const height = (map.height + padding * 2) * cell;
   const offset = padding * cell;
+  const theme = themeFor(map.theme);
 
   const walls = useMemo(() => new Set(map.walls.map(key)), [map.walls]);
   const obstacles = useMemo(() => new Set(map.obstacles.map(key)), [map.obstacles]);
@@ -55,78 +88,152 @@ export function Board({
     <svg
       viewBox={`0 0 ${width} ${height}`}
       className="h-full w-full select-none"
-      style={{ background: "radial-gradient(circle at 50% 30%, #1b1611, #0d0b09)" }}
+      style={{ background: theme.fog }}
     >
       <defs>
-        <pattern id="grid" width={cell} height={cell} patternUnits="userSpaceOnUse">
-          <path d={`M ${cell} 0 L 0 0 0 ${cell}`} fill="none" stroke="rgba(216,195,154,0.06)" strokeWidth={1} />
+        <pattern id="board-grid" width={cell} height={cell} patternUnits="userSpaceOnUse">
+          <path d={`M ${cell} 0 L 0 0 0 ${cell}`} fill="none" stroke="rgba(255,255,255,0.035)" strokeWidth={1} />
         </pattern>
+        <radialGradient id="torch-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={theme.accent} stopOpacity="0.55" />
+          <stop offset="100%" stopColor={theme.accent} stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="board-vignette" cx="50%" cy="45%" r="72%">
+          <stop offset="55%" stopColor="#000" stopOpacity="0" />
+          <stop offset="100%" stopColor={theme.fog} stopOpacity="0.85" />
+        </radialGradient>
+        <linearGradient id="wall-face" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={theme.wallEdge} />
+          <stop offset="100%" stopColor={theme.wall} />
+        </linearGradient>
       </defs>
 
       <g transform={`translate(${offset}, ${offset})`}>
-        <rect width={map.width * cell} height={map.height * cell} fill="url(#grid)" />
+        {/* Floor + grid */}
+        <rect width={map.width * cell} height={map.height * cell} fill={theme.floorA} />
+        {Array.from({ length: map.height }).map((_, y) =>
+          Array.from({ length: map.width }).map((__, x) =>
+            (x + y) % 2 === 0 ? (
+              <rect key={`f-${x}-${y}`} x={x * cell} y={y * cell} width={cell} height={cell} fill={theme.floorB} />
+            ) : null,
+          ),
+        )}
+        <rect width={map.width * cell} height={map.height * cell} fill="url(#board-grid)" />
 
-        {/* Floor tiles */}
+        {/* Reachable highlight */}
+        {Array.from(reachablePaths.keys()).map((k) => {
+          const [x, y] = k.split(",").map(Number);
+          return (
+            <rect
+              key={`r-${k}`}
+              x={x * cell + 3}
+              y={y * cell + 3}
+              width={cell - 6}
+              height={cell - 6}
+              rx={4}
+              fill="rgba(111,211,160,0.16)"
+              stroke="rgba(111,211,160,0.45)"
+              strokeWidth={1}
+            />
+          );
+        })}
+
+        {/* Interactive floor cells (clickable) */}
         {Array.from({ length: map.height }).map((_, y) =>
           Array.from({ length: map.width }).map((__, x) => {
             const k = `${x},${y}`;
-            const isWall = walls.has(k);
-            const isObstacle = obstacles.has(k);
-            const door = doors.get(k);
-            const reachable = reachablePaths.has(k);
+            if (walls.has(k)) return null;
             return (
-              <g key={k} onClick={() => !isWall && onCellClick({ x, y })} className={!isWall ? "cursor-pointer" : ""}>
-                <rect
-                  x={x * cell}
-                  y={y * cell}
-                  width={cell}
-                  height={cell}
-                  fill={
-                    isWall
-                      ? "#241a12"
-                      : isObstacle
-                        ? "#2c2117"
-                        : reachable
-                          ? "rgba(62,156,110,0.22)"
-                          : "rgba(42,29,20,0.35)"
-                  }
-                  stroke="rgba(216,195,154,0.05)"
-                />
-                {isWall && (
-                  <rect x={x * cell + 2} y={y * cell + 2} width={cell - 4} height={cell - 4} fill="#2f2519" rx={3} />
-                )}
-                {isObstacle && (
-                  <rect x={x * cell + 6} y={y * cell + 6} width={cell - 12} height={cell - 12} fill="#3a2c1e" rx={4} />
-                )}
-                {door && (
-                  <rect
-                    x={x * cell + 4}
-                    y={y * cell + 4}
-                    width={cell - 8}
-                    height={cell - 8}
-                    rx={4}
-                    fill={door.open ? "rgba(201,162,39,0.25)" : "#4a3a20"}
-                    stroke="#C9A227"
-                    strokeWidth={1.5}
-                  />
-                )}
-              </g>
+              <rect
+                key={`c-${k}`}
+                x={x * cell}
+                y={y * cell}
+                width={cell}
+                height={cell}
+                fill="transparent"
+                className="cursor-pointer"
+                onClick={() => onCellClick({ x, y })}
+              />
             );
           }),
         )}
 
-        {/* Decor */}
+        {/* Walls with depth */}
+        {map.walls.map((wall) => (
+          <g key={`w-${key(wall)}`}>
+            <rect x={wall.x * cell} y={wall.y * cell} width={cell} height={cell} fill="url(#wall-face)" />
+            <rect x={wall.x * cell} y={wall.y * cell} width={cell} height={4} fill={theme.wallEdge} opacity={0.9} />
+            <rect
+              x={wall.x * cell + 2}
+              y={wall.y * cell + 6}
+              width={cell - 4}
+              height={cell - 8}
+              rx={3}
+              fill="rgba(0,0,0,0.22)"
+            />
+          </g>
+        ))}
+
+        {/* Obstacles */}
+        {map.obstacles.map((obstacle) => (
+          <g key={`o-${key(obstacle)}`}>
+            <rect
+              x={obstacle.x * cell + 4}
+              y={obstacle.y * cell + 4}
+              width={cell - 8}
+              height={cell - 8}
+              rx={5}
+              fill={theme.obstacle}
+              stroke="rgba(0,0,0,0.35)"
+            />
+            <rect
+              x={obstacle.x * cell + 7}
+              y={obstacle.y * cell + 7}
+              width={cell - 14}
+              height={cell - 18}
+              rx={3}
+              fill="rgba(255,255,255,0.05)"
+            />
+          </g>
+        ))}
+
+        {/* Doors */}
+        {map.doors.map((door, index) => (
+          <rect
+            key={`d-${index}`}
+            x={door.x * cell + 4}
+            y={door.y * cell + 4}
+            width={cell - 8}
+            height={cell - 8}
+            rx={4}
+            fill={door.open ? "rgba(201,162,39,0.18)" : theme.wallEdge}
+            stroke={theme.accent}
+            strokeWidth={1.5}
+          />
+        ))}
+
+        {/* Decor with torch glow */}
         {map.decor.map((decor, index) => (
-          <text
-            key={`decor-${index}`}
-            x={decor.x * cell + cell / 2}
-            y={decor.y * cell + cell / 2 + 4}
-            textAnchor="middle"
-            fontSize={cell * 0.5}
-            opacity={0.5}
-          >
-            {ICONS[decor.icon] ?? "✦"}
-          </text>
+          <g key={`decor-${index}`}>
+            {decor.icon === "torch" && (
+              <circle
+                className="torch-glow"
+                cx={decor.x * cell + cell / 2}
+                cy={decor.y * cell + cell / 2}
+                r={cell * 1.6}
+                fill="url(#torch-glow)"
+              />
+            )}
+            <text
+              x={decor.x * cell + cell / 2}
+              y={decor.y * cell + cell / 2 + 5}
+              textAnchor="middle"
+              fontSize={cell * 0.5}
+              opacity={0.7}
+            >
+              {DECOR_ICONS[decor.icon] ?? "✦"}
+            </text>
+          </g>
         ))}
 
         {/* Entities */}
@@ -140,9 +247,13 @@ export function Board({
               selected={selectedEntityId === entity.id}
               active={activeEntityId === entity.id}
               targetable={targetableEntityIds.has(entity.id)}
+              accent={theme.accent}
               onClick={() => onEntityClick(entity)}
             />
           ))}
+
+        {/* Vignette */}
+        <rect width={map.width * cell} height={map.height * cell} fill="url(#board-vignette)" pointerEvents="none" />
       </g>
     </svg>
   );
@@ -154,6 +265,7 @@ function Token({
   selected,
   active,
   targetable,
+  accent,
   onClick,
 }: {
   entity: GameEntity;
@@ -161,16 +273,15 @@ function Token({
   selected: boolean;
   active: boolean;
   targetable: boolean;
+  accent: string;
   onClick: () => void;
 }) {
-  // IMPORTANT: select the stable array reference and filter outside the selector.
-  // A selector that returns a new array on every call makes useSyncExternalStore
-  // loop forever ("The result of getSnapshot should be cached").
   const floatingTexts = useGameStore((state) => state.floatingTexts);
   const floating = floatingTexts.filter((f) => f.entityId === entity.id);
   const dead = !entity.alive;
   const x = entity.x * cell + cell / 2;
   const y = entity.y * cell + cell / 2;
+  const color = entity.color ?? accent;
 
   return (
     <motion.g
@@ -179,7 +290,7 @@ function Token({
         onClick();
       }}
       initial={{ opacity: 0, scale: 0.6 }}
-      animate={{ opacity: dead ? 0.25 : 1, scale: dead ? 0.7 : 1 }}
+      animate={{ opacity: dead ? 0.28 : 1, scale: dead ? 0.75 : 1 }}
       transition={{ type: "spring", stiffness: 260, damping: 20 }}
       className={cn("cursor-pointer", targetable && "animate-float")}
     >
@@ -189,29 +300,31 @@ function Token({
           cy={y}
           r={cell * 0.46}
           fill="none"
-          stroke={targetable ? "#B0364B" : active ? "#C9A227" : "#E8E1D5"}
+          stroke={targetable ? "#d0566a" : active ? accent : "#e8e1d5"}
           strokeWidth={2.5}
           strokeDasharray={targetable ? "5 4" : undefined}
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 1.6, repeat: Infinity }}
         />
       )}
-      <circle cx={x} cy={y} r={cell * 0.34} fill={entity.color ?? "#C9A227"} opacity={dead ? 0.4 : 1} />
-      <circle cx={x} cy={y} r={cell * 0.34} fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth={2} />
-      <text x={x} y={y + 4} textAnchor="middle" fontSize={cell * 0.32} fill="#0D0B09" fontWeight={700}>
+      <circle cx={x} cy={y} r={cell * 0.36} fill="#0c0a08" />
+      <circle cx={x} cy={y} r={cell * 0.33} fill={color} />
+      <circle cx={x} cy={y} r={cell * 0.33} fill="none" stroke="rgba(0,0,0,0.55)" strokeWidth={2} />
+      <circle cx={x - cell * 0.1} cy={y - cell * 0.1} r={cell * 0.12} fill="rgba(255,255,255,0.18)" />
+      <text x={x} y={y + 4} textAnchor="middle" fontSize={cell * 0.3} fill="#0c0a08" fontWeight={800}>
         {entity.name.charAt(0).toUpperCase()}
       </text>
 
       {entity.kind !== "ITEM" && entity.maxHp > 1 && (
         <g>
-          <rect x={x - cell * 0.36} y={y + cell * 0.36} width={cell * 0.72} height={5} rx={2} fill="rgba(0,0,0,0.6)" />
+          <rect x={x - cell * 0.36} y={y + cell * 0.38} width={cell * 0.72} height={5} rx={2} fill="rgba(0,0,0,0.65)" />
           <rect
             x={x - cell * 0.36}
-            y={y + cell * 0.36}
+            y={y + cell * 0.38}
             width={cell * 0.72 * Math.max(0, entity.hp / entity.maxHp)}
             height={5}
             rx={2}
-            fill={entity.kind === "ENEMY" ? "#B0364B" : "#3E9C6E"}
+            fill={entity.kind === "ENEMY" ? "#d0566a" : "#6fd3a0"}
           />
         </g>
       )}
@@ -224,7 +337,7 @@ function Token({
           textAnchor="middle"
           fontSize={cell * 0.4}
           fontWeight={800}
-          fill={text.kind === "damage" ? "#E06A7A" : "#6FD3A0"}
+          fill={text.kind === "damage" ? "#e06a7a" : "#6fd3a0"}
           initial={{ opacity: 1, y: y - cell * 0.4 }}
           animate={{ opacity: 0, y: y - cell * 1.1 }}
           transition={{ duration: 1.3 }}
