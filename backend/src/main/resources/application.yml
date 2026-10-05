@@ -27,8 +27,10 @@ app:
   ai:
     provider: ${AI_PROVIDER:mock}
     api-key: ${AI_API_KEY:}
-    model: ${AI_MODEL:gpt-4o-mini}
-    base-url: ${AI_BASE_URL:https://api.openai.com/v1}
+    model: ${AI_MODEL:space-bunny-free}
+    base-url: ${AI_BASE_URL:}
+    fallback-models: ${AI_FALLBACK_MODELS:deepseek-v4-flash,mimo-v2.5,glm-5.3-flash}
+    user-agent: ${AI_USER_AGENT:dungeons-and-masters/1.0}
   image:
     provider: ${IMAGE_PROVIDER:placeholder}
 

@@ -36,6 +36,9 @@ public class DungeonMasterService {
     }
 
     public String providerId() {
+        if (provider instanceof OpenAiCompatibleProvider compatible) {
+            return "opencode/" + compatible.models().get(0);
+        }
         return provider.id();
     }
 

@@ -86,6 +86,7 @@ cd frontend && pnpm test
 
 - [`docs/architecture.md`](docs/architecture.md)
 - [`docs/game-engine.md`](docs/game-engine.md)
+- [`docs/character-creation.md`](docs/character-creation.md)
 - [`docs/ai-dm.md`](docs/ai-dm.md)
 - [`docs/database.md`](docs/database.md)
 - [`docs/decisions.md`](docs/decisions.md)

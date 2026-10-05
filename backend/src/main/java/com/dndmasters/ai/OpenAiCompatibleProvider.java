@@ -5,22 +5,43 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import com.dndmasters.util.Json;
 
-/** Calls an OpenAI-compatible chat completions endpoint. Configured entirely via env vars. */
+/**
+ * Calls an OpenAI-compatible chat completions endpoint (OpenAI, OpenCode Zen/Go, etc).
+ * Configured entirely via env vars. Supports a fallback chain of models so a rate-limited
+ * or unavailable model degrades to the next cheapest one instead of failing the turn.
+ */
 public class OpenAiCompatibleProvider implements AIProvider {
 
     private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).build();
     private final String baseUrl;
     private final String apiKey;
-    private final String model;
+    private final List<String> models;
+    private final String userAgent;
+    private final String sessionId = UUID.randomUUID().toString();
 
-    public OpenAiCompatibleProvider(String baseUrl, String apiKey, String model) {
+    public OpenAiCompatibleProvider(String baseUrl, String apiKey, String model, List<String> fallbackModels) {
+        this(baseUrl, apiKey, model, fallbackModels, "dungeons-and-masters/1.0");
+    }
+
+    public OpenAiCompatibleProvider(String baseUrl, String apiKey, String model, List<String> fallbackModels,
+                                    String userAgent) {
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         this.apiKey = apiKey;
-        this.model = model;
+        this.userAgent = userAgent;
+        List<String> all = new ArrayList<>();
+        if (model != null && !model.isBlank()) {
+            all.add(model);
+        }
+        if (fallbackModels != null) {
+            fallbackModels.stream().filter(m -> m != null && !m.isBlank() && !all.contains(m)).forEach(all::add);
+        }
+        this.models = all.isEmpty() ? List.of("gpt-4o-mini") : List.copyOf(all);
     }
 
     @Override
@@ -28,8 +49,25 @@ public class OpenAiCompatibleProvider implements AIProvider {
         return "openai-compatible";
     }
 
+    public List<String> models() {
+        return models;
+    }
+
     @Override
     public AiResponse complete(AiRequest request) {
+        RuntimeException lastError = null;
+        for (String model : models) {
+            try {
+                return callModel(model, request);
+            } catch (RuntimeException e) {
+                lastError = e;
+                // Try the next model in the fallback chain.
+            }
+        }
+        throw new IllegalStateException("All AI models failed: " + models, lastError);
+    }
+
+    private AiResponse callModel(String model, AiRequest request) {
         Map<String, Object> body = Map.of(
                 "model", model,
                 "temperature", request.temperature(),
@@ -43,6 +81,8 @@ public class OpenAiCompatibleProvider implements AIProvider {
                 .timeout(Duration.ofSeconds(60))
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + apiKey)
+                .header("User-Agent", userAgent)
+                .header("x-opencode-session", sessionId)
                 .POST(HttpRequest.BodyPublishers.ofString(Json.write(body)))
                 .build();
         try {
@@ -55,7 +95,7 @@ public class OpenAiCompatibleProvider implements AIProvider {
             Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
             return new AiResponse(String.valueOf(message.get("content")));
         } catch (Exception e) {
-            throw new IllegalStateException("AI completion failed", e);
+            throw new IllegalStateException("AI completion failed for model " + model + ": " + e.getMessage(), e);
         }
     }
 }
