@@ -80,7 +80,8 @@ class GameFlowTest {
                 .andExpect(jsonPath("$.map.width").isNumber())
                 .andReturn();
         JsonNode stateJson = objectMapper.readTree(state.getResponse().getContentAsString());
-        assertThat(stateJson.get("entities").size()).isGreaterThanOrEqualTo(5); // 4 heroes + NPC
+        // Only the joined player's character plus the scene's NPC — no injected demo heroes.
+        assertThat(stateJson.get("entities").size()).isGreaterThanOrEqualTo(2);
 
         // Roll a die through the API.
         mockMvc.perform(post("/api/campaigns/" + campaignId + "/actions")

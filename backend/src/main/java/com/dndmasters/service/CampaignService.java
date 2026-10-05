@@ -445,21 +445,11 @@ public class CampaignService {
 
     @Transactional(readOnly = true)
     public List<PlayerCharacter> partyCharacters(Long campaignId) {
+        // Only characters actually chosen by joined players. No demo characters are injected.
         List<PlayerCharacter> result = new ArrayList<>();
-        java.util.Set<Long> taken = new java.util.HashSet<>();
         for (CampaignMemberEntity member : members.findByCampaignIdOrderByIdAsc(campaignId)) {
             if (member.getCharacterId() != null) {
-                characters.findById(member.getCharacterId()).map(characterMapper::toDomain).ifPresent(c -> {
-                    result.add(c);
-                    taken.add(c.getId());
-                });
-            }
-        }
-        // Fill the party with the remaining predefined heroes as DM-controlled allies.
-        for (CharacterEntity predefined : characters.findByPredefinedTrueOrderByIdAsc()) {
-            if (!taken.contains(predefined.getId())) {
-                result.add(characterMapper.toDomain(predefined));
-                taken.add(predefined.getId());
+                characters.findById(member.getCharacterId()).map(characterMapper::toDomain).ifPresent(result::add);
             }
         }
         return result;
