@@ -361,6 +361,7 @@ public class GameService {
         GameState state = campaigns.state(campaignId);
         java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
         out.put("title", state.getCampaign().getName());
+        out.put("image", state.getCampaign().getImage());
         out.put("setting", state.getCampaign().getSetting());
         out.put("villain", state.getCampaign().getVillain());
         out.put("objective", state.getCampaign().getObjective());

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 
 interface Props {
   dmName: string;
+  dmAvatar?: string;
   narration: string | null;
   events: GameEvent[];
   providerId?: string;
@@ -33,7 +34,7 @@ const EVENT_TONE: Record<string, string> = {
   ADVENTURE_ENDED: "#C9A227",
 };
 
-export function DmPanel({ dmName, narration, events, providerId, spotlightName, busy, pendingCheck, onRollCheck, onSay }: Props) {
+export function DmPanel({ dmName, dmAvatar, narration, events, providerId, spotlightName, busy, pendingCheck, onRollCheck, onSay }: Props) {
   const dmThinking = useGameStore((state) => state.dmThinking);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [text, setText] = useState("");
@@ -46,9 +47,17 @@ export function DmPanel({ dmName, narration, events, providerId, spotlightName, 
     <div className="panel-wood panel flex h-full flex-col">
       <div className="flex items-center gap-3 border-b border-gold/15 p-4">
         <div className="relative">
-          <span className="title-display flex h-11 w-11 items-center justify-center rounded-full border-2 border-gold bg-black/40 text-lg font-bold text-gold">
-            DM
-          </span>
+          {dmAvatar ? (
+            <img
+              src={dmAvatar}
+              alt=""
+              className="h-11 w-11 rounded-full border-2 border-gold object-cover"
+            />
+          ) : (
+            <span className="title-display flex h-11 w-11 items-center justify-center rounded-full border-2 border-gold bg-black/40 text-lg font-bold text-gold">
+              DM
+            </span>
+          )}
           {dmThinking && (
             <motion.span
               className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-arcane-soft"
@@ -63,7 +72,7 @@ export function DmPanel({ dmName, narration, events, providerId, spotlightName, 
             {dmThinking ? "Tejiendo la historia..." : "Narrador de la partida"}
           </p>
         </div>
-        {providerId && <Badge tone="arcane">{providerId}</Badge>}
+        {providerId && <Badge tone="gold">{providerId}</Badge>}
       </div>
 
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">

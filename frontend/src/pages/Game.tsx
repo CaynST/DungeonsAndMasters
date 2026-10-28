@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Crown, Flag } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, getStoredUser } from "@/lib/api";
 import { connectCampaignSocket } from "@/lib/ws";
 import { findPath, reachableCells } from "@/lib/pathfinding";
 import { CinematicIntro } from "@/components/intro/CinematicIntro";
@@ -115,13 +115,23 @@ export function Game() {
     setActiveEntity(currentParticipant?.entityId ?? null);
   }, [currentParticipant?.entityId, setActiveEntity]);
 
+  const currentUser = getStoredUser();
   const myEntity = useMemo(() => {
     if (!gameState) return undefined;
-    const mine = gameState.party.find((character) => character.predefined)?.id;
+    // Prefer the character this user actually joined with.
+    const member = gameState.campaign.members.find((m) => m.userId === currentUser?.id);
+    const characterId = member?.characterId;
+    if (characterId != null) {
+      const own = gameState.entities.find(
+        (entity) => entity.kind === "PLAYER" && entity.refId === characterId,
+      );
+      if (own) return own;
+    }
+    // Spectator / demo fallback: the first human-controlled token.
     return gameState.entities.find(
       (entity) => entity.kind === "PLAYER" && entity.data?.controller === "PLAYER",
-    ) ?? gameState.entities.find((entity) => entity.kind === "PLAYER" && entity.refId === mine);
-  }, [gameState]);
+    );
+  }, [gameState, currentUser?.id]);
 
   const isMyTurn = !combat?.active || currentParticipant?.entityId === myEntity?.id;
   const canAct = Boolean(myEntity?.alive) && isMyTurn;
@@ -399,6 +409,7 @@ export function Game() {
             {tab === "dm" && (
               <DmPanel
                 dmName={gameState.campaign.dmName}
+                dmAvatar={gameState.campaign.dmAvatar}
                 narration={narration}
                 events={gameState.recentEvents}
                 providerId={provider.data?.aiProvider}

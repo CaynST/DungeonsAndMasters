@@ -27,8 +27,14 @@ export function Login() {
   const errorMessage = mutation.error instanceof Error ? mutation.error.message : null;
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
+      <img
+        src="/images/campaigns/valdros.png"
+        alt=""
+        className="absolute inset-0 h-full w-full object-cover opacity-30"
+      />
+      <div className="absolute inset-0 bg-[#0b0907]/80" />
+      <div className="relative w-full max-w-md">
         <div className="mb-8 text-center">
           <div className="mb-3 flex justify-center gap-3 text-gold">
             <Sword className="h-7 w-7" />

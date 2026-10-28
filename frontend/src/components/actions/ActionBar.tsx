@@ -121,7 +121,7 @@ export function ActionBar({
           ))}
 
           <Button
-            variant="arcane"
+            variant="danger"
             size="sm"
             disabled={!canActNow || !selectedTargetName}
             onClick={onAttack}

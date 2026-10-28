@@ -149,7 +149,8 @@ public class CampaignService {
         campaign.setDescription(adventure.description());
         campaign.setDmName(adventure.dmName());
         campaign.setDmAvatar("/images/dm/dungeon-master.png");
-        campaign.setImage("/images/campaigns/valdros.png");
+        String firstTheme = adventure.scenes().isEmpty() ? "crypt" : adventure.scenes().get(0).map().getTheme();
+        campaign.setImage("/images/scenes/theme-" + firstTheme + ".png");
         campaign.setStatus(CampaignStatus.LOBBY.name());
         campaign.setPhase(GamePhase.INTRO.name());
         campaign.setEdition(edition.name());
@@ -215,7 +216,7 @@ public class CampaignService {
             scene.setDescription(def.description());
             scene.setKind(def.kind());
             scene.setImagePrompt(def.imagePrompt());
-            scene.setImageUrl("/images/scenes/valdros-" + def.orderIndex() + ".png");
+            scene.setImageUrl("/images/scenes/theme-" + map.getTheme() + ".png");
             scene.setMapId(map.getId());
             scenes.save(scene);
             if (firstSceneId == null) {

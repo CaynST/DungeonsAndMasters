@@ -10,8 +10,8 @@ export default {
         elevated: "#211A14",
         wood: "#2A1D14",
         parchment: "#D8C39A",
-        ink: "#E8E1D5",
-        muted: "#9E9485",
+        ink: "#F0E9DC",
+        muted: "#B3A793",
         gold: {
           DEFAULT: "#C9A227",
           soft: "#E0C56A",

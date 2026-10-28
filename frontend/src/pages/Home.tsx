@@ -69,6 +69,38 @@ export function Home() {
         </div>
       </header>
 
+      {/* Featured campaign: the centrepiece of the table */}
+      {campaigns.data && campaigns.data.length > 0 && (
+        (() => {
+          const featured = campaigns.data.find((c) => c.status === "ACTIVE") ?? campaigns.data[0];
+          return (
+            <section className="relative mb-10 overflow-hidden rounded-xl border border-[#4a3520]">
+              <img
+                src={featured.image ?? "/images/campaigns/valdros.png"}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover opacity-60"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#0b0907] via-[#0b0907]/85 to-[#0b0907]/10" />
+              <div className="relative max-w-2xl p-8 md:p-10">
+                <p className="text-[11px] uppercase tracking-[0.32em] text-[#d4a72c]">Campaña destacada</p>
+                <h2 className="title-display mt-2 text-3xl font-bold text-[#f0e9dc] md:text-4xl">
+                  {featured.name}
+                </h2>
+                <p className="mt-3 line-clamp-2 text-sm text-[#c8bda7]">{featured.setting}</p>
+                <div className="mt-5 flex flex-wrap items-center gap-4">
+                  <Button variant="primary" onClick={() => navigate(`/campaign/${featured.id}/lobby`)}>
+                    <Swords className="h-4 w-4" /> Entrar en la campaña
+                  </Button>
+                  <span className="text-xs text-[#b3a793]">
+                    {featured.members.length} aventureros · {featured.phase}
+                  </span>
+                </div>
+              </div>
+            </section>
+          );
+        })()
+      )}
+
       <section className="mb-10">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="title-display flex items-center gap-2 text-xl text-parchment">

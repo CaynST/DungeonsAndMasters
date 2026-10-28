@@ -131,7 +131,7 @@ export function Lobby() {
             {isMember ? (
               <div className="mt-4">
                 <Button
-                  variant="arcane"
+                  variant="primary"
                   size="lg"
                   className="w-full"
                   loading={start.isPending}
@@ -192,7 +192,7 @@ function CharacterChoice({
       }`}
     >
       <div className="flex items-center gap-3">
-        <Avatar name={character.name} color={character.color} small />
+        <Portrait character={character} />
         <div className="min-w-0 flex-1">
           <p className="title-display text-sm text-parchment">{character.name}</p>
           <p className="text-[11px] uppercase tracking-wider text-muted">
@@ -211,6 +211,20 @@ function CharacterChoice({
       </div>
     </button>
   );
+}
+
+function Portrait({ character }: { character: PlayerCharacter }) {
+  if (character.portrait) {
+    return (
+      <img
+        src={character.portrait}
+        alt=""
+        className="h-10 w-10 shrink-0 rounded-full border-2 object-cover"
+        style={{ borderColor: character.color ?? "#C9A227" }}
+      />
+    );
+  }
+  return <Avatar name={character.name} color={character.color} small />;
 }
 
 function Avatar({ name, color, small = false }: { name: string; color?: string; small?: boolean }) {

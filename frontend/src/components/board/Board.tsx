@@ -358,12 +358,39 @@ function Token({
         />
       )}
       <circle cx={x} cy={y} r={cell * 0.36} fill="#0c0a08" />
-      <circle cx={x} cy={y} r={cell * 0.33} fill={color} />
-      <circle cx={x} cy={y} r={cell * 0.33} fill="none" stroke="rgba(0,0,0,0.55)" strokeWidth={2} />
-      <circle cx={x - cell * 0.1} cy={y - cell * 0.1} r={cell * 0.12} fill="rgba(255,255,255,0.18)" />
-      <text x={x} y={y + 4} textAnchor="middle" fontSize={cell * 0.3} fill="#0c0a08" fontWeight={800}>
-        {entity.name.charAt(0).toUpperCase()}
-      </text>
+      {entity.portrait ? (
+        <>
+          <defs>
+            <clipPath id={`token-clip-${entity.id}`}>
+              <circle cx={x} cy={y} r={cell * 0.33} />
+            </clipPath>
+          </defs>
+          <image
+            href={entity.portrait}
+            x={x - cell * 0.33}
+            y={y - cell * 0.33}
+            width={cell * 0.66}
+            height={cell * 0.66}
+            clipPath={`url(#token-clip-${entity.id})`}
+            preserveAspectRatio="xMidYMid slice"
+          />
+        </>
+      ) : (
+        <>
+          <circle cx={x} cy={y} r={cell * 0.33} fill={color} />
+          <text x={x} y={y + 4} textAnchor="middle" fontSize={cell * 0.3} fill="#0c0a08" fontWeight={800}>
+            {entity.name.charAt(0).toUpperCase()}
+          </text>
+        </>
+      )}
+      <circle
+        cx={x}
+        cy={y}
+        r={cell * 0.33}
+        fill="none"
+        stroke={entity.kind === "ENEMY" ? "#d0566a" : "rgba(0,0,0,0.6)"}
+        strokeWidth={2.5}
+      />
 
       {entity.kind !== "ITEM" && entity.maxHp > 1 && (
         <g>

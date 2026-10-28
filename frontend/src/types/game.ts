@@ -358,6 +358,7 @@ export interface AdminCharacter {
 
 export interface CampaignIntro {
   title: string;
+  image?: string;
   setting?: string;
   villain?: string;
   objective?: string;

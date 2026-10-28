@@ -36,7 +36,16 @@ export function CinematicIntro({ intro, onDone }: Props) {
   }, [step, steps.length, current, onDone]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#070604]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[#070604]">
+      {intro.image && (
+        <img src={intro.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-20" />
+      )}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ background: "radial-gradient(circle at 50% 45%, transparent 20%, rgba(7,6,4,0.92) 100%)" }}
+      />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-black/80" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-black/80" />
       <button
         onClick={onDone}
         className="absolute right-5 top-5 inline-flex items-center gap-2 rounded-md border border-parchment/15 px-3 py-1.5 text-xs text-muted transition hover:text-ink"
