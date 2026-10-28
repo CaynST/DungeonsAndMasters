@@ -20,3 +20,6 @@ backend/data/
 
 # Logs
 *.log
+
+# Reference manuals (large, copyrighted; kept locally for analysis only)
+manuals/
