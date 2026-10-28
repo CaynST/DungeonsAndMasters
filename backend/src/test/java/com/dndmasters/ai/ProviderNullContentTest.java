@@ -1,6 +1,7 @@
 package com.dndmasters.ai;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.sun.net.httpserver.HttpServer;
 import java.io.OutputStream;
@@ -11,7 +12,11 @@ import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-/** The provider must tolerate reasoning models that return null content. */
+/**
+ * A reasoning model may return {@code content: null}. Its {@code reasoning} field is private
+ * chain-of-thought, not an answer: it must never be surfaced to the player. If content is
+ * missing the provider fails so the caller can try another model or fall back.
+ */
 class ProviderNullContentTest {
 
     private HttpServer server;
@@ -37,23 +42,24 @@ class ProviderNullContentTest {
     }
 
     @Test
-    void fallsBackToReasoningContentWhenContentIsNull() throws Exception {
+    void neverSurfacesChainOfThoughtWhenContentIsNull() throws Exception {
         String baseUrl = respondWith(
                 "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":null,"
-                        + "\"reasoning\":\"El orco gruñe y alza su hacha.\"}}]}");
+                        + "\"reasoning\":\"I should tell the player that the orc attacks.\"}}]}");
         OpenAiCompatibleProvider provider = new OpenAiCompatibleProvider(baseUrl, "k", "m", List.of());
-        AiResponse response = provider.complete(new AiRequest("s", "u", Map.of(), 0.5, 100));
-        assertThat(response.text()).contains("orco").contains("hacha").doesNotContain("null");
+        assertThatThrownBy(() -> provider.complete(new AiRequest("s", "u", Map.of(), 0.5, 100)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("All AI models failed");
     }
 
     @Test
-    void usesReasoningContentFieldWhenProvided() throws Exception {
+    void neverSurfacesReasoningContentWhenContentIsNull() throws Exception {
         String baseUrl = respondWith(
                 "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":null,"
-                        + "\"reasoning_content\":\"La cripta respira.\"}}]}");
+                        + "\"reasoning_content\":\"The crypt breathes.\"}}]}");
         OpenAiCompatibleProvider provider = new OpenAiCompatibleProvider(baseUrl, "k", "m", List.of());
-        AiResponse response = provider.complete(new AiRequest("s", "u", Map.of(), 0.5, 100));
-        assertThat(response.text()).isEqualTo("La cripta respira.");
+        assertThatThrownBy(() -> provider.complete(new AiRequest("s", "u", Map.of(), 0.5, 100)))
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test

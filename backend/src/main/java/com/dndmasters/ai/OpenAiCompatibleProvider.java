@@ -100,21 +100,16 @@ public class OpenAiCompatibleProvider implements AIProvider {
     }
 
     /**
-     * Reasoning models sometimes return {@code content: null} with the actual text in
-     * {@code reasoning_content} or {@code reasoning}. Prefer the final answer, but never
-     * surface the literal string "null".
+     * Returns the assistant's final answer. Reasoning fields are private chain-of-thought and
+     * must never be shown to the player; when the model returns no content we fail so the
+     * caller can try the next model or fall back to the offline DM.
      */
     private String extractText(Map<String, Object> message) {
         String content = stringOrNull(message.get("content"));
         if (content != null && !content.isBlank()) {
             return content;
         }
-        String reasoningContent = stringOrNull(message.get("reasoning_content"));
-        if (reasoningContent != null && !reasoningContent.isBlank()) {
-            return reasoningContent;
-        }
-        String reasoning = stringOrNull(message.get("reasoning"));
-        return reasoning != null ? reasoning : "";
+        throw new IllegalStateException("Model returned no content (reasoning-only response)");
     }
 
     private String stringOrNull(Object value) {

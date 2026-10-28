@@ -51,7 +51,7 @@ public class DungeonMasterService {
     public DmResponse respond(DmContext context) {
         DmResponse raw;
         try {
-            AiRequest request = new AiRequest(SYSTEM, userPrompt(context), context.toMap(), 0.8, 900);
+            AiRequest request = new AiRequest(SYSTEM, userPrompt(context), context.toMap(), 0.8, 1500);
             raw = parse(provider.complete(request).text());
         } catch (Exception e) {
             // Never let an AI outage break the game: fall back to the offline script.
