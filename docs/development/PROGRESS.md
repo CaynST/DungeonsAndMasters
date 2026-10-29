@@ -15,9 +15,16 @@
 - `MovementValidatorTest`: test Red de esquina bloqueada y caso permitido.
 - Suite backend completa en verde.
 
+**Muerte y salvaciones (P1)**
+- `DeathSaveRules` puro (moribundo/estable/muerto, 20/1, daño masivo) con tests.
+- Integrado en `CombatService` (los PJ caen moribundos) y `GameService` (acción `DEATH_SAVE`,
+  bloqueo de acciones para moribundos, curación limpia el estado).
+- Frontend: banner de moribundo/estable y botón de salvación; acciones bloqueadas.
+
 **Commits**
 - `feat(rules): validate attack range and forbid cutting wall corners`
 - `docs(development): mark P0 range and corner rules as done`
+- `feat(rules): death saving throws and dying state`
 
 ## 2026-10-28 — Auditoría de manuales + rediseño visual
 

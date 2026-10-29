@@ -7,7 +7,7 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 
 | ID | Tarea | Prioridad | Estado |
 |----|-------|-----------|--------|
-| R-01 | Tiradas de salvación contra muerte (3 éxitos/fallos, 1 = 2 fallos, 20 = 1 PG, estabilizar, daño masivo) | P1 | pending |
+| R-01 | Tiradas de salvación contra muerte (3 éxitos/fallos, 1 = 2 fallos, 20 = 1 PG, estabilizar, daño masivo) | P1 | done |
 | R-02 | Economía de acciones completa: acción adicional, reacción, ataque de oportunidad, interacción gratuita | P1 | pending |
 | R-03 | Acciones de combate: Carrera, Retirada, Esquivar, Ayudar, Ocultarse, Preparado, Buscar, Usar objeto | P1 | pending |
 | R-04 | Condiciones del Apéndice A (cegado, derribado, apresado, asustado, etc.) | P1 | pending |
@@ -51,3 +51,4 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-08 | Intro con imagen, viñeta y letterbox | done |
 | D-09 | Rango/alcance de ataque + desventaja a larga distancia | done |
 | D-10 | Movimiento diagonal sin atravesar esquinas | done |
+| D-11 | Muerte y salvaciones de muerte (moribundo/estable/muerto) | done |
