@@ -20,7 +20,7 @@ y visibilidad en la UI.
 - `ConditionTest`, `ConditionSetTest`, `ConditionRulesTest` (modelo puro).
 - `ConditionIntegrationTest` (expiración, bloqueo, penalti, ventaja, DM, `STAND_UP`).
 - `DmActionValidatorTest`, `MockAIProviderTest`.
-- Backend completo: **144 tests** en verde. Frontend: **24 tests** y `pnpm build` en verde.
+- Backend completo: **150 tests** en verde. Frontend: **24 tests** y `pnpm build` en verde.
 
 **Siguiente paso**
 - Cobertura (R-05), luego conjuros/rasgos de clase y las aproximaciones listadas en `TECH_DEBT.md`.
