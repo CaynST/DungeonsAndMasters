@@ -485,7 +485,9 @@ export function Game() {
           checkPending={Boolean(checkPending)}
           downed={isDowned}
           movementUsed={typeof myEntity?.data?.movementUsed === "number" ? myEntity.data.movementUsed : 0}
-          movementMax={myEntity?.speed ?? 0}
+          movementMax={
+            typeof myEntity?.data?.movementMax === "number" ? myEntity.data.movementMax : myEntity?.speed ?? 0
+          }
           actionUsed={Boolean(myEntity?.data?.actionUsed)}
           selectedTargetName={mode === "attack" ? selectedEntity?.name : undefined}
           selectedAttack={selectedAttack}
@@ -497,6 +499,7 @@ export function Game() {
           onDiceRequest={() => act.mutate({ type: "DICE", expression: "1d20" })}
           onOpenShop={() => setShowShop(true)}
           shopOpen={gameState.campaign.shopOpen}
+          onCombatAction={(type) => act.mutate({ type, actorEntityId: myEntity?.id })}
           mode={mode}
           onToggleMode={setMode}
         />

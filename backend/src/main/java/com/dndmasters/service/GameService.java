@@ -137,6 +137,9 @@ public class GameService {
             case PlayerAction.USE_ITEM -> useItem(campaignId, userId, action);
             case PlayerAction.PASS -> pass(campaignId, userId, action);
             case PlayerAction.DEATH_SAVE -> deathSave(campaignId, userId, action);
+            case PlayerAction.DASH -> combatAction(campaignId, userId, action, PlayerAction.DASH);
+            case PlayerAction.DODGE -> combatAction(campaignId, userId, action, PlayerAction.DODGE);
+            case PlayerAction.DISENGAGE -> combatAction(campaignId, userId, action, PlayerAction.DISENGAGE);
             default -> ActionResult.error("Tipo de acción desconocido: " + action.getType());
         };
     }
@@ -240,19 +243,25 @@ public class GameService {
         if (!result.ok()) {
             return ActionResult.error(result.reason());
         }
-        // Cumulative movement this turn must respect the creature's speed.
-        int used = actor.getData().get("movementUsed") instanceof Number n ? n.intValue() : 0;
-        if (used + result.cost() > actor.getSpeed()) {
+        // Cumulative movement this turn must respect the allowance (speed, doubled by Dash).
+        int used = com.dndmasters.engine.combat.TurnEconomy.movementUsed(actor.getData());
+        int allowance = com.dndmasters.engine.combat.TurnEconomy.movementAllowance(actor.getData(), actor.getSpeed());
+        if (used + result.cost() > allowance) {
             return ActionResult.error(
-                    "No te queda movimiento: llevas " + used + " de " + actor.getSpeed() + " casillas este turno.");
+                    "No te queda movimiento: llevas " + used + " de " + allowance + " casillas este turno.");
         }
+        com.dndmasters.domain.Cell previousCell = actor.cell();
         actor.moveTo(action.getPath().get(action.getPath().size() - 1));
         actor.getData().put("movementUsed", used + result.cost());
         campaigns.saveEntity(actor);
-        GameEvent event = events.record(campaignId, activeSceneId(campaignId), "MOVE", actor.getName(),
+        List<GameEvent> recorded = new ArrayList<>();
+        recorded.add(events.record(campaignId, activeSceneId(campaignId), "MOVE", actor.getName(),
                 actor.getName() + " se mueve " + result.cost() + " casilla(s).",
-                Map.of("entityId", actor.getId(), "x", actor.getX(), "y", actor.getY(), "cost", result.cost()));
-        return new ActionResult(true, null, null, List.of(event), null, null, null, List.of(), false);
+                Map.of("entityId", actor.getId(), "x", actor.getX(), "y", actor.getY(), "cost", result.cost())));
+        // Leaving an enemy's reach provokes an opportunity attack unless disengaged.
+        CombatState combatState = state != null ? state : transientState(campaignId);
+        recorded.addAll(combat.opportunityAttacks(campaignId, combatState, actor, previousCell));
+        return new ActionResult(true, null, null, recorded, null, null, null, List.of(), false);
     }
 
     private ActionResult attack(Long campaignId, Long userId, PlayerAction action) {
@@ -404,8 +413,57 @@ public class GameService {
         return out;
     }
 
-    private ActionResult deathSave(Long campaignId, Long userId, PlayerAction action) {
+    /** Dash, Dodge and Disengage: standard combat actions that consume the action. */
+    private ActionResult combatAction(Long campaignId, Long userId, PlayerAction action, String type) {
         GameEntity actor = resolveActor(campaignId, userId, action);
+        if (actor == null) {
+            return ActionResult.error("No se encontró el personaje activo");
+        }
+        if (!ownedBy(actor, userId)) {
+            return ActionResult.error("No controlas ese personaje");
+        }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
+        }
+        CombatState state = campaigns.activeCombat(campaignId);
+        if (state != null && state.isActive() && !state.isCombatantTurn(actor.getId())) {
+            return ActionResult.error("No es tu turno");
+        }
+        if (Boolean.TRUE.equals(actor.getData().get("actionUsed"))) {
+            return ActionResult.error("Ya has usado tu acción este turno.");
+        }
+
+        String message;
+        switch (type) {
+            case PlayerAction.DASH -> {
+                int allowance = com.dndmasters.engine.combat.TurnEconomy
+                        .movementAllowance(actor.getData(), actor.getSpeed());
+                actor.getData().put("movementMax", allowance + actor.getSpeed());
+                actor.getData().put("dashUsed", true);
+                message = actor.getName() + " corre: movimiento ampliado a "
+                        + (allowance + actor.getSpeed()) + " casillas.";
+            }
+            case PlayerAction.DODGE -> {
+                actor.getData().put("dodging", true);
+                message = actor.getName() + " esquiva: los ataques contra él tienen desventaja.";
+            }
+            case PlayerAction.DISENGAGE -> {
+                actor.getData().put("disengaged", true);
+                message = actor.getName()
+                        + " se retira con cuidado: su movimiento no provoca ataques de oportunidad.";
+            }
+            default -> {
+                return ActionResult.error("Acción de combate desconocida");
+            }
+        }
+        actor.getData().put("actionUsed", true);
+        campaigns.saveEntity(actor);
+        GameEvent event = events.record(campaignId, activeSceneId(campaignId), type, actor.getName(), message,
+                Map.of("entityId", actor.getId()));
+        return new ActionResult(true, null, null, List.of(event), null, null, null, List.of(), false);
+    }
+
+    private ActionResult deathSave(Long campaignId, Long userId, PlayerAction action) {        GameEntity actor = resolveActor(campaignId, userId, action);
         if (actor == null) {
             return ActionResult.error("No se encontró el personaje activo");
         }

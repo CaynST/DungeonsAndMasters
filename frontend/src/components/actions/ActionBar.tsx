@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dices, Footprints, Lock, MessageSquare, MoveRight, Store, Swords } from "lucide-react";
+import { Dices, Footprints, Lock, MessageSquare, MoveRight, Shield, Store, Swords, Undo2, Wind } from "lucide-react";
 import type { Attack, PlayerCharacter } from "@/types/game";
 import { Button } from "@/components/ui/Button";
 import { formatModifier } from "@/lib/utils";
@@ -26,6 +26,7 @@ interface Props {
   shopOpen?: boolean;
   mode: "move" | "attack";
   onToggleMode: (mode: "move" | "attack") => void;
+  onCombatAction: (type: "DASH" | "DODGE" | "DISENGAGE") => void;
 }
 
 export function ActionBar({
@@ -50,6 +51,7 @@ export function ActionBar({
   shopOpen,
   mode,
   onToggleMode,
+  onCombatAction,
 }: Props) {
   // While an action is in flight, a check is unresolved or the hero is downed, everything is locked.
   const locked = Boolean(busy) || Boolean(checkPending) || Boolean(downed);
@@ -108,6 +110,34 @@ export function ActionBar({
             onClick={() => onToggleMode("attack")}
           >
             <Swords className="h-4 w-4" /> Atacar
+          </Button>
+
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={!canActNow}
+            title="Correr: dobla tu movimiento este turno"
+            onClick={() => onCombatAction("DASH")}
+          >
+            <Wind className="h-4 w-4" /> Correr
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={!canActNow}
+            title="Esquivar: los ataques contra ti tienen desventaja"
+            onClick={() => onCombatAction("DODGE")}
+          >
+            <Shield className="h-4 w-4" /> Esquivar
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={!canActNow}
+            title="Retirada: tu movimiento no provoca ataques de oportunidad"
+            onClick={() => onCombatAction("DISENGAGE")}
+          >
+            <Undo2 className="h-4 w-4" /> Retirada
           </Button>
 
           <div className="mx-1 h-6 w-px bg-parchment/10" />

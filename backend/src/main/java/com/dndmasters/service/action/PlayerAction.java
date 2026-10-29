@@ -23,6 +23,9 @@ public class PlayerAction {
     public static final String USE_ITEM = "USE_ITEM";
     public static final String PASS = "PASS";
     public static final String DEATH_SAVE = "DEATH_SAVE";
+    public static final String DASH = "DASH";
+    public static final String DODGE = "DODGE";
+    public static final String DISENGAGE = "DISENGAGE";
 
     private String type;
     private Long actorEntityId;

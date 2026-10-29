@@ -11,6 +11,7 @@ import com.dndmasters.domain.GamePhase;
 import com.dndmasters.engine.board.GridMath;
 import com.dndmasters.engine.combat.CombatEngine;
 import com.dndmasters.engine.combat.DeathSaveRules;
+import com.dndmasters.engine.combat.TurnEconomy;
 import com.dndmasters.engine.combat.TurnManager;
 import com.dndmasters.engine.rules.AttackResolver;
 import com.dndmasters.engine.rules.AttackResult;
@@ -317,7 +318,12 @@ public class CombatService {
                                                          List<com.dndmasters.domain.GameEvent> recorded) {
         Combatant attackerC = Combatants.of(attacker);
         Combatant targetC = Combatants.of(target);
-        AttackResult attackResult = attackResolver.resolve(attackerC, targetC, attack, advantage);
+        com.dndmasters.engine.rules.Advantage effective = advantage;
+        if (Boolean.TRUE.equals(target.getData().get("dodging"))) {
+            // Dodging imposes disadvantage on attacks against the creature until its next turn.
+            effective = com.dndmasters.engine.rules.Advantage.DISADVANTAGE;
+        }
+        AttackResult attackResult = attackResolver.resolve(attackerC, targetC, attack, effective);
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("attackerId", attacker.getId());
@@ -425,6 +431,49 @@ public class CombatService {
 
     private int intOf(Object value) {
         return value instanceof Number n ? n.intValue() : 0;
+    }
+
+    /**
+     * Enemies adjacent to the mover's previous cell may use their reaction to make one melee
+     * attack when the mover leaves their reach. Disengage prevents it; one reaction per creature.
+     */
+    @Transactional
+    public List<com.dndmasters.domain.GameEvent> opportunityAttacks(Long campaignId, CombatState state,
+                                                                    GameEntity mover, Cell previousCell) {
+        List<com.dndmasters.domain.GameEvent> recorded = new ArrayList<>();
+        if (state.getSceneId() == null || mover.getKind() != EntityKind.PLAYER) {
+            return recorded;
+        }
+        if (TurnEconomy.flag(mover.getData(), "disengaged")) {
+            return recorded;
+        }
+        List<GameEntity> sceneEntities = campaigns.entitiesInScene(state.getSceneId());
+        List<GameEntity> attackers = sceneEntities.stream()
+                .filter(e -> e.getKind() == EntityKind.ENEMY)
+                .filter(GameEntity::isAlive)
+                .filter(e -> e.getId() != mover.getId())
+                .filter(e -> !TurnEconomy.flag(e.getData(), "reactionUsed"))
+                .filter(e -> e.cell().chebyshevTo(previousCell) <= 1)
+                .filter(e -> e.cell().chebyshevTo(mover.cell()) > 1)
+                .toList();
+        for (GameEntity attacker : attackers) {
+            if (!mover.isAlive()) {
+                break;
+            }
+            Attack melee = entityMapper.attacksOf(attacker).stream()
+                    .filter(a -> !a.ranged()).findFirst().orElse(null);
+            if (melee == null) {
+                continue;
+            }
+            attacker.getData().put("reactionUsed", true);
+            campaigns.saveEntity(attacker);
+            recorded.add(events.record(campaignId, state.getSceneId(), "OPPORTUNITY_ATTACK", attacker.getName(),
+                    attacker.getName() + " realiza un ataque de oportunidad contra " + mover.getName() + ".",
+                    Map.of("entityId", attacker.getId(), "targetId", mover.getId())));
+            recorded.addAll(attack(campaignId, state, attacker, mover, melee,
+                    com.dndmasters.engine.rules.Advantage.NONE));
+        }
+        return recorded;
     }
 
     public boolean isFinished(CombatState state) {

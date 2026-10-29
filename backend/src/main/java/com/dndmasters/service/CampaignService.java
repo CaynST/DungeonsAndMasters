@@ -499,9 +499,7 @@ public class CampaignService {
     @Transactional
     public void resetTurnUsage(Long entityId) {
         entity(entityId).ifPresent(e -> {
-            e.getData().put("actionUsed", false);
-            e.getData().put("movementUsed", 0);
-            e.getData().put("bonusUsed", false);
+            com.dndmasters.engine.combat.TurnEconomy.reset(e.getData(), e.getSpeed());
             saveEntity(e);
         });
     }
