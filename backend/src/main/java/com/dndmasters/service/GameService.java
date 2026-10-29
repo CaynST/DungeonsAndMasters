@@ -22,6 +22,8 @@ import com.dndmasters.engine.dice.DiceEngine;
 import com.dndmasters.engine.dice.DiceRollResult;
 import com.dndmasters.engine.rules.CheckResolver;
 import com.dndmasters.engine.rules.CheckResult;
+import com.dndmasters.engine.rules.Advantage;
+import com.dndmasters.engine.rules.RangeRules;
 import com.dndmasters.engine.rules.Combatants;
 import com.dndmasters.persistence.entity.CharacterEntity;
 import com.dndmasters.persistence.entity.DiceRollEntity;
@@ -268,8 +270,14 @@ public class GameService {
             return ActionResult.error("Ya has usado tu acción este turno. Termina el turno para volver a actuar.");
         }
         Attack chosen = chooseAttack(actor, action.getAttack());
+        int distance = actor.cell().chebyshevTo(target.cell());
+        RangeRules.Result range = RangeRules.check(chosen, distance);
+        if (!range.allowed()) {
+            return ActionResult.error(range.reason());
+        }
+        Advantage advantage = range.disadvantage() ? Advantage.DISADVANTAGE : Advantage.NONE;
         CombatState eventState = state != null ? state : transientState(campaignId);
-        List<GameEvent> recorded = new ArrayList<>(combat.attack(campaignId, eventState, actor, target, chosen));
+        List<GameEvent> recorded = new ArrayList<>(combat.attack(campaignId, eventState, actor, target, chosen, advantage));
         actor.getData().put("actionUsed", true);
         campaigns.saveEntity(actor);
 

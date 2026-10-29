@@ -226,7 +226,7 @@ public class CombatService {
         if (attack != null) {
             int attackCount = "AGGRESSIVE".equals(String.valueOf(actor.getData().get("behavior"))) ? 2 : 1;
             for (int i = 0; i < attackCount && nearest.isAlive(); i++) {
-                attack(campaignId, state, actor, nearest, attack, recorded);
+                attack(campaignId, state, actor, nearest, attack, com.dndmasters.engine.rules.Advantage.NONE, recorded);
             }
         }
         return recorded;
@@ -300,15 +300,23 @@ public class CombatService {
     @Transactional
     public List<com.dndmasters.domain.GameEvent> attack(Long campaignId, CombatState state, GameEntity attacker,
                                                         GameEntity target, Attack attack) {
-        return attack(campaignId, state, attacker, target, attack, new ArrayList<>());
+        return attack(campaignId, state, attacker, target, attack, com.dndmasters.engine.rules.Advantage.NONE, new ArrayList<>());
+    }
+
+    @Transactional
+    public List<com.dndmasters.domain.GameEvent> attack(Long campaignId, CombatState state, GameEntity attacker,
+                                                        GameEntity target, Attack attack,
+                                                        com.dndmasters.engine.rules.Advantage advantage) {
+        return attack(campaignId, state, attacker, target, attack, advantage, new ArrayList<>());
     }
 
     private List<com.dndmasters.domain.GameEvent> attack(Long campaignId, CombatState state, GameEntity attacker,
                                                          GameEntity target, Attack attack,
+                                                         com.dndmasters.engine.rules.Advantage advantage,
                                                          List<com.dndmasters.domain.GameEvent> recorded) {
         Combatant attackerC = Combatants.of(attacker);
         Combatant targetC = Combatants.of(target);
-        AttackResult attackResult = attackResolver.resolve(attackerC, targetC, attack);
+        AttackResult attackResult = attackResolver.resolve(attackerC, targetC, attack, advantage);
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("attackerId", attacker.getId());

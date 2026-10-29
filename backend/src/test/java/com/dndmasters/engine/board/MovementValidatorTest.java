@@ -86,4 +86,23 @@ class MovementValidatorTest {
     void rejectsEmptyPath() {
         assertThat(validator.validate(map, entity, List.of(), Set.of()).ok()).isFalse();
     }
+
+    @Test
+    void rejectsDiagonalThroughWallCorner() {
+        // (3,3) -> (4,4): the orthogonal (4,3) is a wall, so the corner is blocked.
+        map.setWalls(List.of(new Cell(0, 1), new Cell(2, 0), new Cell(4, 3)));
+        entity.setX(3);
+        entity.setY(3);
+        MoveResult result = validator.validateTo(map, entity, new Cell(4, 4), Set.of());
+        assertThat(result.ok()).isFalse();
+        assertThat(result.reason()).contains("esquina");
+    }
+
+    @Test
+    void allowsDiagonalWhenBothCornersAreFree() {
+        entity.setX(3);
+        entity.setY(3);
+        MoveResult result = validator.validateTo(map, entity, new Cell(4, 4), Set.of());
+        assertThat(result.ok()).isTrue();
+    }
 }

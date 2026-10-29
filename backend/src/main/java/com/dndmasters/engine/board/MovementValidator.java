@@ -27,6 +27,15 @@ public class MovementValidator {
             if (!step.isAdjacent(current)) {
                 return MoveResult.rejected("Path is not contiguous at " + step);
             }
+            // Diagonal movement may not cut through the corner of a wall/obstacle (PHB).
+            int dx = step.x() - current.x();
+            int dy = step.y() - current.y();
+            if (dx != 0 && dy != 0) {
+                if (map.blocksMovement(new Cell(current.x() + dx, current.y()))
+                        || map.blocksMovement(new Cell(current.x(), current.y() + dy))) {
+                    return MoveResult.rejected("No puedes atravesar la esquina de un muro en " + step);
+                }
+            }
             if (map.blocksMovement(step)) {
                 return MoveResult.rejected("Cell " + step + " is blocked");
             }

@@ -109,6 +109,21 @@ class RulesEngineTest {
     }
 
     @Test
+    void advantageTakesHigherDieAndDisadvantageTakesLower() {
+        Combatant attacker = combatant(1, 20, 15, new Stats(10, 10, 10, 10, 10, 10));
+        Combatant target = combatant(2, 20, 15, new Stats(10, 10, 10, 10, 10, 10));
+        Attack attack = Attack.melee("Hacha", 0, "1d6");
+
+        // Rolls 4 then 18: advantage picks 18 → hits AC 15.
+        AttackResolver withAdvantage = new AttackResolver(new DiceEngine(StubRandom.of(3, 17)));
+        assertThat(withAdvantage.resolve(attacker, target, attack, Advantage.ADVANTAGE).hit()).isTrue();
+
+        // Rolls 18 then 4: disadvantage picks 4 → misses AC 15.
+        AttackResolver withDisadvantage = new AttackResolver(new DiceEngine(StubRandom.of(17, 3)));
+        assertThat(withDisadvantage.resolve(attacker, target, attack, Advantage.DISADVANTAGE).hit()).isFalse();
+    }
+
+    @Test
     void initiativeOrdersByTotalThenDexThenId() {
         // combatants rolled in list order: 10, 5, 10
         DiceEngine dice = new DiceEngine(StubRandom.of(10, 5, 9));
