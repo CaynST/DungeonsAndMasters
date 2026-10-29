@@ -18,6 +18,7 @@ import com.dndmasters.domain.InventoryItem;
 import com.dndmasters.domain.PlayerCharacter;
 import com.dndmasters.engine.board.MoveResult;
 import com.dndmasters.engine.board.MovementValidator;
+import com.dndmasters.engine.combat.DeathSaveRules;
 import com.dndmasters.engine.dice.DiceEngine;
 import com.dndmasters.engine.dice.DiceRollResult;
 import com.dndmasters.engine.rules.CheckResolver;
@@ -135,6 +136,7 @@ public class GameService {
             case PlayerAction.NARRATE -> narrate(campaignId, userId, action);
             case PlayerAction.USE_ITEM -> useItem(campaignId, userId, action);
             case PlayerAction.PASS -> pass(campaignId, userId, action);
+            case PlayerAction.DEATH_SAVE -> deathSave(campaignId, userId, action);
             default -> ActionResult.error("Tipo de acción desconocido: " + action.getType());
         };
     }
@@ -177,6 +179,9 @@ public class GameService {
         if (actor == null) {
             return ActionResult.error("No se encontró el personaje activo");
         }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
+        }
         String skill = action.getSkill() == null ? "perception" : action.getSkill();
         int dc = action.getDc() == null ? 12 : action.getDc();
         CheckResult checkResult = checkResolver.resolve(Combatants.of(actor), skill, dc);
@@ -216,6 +221,9 @@ public class GameService {
         if (!ownedBy(actor, userId)) {
             return ActionResult.error("No controlas ese personaje");
         }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
+        }
         if (action.getPath() == null || action.getPath().isEmpty()) {
             return ActionResult.error("Ruta de movimiento vacía");
         }
@@ -254,6 +262,9 @@ public class GameService {
         }
         if (!ownedBy(actor, userId)) {
             return ActionResult.error("No controlas ese personaje");
+        }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
         }
         if (action.getTargetEntityId() == null) {
             return ActionResult.error("Selecciona un objetivo");
@@ -329,6 +340,9 @@ public class GameService {
     private ActionResult dialogue(Long campaignId, Long userId, PlayerAction action) {
         String text = action.getText() == null ? "El jugador habla." : action.getText();
         GameEntity actor = resolveActor(campaignId, userId, action);
+        if (actor != null && isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; no puedes hablar.");
+        }
         String actorName = actor != null ? actor.getName() : "El grupo";
         // Record what the player said so it appears in the log and the chronicle.
         GameEvent spoken = events.record(campaignId, activeSceneId(campaignId), "PLAYER_ACTION", actorName, text, Map.of());
@@ -390,10 +404,79 @@ public class GameService {
         return out;
     }
 
+    private ActionResult deathSave(Long campaignId, Long userId, PlayerAction action) {
+        GameEntity actor = resolveActor(campaignId, userId, action);
+        if (actor == null) {
+            return ActionResult.error("No se encontró el personaje activo");
+        }
+        if (!ownedBy(actor, userId)) {
+            return ActionResult.error("No controlas ese personaje");
+        }
+        DeathSaveRules.State current = combat.deathState(actor);
+        if (!current.dying()) {
+            return ActionResult.error(current.stable()
+                    ? "Estás estable; no necesitas salvación."
+                    : "No estás moribundo.");
+        }
+        CombatState state = campaigns.activeCombat(campaignId);
+        if (state != null && state.isActive() && !state.isCombatantTurn(actor.getId())) {
+            return ActionResult.error("No es tu turno");
+        }
+
+        int d20 = dice.roll("1d20").rolls().get(0);
+        DeathSaveRules.State next = DeathSaveRules.roll(current, d20);
+        combat.applyDeathState(actor, next);
+        campaigns.saveEntity(actor);
+
+        Long sceneId = activeSceneId(campaignId);
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("entityId", actor.getId());
+        data.put("roll", d20);
+        data.put("successes", next.successes());
+        data.put("failures", next.failures());
+        data.put("dead", next.dead());
+        data.put("stable", next.stable());
+
+        List<GameEvent> recorded = new ArrayList<>();
+        recorded.add(events.record(campaignId, sceneId, "DEATH_SAVE", actor.getName(),
+                "Salvación de muerte: " + d20 + " → " + next.successes() + " éxitos, "
+                        + next.failures() + " fallos.", data));
+
+        if (next.dead()) {
+            if (state != null) {
+                combat.markParticipantDead(state, actor.getId());
+            }
+            recorded.add(events.record(campaignId, sceneId, "DEATH", actor.getName(),
+                    actor.getName() + " muere.", Map.of("entityId", actor.getId())));
+            if (state != null && combat.isFinished(state)) {
+                combat.finish(campaignId, state);
+                recorded.addAll(aftermath(campaignId, state).events());
+            }
+        } else if (next.stable()) {
+            recorded.add(events.record(campaignId, sceneId, "STABILIZED", actor.getName(),
+                    actor.getName() + " se estabiliza.", Map.of("entityId", actor.getId())));
+        } else if (next.hpAfter() > 0) {
+            recorded.add(events.record(campaignId, sceneId, "REVIVED", actor.getName(),
+                    actor.getName() + " recupera la consciencia con 1 PG.", Map.of("entityId", actor.getId())));
+        }
+
+        Map<String, Object> roll = new LinkedHashMap<>();
+        roll.put("expression", "1d20");
+        roll.put("rolls", List.of(d20));
+        roll.put("modifier", 0);
+        roll.put("total", d20);
+        roll.put("natural20", d20 == 20);
+        roll.put("natural1", d20 == 1);
+        return new ActionResult(true, null, null, recorded, null, roll, null, List.of(), false);
+    }
+
     private ActionResult useItem(Long campaignId, Long userId, PlayerAction action) {
         GameEntity actor = resolveActor(campaignId, userId, action);
         if (actor == null) {
             return ActionResult.error("No se encontró el personaje activo");
+        }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
         }
         if (Boolean.TRUE.equals(actor.getData().get("actionUsed"))) {
             return ActionResult.error("Ya has usado tu acción este turno.");
@@ -404,6 +487,10 @@ public class GameService {
             int newHp = Math.min(maxHp, actor.getHp() + heal.total());
             actor.setHp(newHp);
             actor.setAlive(true);
+            actor.getData().put("dying", false);
+            actor.getData().put("stable", false);
+            actor.getData().put("deathSuccesses", 0);
+            actor.getData().put("deathFailures", 0);
             actor.getData().put("actionUsed", true);
             campaigns.saveEntity(actor);
             GameEvent event = events.record(campaignId, activeSceneId(campaignId), "HEAL", actor.getName(),
@@ -616,6 +703,12 @@ public class GameService {
             return userId != null && userId.longValue() == n.longValue();
         }
         return true;
+    }
+
+    /** True while the creature is dying or stabilised at 0 HP (cannot take normal actions). */
+    private boolean isDowned(GameEntity entity) {
+        return Boolean.TRUE.equals(entity.getData().get("dying"))
+                || Boolean.TRUE.equals(entity.getData().get("stable"));
     }
 
     private Set<com.dndmasters.domain.Cell> occupiedCells(Long campaignId, long exceptEntityId) {

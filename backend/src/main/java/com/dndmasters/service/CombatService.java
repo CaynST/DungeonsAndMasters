@@ -10,6 +10,7 @@ import com.dndmasters.domain.GameMap;
 import com.dndmasters.domain.GamePhase;
 import com.dndmasters.engine.board.GridMath;
 import com.dndmasters.engine.combat.CombatEngine;
+import com.dndmasters.engine.combat.DeathSaveRules;
 import com.dndmasters.engine.combat.TurnManager;
 import com.dndmasters.engine.rules.AttackResolver;
 import com.dndmasters.engine.rules.AttackResult;
@@ -334,12 +335,26 @@ public class CombatService {
         if (attackResult.hit()) {
             DamageResult damage = damageResolver.apply(attack, attackResult, targetC);
             target.setHp(targetC.getHp());
-            target.setAlive(targetC.isAlive());
-            campaigns.saveEntity(target);
             data.put("damage", damage.total());
             data.put("damageRolls", damage.rolls());
             data.put("hpAfter", damage.targetHpAfter());
             data.put("dead", damage.dead());
+
+            boolean playerDown = damage.targetHpAfter() <= 0 && target.getKind() == EntityKind.PLAYER;
+            if (playerDown) {
+                DeathSaveRules.State current = deathState(target);
+                DeathSaveRules.State next = current.dying()
+                        ? DeathSaveRules.onDamage(current, damage.total(), target.getMaxHp(), attackResult.critical())
+                        : DeathSaveRules.State.startDying();
+                applyDeathState(target, next);
+                campaigns.saveEntity(target);
+                data.put("dying", !next.dead());
+                data.put("successes", next.successes());
+                data.put("failures", next.failures());
+            } else {
+                target.setAlive(targetC.isAlive());
+                campaigns.saveEntity(target);
+            }
 
             String verb = attackResult.critical() ? "¡CRÍTICO! " + attacker.getName() + " impacta a "
                     : attacker.getName() + " impacta a ";
@@ -348,7 +363,21 @@ public class CombatService {
                             + attackResult.targetAc() + ") y causa " + damage.total() + " de daño.",
                     data));
 
-            if (!target.isAlive()) {
+            if (playerDown) {
+                DeathSaveRules.State stateAfter = deathState(target);
+                if (stateAfter.dead()) {
+                    turns.markDead(state, target.getId());
+                    if (state.getId() != null) persist(state);
+                    recorded.add(events.record(campaignId, state.getSceneId(), "DEATH", target.getName(),
+                            target.getName() + " muere.", Map.of("entityId", target.getId())));
+                } else {
+                    recorded.add(events.record(campaignId, state.getSceneId(), "DYING", target.getName(),
+                            target.getName() + " cae moribundo (" + stateAfter.successes() + " éxitos, "
+                                    + stateAfter.failures() + " fallos).",
+                            Map.of("entityId", target.getId(), "successes", stateAfter.successes(),
+                                    "failures", stateAfter.failures())));
+                }
+            } else if (!target.isAlive()) {
                 turns.markDead(state, target.getId());
                 if (state.getId() != null) {
                     persist(state);
@@ -363,6 +392,39 @@ public class CombatService {
                     data));
         }
         return recorded;
+    }
+
+    /** Reads the death-save state stored on an entity's data map. */
+    public DeathSaveRules.State deathState(GameEntity entity) {
+        return new DeathSaveRules.State(
+                Boolean.TRUE.equals(entity.getData().get("dying")),
+                Boolean.TRUE.equals(entity.getData().get("stable")),
+                intOf(entity.getData().get("deathSuccesses")),
+                intOf(entity.getData().get("deathFailures")),
+                false,
+                entity.getHp());
+    }
+
+    /** Writes the death-save state back to the entity (HP, alive flag and counters). */
+    public void applyDeathState(GameEntity entity, DeathSaveRules.State state) {
+        entity.getData().put("dying", state.dying());
+        entity.getData().put("stable", state.stable());
+        entity.getData().put("deathSuccesses", state.successes());
+        entity.getData().put("deathFailures", state.failures());
+        entity.setHp(state.hpAfter());
+        entity.setAlive(!state.dead());
+    }
+
+    /** Marks a participant dead and persists the combat state. */
+    public void markParticipantDead(CombatState state, long entityId) {
+        turns.markDead(state, entityId);
+        if (state.getId() != null) {
+            persist(state);
+        }
+    }
+
+    private int intOf(Object value) {
+        return value instanceof Number n ? n.intValue() : 0;
     }
 
     public boolean isFinished(CombatState state) {

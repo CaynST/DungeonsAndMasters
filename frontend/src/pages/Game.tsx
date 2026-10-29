@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Crown, Flag } from "lucide-react";
+import { ArrowLeft, Crown, Flag, Skull } from "lucide-react";
 import { api, getStoredUser } from "@/lib/api";
 import { connectCampaignSocket } from "@/lib/ws";
 import { findPath, reachableCells } from "@/lib/pathfinding";
@@ -134,7 +134,10 @@ export function Game() {
   }, [gameState, currentUser?.id]);
 
   const isMyTurn = !combat?.active || currentParticipant?.entityId === myEntity?.id;
-  const canAct = Boolean(myEntity?.alive) && isMyTurn;
+  const isDowned = Boolean(myEntity?.data?.dying) || Boolean(myEntity?.data?.stable);
+  const deathSuccesses = typeof myEntity?.data?.deathSuccesses === "number" ? myEntity.data.deathSuccesses : 0;
+  const deathFailures = typeof myEntity?.data?.deathFailures === "number" ? myEntity.data.deathFailures : 0;
+  const canAct = Boolean(myEntity?.alive) && isMyTurn && !isDowned;
 
   const spotlightCharacter =
     !combat?.active && gameState && gameState.party.length > 0
@@ -353,6 +356,30 @@ export function Game() {
             </div>
           )}
 
+          {/* Dying / stabilised banner */}
+          {isDowned && myEntity && (
+            <div className="panel-raised flex flex-wrap items-center justify-between gap-3 border-[#d0566a]/40 px-4 py-2.5">
+              <div className="flex items-center gap-3">
+                <Skull className="h-4 w-4 text-[#d0566a]" />
+                <span className="text-sm text-[#e8b7c0]">
+                  {Boolean(myEntity.data?.stable)
+                    ? "Estás estable (inconsciente). Solo puedes terminar el turno."
+                    : `Estás moribundo — ${deathSuccesses} éxitos, ${deathFailures} fallos.`}
+                </span>
+              </div>
+              {!Boolean(myEntity.data?.stable) && (
+                <Button
+                  variant="danger"
+                  size="sm"
+                  loading={act.isPending}
+                  onClick={() => act.mutate({ type: "DEATH_SAVE", actorEntityId: myEntity.id })}
+                >
+                  Tirar salvación de muerte
+                </Button>
+              )}
+            </div>
+          )}
+
           {/* Board */}
           <div className="panel relative min-h-0 flex-1 overflow-hidden">
             <AnimatePresence mode="wait">
@@ -414,7 +441,7 @@ export function Game() {
                 events={gameState.recentEvents}
                 providerId={provider.data?.aiProvider}
                 spotlightName={spotlightCharacter?.name}
-                busy={act.isPending}
+                busy={act.isPending || isDowned}
                 pendingCheck={checkPending}
                 onRollCheck={rollCheck}
                 onSay={(text) => act.mutate({ type: "DIALOGUE", text, actorEntityId: myEntity?.id })}
@@ -456,6 +483,7 @@ export function Game() {
           isMyTurn={isMyTurn}
           busy={actionBusy}
           checkPending={Boolean(checkPending)}
+          downed={isDowned}
           movementUsed={typeof myEntity?.data?.movementUsed === "number" ? myEntity.data.movementUsed : 0}
           movementMax={myEntity?.speed ?? 0}
           actionUsed={Boolean(myEntity?.data?.actionUsed)}

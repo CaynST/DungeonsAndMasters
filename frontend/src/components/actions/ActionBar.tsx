@@ -10,6 +10,7 @@ interface Props {
   isMyTurn: boolean;
   busy?: boolean;
   checkPending?: boolean;
+  downed?: boolean;
   movementUsed?: number;
   movementMax?: number;
   actionUsed?: boolean;
@@ -33,6 +34,7 @@ export function ActionBar({
   isMyTurn,
   busy,
   checkPending,
+  downed,
   movementUsed,
   movementMax,
   actionUsed,
@@ -49,19 +51,24 @@ export function ActionBar({
   mode,
   onToggleMode,
 }: Props) {
-  // While an action is in flight or the DM's check is unresolved, everything is locked.
-  const locked = Boolean(busy) || Boolean(checkPending);
+  // While an action is in flight, a check is unresolved or the hero is downed, everything is locked.
+  const locked = Boolean(busy) || Boolean(checkPending) || Boolean(downed);
   const canActNow = canAct && !locked;
   const [diceOpen, setDiceOpen] = useState(false);
 
   return (
     <div className="panel flex flex-col gap-2 p-3">
-      {checkPending && (
+      {downed ? (
+        <div className="flex items-center gap-2 rounded-md border border-[#d0566a]/40 bg-[#d0566a]/10 px-3 py-1.5 text-xs text-[#e8b7c0]">
+          <Lock className="h-3.5 w-3.5" />
+          Estás moribundo. Solo puedes tirar una salvación de muerte.
+        </div>
+      ) : checkPending ? (
         <div className="flex items-center gap-2 rounded-md border border-gold/40 bg-gold/10 px-3 py-1.5 text-xs text-gold-soft">
           <Lock className="h-3.5 w-3.5" />
           El Dungeon Master os ha pedido una prueba. Resolvedla antes de actuar.
         </div>
-      )}
+      ) : null}
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-2">
