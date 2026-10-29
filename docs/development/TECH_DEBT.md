@@ -9,8 +9,6 @@ Deuda consciente del prototipo, ordenada por impacto en la fidelidad con el PHB.
 | R-03 | Faltan acciones de combate (Carrera, Retirada, Esquivar, Ayudar, Ocultarse, Preparado, Buscar, Usar objeto) | Alto | P1 | Enum de acciones + efectos por turno |
 | R-04 | Sin condiciones (14 del Apéndice A) | Alto | P1 | Modelo de condiciones con duración y modificadores |
 | R-05 | Sin cobertura | Medio | P1 | Cálculo por línea entre atacante/objetivo (+2/+5/total) |
-| R-06 | Sin rango ni alcance en ataques | Alto | P0 | Validar distancia y desventaja a larga distancia |
-| R-07 | El movimiento diagonal atraviesa esquinas | Medio | P0 | Comprobar las dos casillas ortogonales adyacentes |
 | R-10 | Sin conjuros (trucos, espacios, concentración) | Alto | P1 | Catálogo mínimo + recursos por clase |
 | R-11 | Sin rasgos de clase | Alto | P1 | Rasgos por clase/nivel con hooks en el motor |
 | R-12 | 7 de 13 trasfondos PHB | Bajo | P2 | Añadir los 6 restantes al RuleSet |

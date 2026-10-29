@@ -12,8 +12,8 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | R-03 | Acciones de combate: Carrera, Retirada, Esquivar, Ayudar, Ocultarse, Preparado, Buscar, Usar objeto | P1 | pending |
 | R-04 | Condiciones del Apéndice A (cegado, derribado, apresado, asustado, etc.) | P1 | pending |
 | R-05 | Cobertura (media +2 / tres cuartos +5 / total) | P1 | pending |
-| R-06 | Rango de ataque (normal/largo, desventaja) y alcance cuerpo a cuerpo | P0 | pending |
-| R-07 | Movimiento diagonal: no atravesar esquinas de muros | P0 | pending |
+| R-06 | Rango de ataque (normal/largo, desventaja) y alcance cuerpo a cuerpo | P0 | done |
+| R-07 | Movimiento diagonal: no atravesar esquinas de muros | P0 | done |
 | R-08 | Terreno difícil (coste doble) | P2 | pending |
 | R-09 | Sorpresa | P2 | pending |
 | R-10 | Conjuros: trucos, espacios, concentración, componentes | P1 | pending |
@@ -49,3 +49,5 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-06 | 14 fondos por temática para campañas/escenas | done |
 | D-07 | Fichas del tablero con retrato | done |
 | D-08 | Intro con imagen, viñeta y letterbox | done |
+| D-09 | Rango/alcance de ataque + desventaja a larga distancia | done |
+| D-10 | Movimiento diagonal sin atravesar esquinas | done |

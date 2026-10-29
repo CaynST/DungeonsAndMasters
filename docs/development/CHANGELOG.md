@@ -1,5 +1,12 @@
 # CHANGELOG (desarrollo)
 
+## 2026-10-29
+
+- **D-09** `feat(rules)` — Validación de rango de ataque: cuerpo a cuerpo 1 casilla; a distancia
+  con alcance normal y largo (2×) con desventaja; fuera de alcance se rechaza. Nuevo
+  `RangeRules` y soporte de ventaja/desventaja en `AttackResolver`.
+- **D-10** `fix(rules)` — El movimiento diagonal ya no atraviesa esquinas de muros/obstáculos.
+
 ## 2026-10-28
 
 - **D-01** `fix(assets)` — Convertidos los placeholders de SVG-con-extensión-`.png` a PNG reales;

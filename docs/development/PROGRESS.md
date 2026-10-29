@@ -1,5 +1,24 @@
 # PROGRESS
 
+## 2026-10-29 — Reglas P0: rango y esquinas
+
+**Objetivo:** cerrar las dos brechas P0 detectadas en la auditoría.
+
+**Acciones**
+- `RangeRules`: ataques cuerpo a cuerpo a 1 casilla; a distancia con alcance normal y largo
+  (hasta 2×) con **desventaja**; más allá se rechaza. Integrado en `GameService.attack`.
+- `AttackResolver`: soporte de ventaja/desventaja (2d20, mayor/menor).
+- `MovementValidator`: el movimiento diagonal no puede atravesar la esquina de un muro/obstáculo.
+
+**Verificación (TDD)**
+- `RangeRulesTest` (5 casos) y test de ventaja/desventaja en `RulesEngineTest`.
+- `MovementValidatorTest`: test Red de esquina bloqueada y caso permitido.
+- Suite backend completa en verde.
+
+**Commits**
+- `feat(rules): validate attack range and forbid cutting wall corners`
+- `docs(development): mark P0 range and corner rules as done`
+
 ## 2026-10-28 — Auditoría de manuales + rediseño visual
 
 **Objetivo:** verificar compatibilidad del flujo de juego con los manuales (PHB, DMG, MM),
