@@ -35,3 +35,13 @@ inicio del turno.
 **Consecuencia:** las condiciones son testeables sin Spring, visibles en la UI y extensibles; las
 aproximaciones (fuente de miedo, resistencia petrificada, salvaciones FUE/DES) quedan documentadas
 en `TECH_DEBT.md`.
+
+## ADR-005 — Cobertura por línea de rejilla, no por geometría continua
+**Contexto:** el tablero es una rejilla de casillas y el motor ya usa distancias Chebyshev; una
+solución geométrica continua sería más precisa pero desproporcionada para el prototipo.
+**Alternativas:** calcular polígonos de visión; o aproximar con la línea de casillas.
+**Decisión:** Bresenham entre centros de casillas. Muro o puerta cerrada bloquean por completo;
+los obstáculos suman cobertura media (+2 CA) o de tres cuartos (+5 CA). El cuerpo a cuerpo a 1
+casilla no tiene casilla intermedia y no recibe cobertura.
+**Consecuencia:** reglas deterministas y testeables; las esquinas y la cobertura por criaturas
+quedan como aproximaciones documentadas en `TECH_DEBT.md`.

@@ -2,6 +2,12 @@
 
 ## 2026-10-29
 
+- **D-14** `feat(rules)` — Cobertura 5e: `CoverRules` calcula la línea de visión en la rejilla
+  (Bresenham). Muro o puerta cerrada = cobertura total; un obstáculo = media (+2 CA); dos o más =
+  tres cuartos (+5 CA). `GameService` rechaza ataques contra cobertura total antes de gastar la
+  acción y `CombatService` aplica la CA efectiva a ataques de jugador y de IA, registrando
+  `cover`/`coverBonus` en el evento.
+
 - **D-13** `feat(rules)` — Condiciones del Apéndice A: modelo puro (`Condition`, `ConditionSet`,
   `ConditionRules`) con los 15 estados, ventaja/desventaja, crítico automático, velocidad 0 y
   agotamiento; duración por rondas y acciones `APPLY_CONDITION`/`REMOVE_CONDITION` del DM. Penalti de

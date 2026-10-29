@@ -1,5 +1,26 @@
 # PROGRESS
 
+## 2026-10-29 — Cobertura
+
+**Objetivo:** implementar R-05 con la rejilla como fuente de verdad.
+
+**Acciones**
+- `CoverRules`: línea de Bresenham entre centros de casillas; muro o puerta cerrada = total;
+  1 obstáculo = media (+2 CA); 2+ obstáculos = tres cuartos (+5 CA); cuerpo a cuerpo a 1 casilla
+  ignora cobertura.
+- `GameService.attack` rechaza la cobertura total antes de consumir la acción.
+- `CombatService.attack` aplica la CA efectiva a ataques de jugador y de IA, y registra
+  `cover`/`coverBonus` en el evento; los ataques bloqueados se registran como `ATTACK_BLOCKED`.
+- La UI muestra el motivo en el aviso y la bonificación en el registro de combate.
+
+**Verificación (TDD)**
+- `CoverRulesTest` (10 casos: línea abierta, obstáculos, muro, puerta, cuerpo a cuerpo, diagonal).
+- `CoverIntegrationTest` (rechazo por cobertura total y +2 CA real en el resolver).
+- Backend completo: **162 tests** en verde. Frontend: **24 tests** y `pnpm build` en verde.
+
+**Siguiente paso**
+- Conjuros/rasgos de clase (R-10/R-11) o las brechas P2 de `TECH_DEBT.md`.
+
 ## 2026-10-29 — Condiciones del Apéndice A
 
 **Objetivo:** implementar las condiciones 5e con efectos reales en el motor, aplicación por el DM
