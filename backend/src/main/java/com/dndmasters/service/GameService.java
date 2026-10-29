@@ -28,6 +28,7 @@ import com.dndmasters.engine.dice.DiceRollResult;
 import com.dndmasters.engine.rules.CheckResolver;
 import com.dndmasters.engine.rules.CheckResult;
 import com.dndmasters.engine.rules.Advantage;
+import com.dndmasters.engine.rules.CoverRules;
 import com.dndmasters.engine.rules.RangeRules;
 import com.dndmasters.engine.rules.Combatants;
 import com.dndmasters.persistence.entity.CharacterEntity;
@@ -323,6 +324,11 @@ public class GameService {
         RangeRules.Result range = RangeRules.check(chosen, distance);
         if (!range.allowed()) {
             return ActionResult.error(range.reason());
+        }
+        GameMap attackMap = campaigns.mapForScene(activeSceneId(campaignId));
+        CoverRules.Result cover = CoverRules.check(attackMap, actor.cell(), target.cell(), chosen.ranged());
+        if (cover.blocksAttack()) {
+            return ActionResult.error(cover.reason());
         }
         Advantage advantage = range.disadvantage() ? Advantage.DISADVANTAGE : Advantage.NONE;
         CombatState eventState = state != null ? state : transientState(campaignId);

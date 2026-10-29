@@ -20,6 +20,7 @@ import com.dndmasters.engine.rules.AttackResolver;
 import com.dndmasters.engine.rules.AttackResult;
 import com.dndmasters.engine.rules.Combatant;
 import com.dndmasters.engine.rules.Combatants;
+import com.dndmasters.engine.rules.CoverRules;
 import com.dndmasters.engine.rules.DamageResolver;
 import com.dndmasters.engine.rules.DamageResult;
 import com.dndmasters.persistence.entity.CombatParticipantEntity;
@@ -329,8 +330,26 @@ public class CombatService {
                                                          GameEntity target, Attack attack,
                                                          com.dndmasters.engine.rules.Advantage advantage,
                                                          List<com.dndmasters.domain.GameEvent> recorded) {
+        GameMap map = state.getSceneId() == null ? null : campaigns.mapForScene(state.getSceneId());
+        CoverRules.Result cover = CoverRules.check(map, attacker.cell(), target.cell(), attack.ranged());
+        if (cover.blocksAttack()) {
+            Map<String, Object> blocked = new LinkedHashMap<>();
+            blocked.put("attackerId", attacker.getId());
+            blocked.put("attackerName", attacker.getName());
+            blocked.put("targetId", target.getId());
+            blocked.put("targetName", target.getName());
+            blocked.put("attack", attack.name());
+            blocked.put("cover", cover.cover().name());
+            blocked.put("coverBonus", cover.acBonus());
+            blocked.put("reason", cover.reason());
+            recorded.add(events.record(campaignId, state.getSceneId(), "ATTACK_BLOCKED", attacker.getName(),
+                    cover.reason(), blocked));
+            return recorded;
+        }
+
         Combatant attackerC = Combatants.of(attacker);
         Combatant targetC = Combatants.of(target);
+        targetC.setAc(target.getAc() + cover.acBonus());
         boolean melee = !attack.ranged();
         ConditionSet attackerConditions = Conditions.of(attacker);
         ConditionSet targetConditions = Conditions.of(target);
@@ -360,6 +379,10 @@ public class CombatService {
         data.put("fumble", attackResult.fumble());
         data.put("advantage", effective.name());
         data.put("autoCritical", autoCritical);
+        data.put("cover", cover.cover().name());
+        data.put("coverBonus", cover.acBonus());
+
+        String coverNote = cover.acBonus() > 0 ? " (cobertura +" + cover.acBonus() + " CA)" : "";
 
         if (attackResult.hit()) {
             DamageResult damage = damageResolver.apply(attack, attackResult, targetC);
@@ -389,7 +412,7 @@ public class CombatService {
                     : attacker.getName() + " impacta a ";
             recorded.add(events.record(campaignId, state.getSceneId(), "ATTACK", attacker.getName(),
                     verb + target.getName() + " con " + attack.name() + " (" + attackResult.total() + " vs CA "
-                            + attackResult.targetAc() + ") y causa " + damage.total() + " de daño.",
+                            + attackResult.targetAc() + ")" + coverNote + " y causa " + damage.total() + " de daño.",
                     data));
 
             if (playerDown) {
@@ -417,7 +440,7 @@ public class CombatService {
         } else {
             recorded.add(events.record(campaignId, state.getSceneId(), "ATTACK_MISS", attacker.getName(),
                     attacker.getName() + " falla su ataque contra " + target.getName() + " (" + attackResult.total()
-                            + " vs CA " + attackResult.targetAc() + ").",
+                            + " vs CA " + attackResult.targetAc() + ")" + coverNote + ".",
                     data));
         }
         return recorded;
