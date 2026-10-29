@@ -4,8 +4,8 @@ Deuda consciente del prototipo, ordenada por impacto en la fidelidad con el PHB.
 
 | ID | Deuda | Impacto | Prioridad | Remediación |
 |----|-------|---------|-----------|-------------|
-| R-02 | Solo acción + movimiento; sin acción adicional/reacción/ataques de oportunidad | Alto | P1 | Añadir contadores y desencadenantes; reacciones en el motor |
-| R-03 | Faltan acciones de combate (Carrera, Retirada, Esquivar, Ayudar, Ocultarse, Preparado, Buscar, Usar objeto) | Alto | P1 | Enum de acciones + efectos por turno |
+| R-02 | Reacción solo para oportunidad enemiga; sin acción adicional con habilidades ni interacción gratuita | Medio | P1 | Habilidades de acción adicional por clase y reacciones elegibles |
+| R-03 | Hechas Carrera/Retirada/Esquivar; faltan Ayudar/Ocultarse/Preparado/Buscar/Usar objeto | Medio | P1 | Enum de acciones + efectos por turno |
 | R-04 | Sin condiciones (14 del Apéndice A) | Alto | P1 | Modelo de condiciones con duración y modificadores |
 | R-05 | Sin cobertura | Medio | P1 | Cálculo por línea entre atacante/objetivo (+2/+5/total) |
 | R-10 | Sin conjuros (trucos, espacios, concentración) | Alto | P1 | Catálogo mínimo + recursos por clase |

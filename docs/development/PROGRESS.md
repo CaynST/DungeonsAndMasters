@@ -21,10 +21,17 @@
   bloqueo de acciones para moribundos, curación limpia el estado).
 - Frontend: banner de moribundo/estable y botón de salvación; acciones bloqueadas.
 
+**Economía de turno (P1 parcial)**
+- `TurnEconomy` puro (reset de acción/bono/movimiento/reacción) con tests.
+- Correr, Esquivar y Retirada como acciones; ataques de oportunidad enemigos al salir de alcance;
+  ventaja/desventaja de Esquivar integrada en el resolver.
+- Frontend: botones Correr/Esquivar/Retirada y movimiento máximo leído del estado.
+
 **Commits**
 - `feat(rules): validate attack range and forbid cutting wall corners`
 - `docs(development): mark P0 range and corner rules as done`
 - `feat(rules): death saving throws and dying state`
+- `feat(rules): turn economy, dodge and opportunity attacks`
 
 ## 2026-10-28 — Auditoría de manuales + rediseño visual
 

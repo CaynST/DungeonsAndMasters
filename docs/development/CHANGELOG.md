@@ -6,6 +6,10 @@
   con alcance normal y largo (2×) con desventaja; fuera de alcance se rechaza. Nuevo
   `RangeRules` y soporte de ventaja/desventaja en `AttackResolver`.
 - **D-10** `fix(rules)` — El movimiento diagonal ya no atraviesa esquinas de muros/obstáculos.
+- **D-12** `feat(rules)` — Economía de turno: `TurnEconomy` (reset de acción/movimiento/bono/reacción),
+  **Correr** (movimiento ×2), **Esquivar** (desventaja a ataques contra ti), **Retirada** (sin ataques
+  de oportunidad) y **ataques de oportunidad** de enemigos al salir de su alcance (1 reacción).
+  Botones nuevos en la barra de acciones.
 - **D-11** `feat(rules)` — Muerte y salvaciones: los PJ a 0 PG caen moribundos; salvación al inicio
   del turno (3 éxitos estabilizan, 3 fallos matan, 20 = 1 PG, 1 = 2 fallos); daño a 0 PG suma fallo
   (2 en crítico) y daño ≥ PG máximos mata. Acción `DEATH_SAVE` y bloqueo de acciones para moribundos.
