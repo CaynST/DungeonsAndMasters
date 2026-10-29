@@ -2,6 +2,13 @@
 
 ## 2026-10-29
 
+- **D-13** `feat(rules)` — Condiciones del Apéndice A: modelo puro (`Condition`, `ConditionSet`,
+  `ConditionRules`) con los 15 estados, ventaja/desventaja, crítico automático, velocidad 0 y
+  agotamiento; duración por rondas y acciones `APPLY_CONDITION`/`REMOVE_CONDITION` del DM. Penalti de
+  agotamiento en pruebas, bloqueo de acciones incapacitadas y acción `STAND_UP`. UI: insignias en
+  tablero, iniciativa y barra de acciones; aviso de incapacitado. Disparador offline: fallar la
+  prueba inicial aplica **Cegado**.
+
 - **D-09** `feat(rules)` — Validación de rango de ataque: cuerpo a cuerpo 1 casilla; a distancia
   con alcance normal y largo (2×) con desventaja; fuera de alcance se rechaza. Nuevo
   `RangeRules` y soporte de ventaja/desventaja en `AttackResolver`.

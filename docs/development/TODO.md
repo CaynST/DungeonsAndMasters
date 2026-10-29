@@ -10,7 +10,7 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | R-01 | Tiradas de salvación contra muerte (3 éxitos/fallos, 1 = 2 fallos, 20 = 1 PG, estabilizar, daño masivo) | P1 | done |
 | R-02 | Economía de acciones completa: acción adicional, reacción, ataque de oportunidad, interacción gratuita | P1 | in_progress |
 | R-03 | Acciones de combate: Carrera, Retirada, Esquivar, Ayudar, Ocultarse, Preparado, Buscar, Usar objeto | P1 | in_progress |
-| R-04 | Condiciones del Apéndice A (cegado, derribado, apresado, asustado, etc.) | P1 | pending |
+| R-04 | Condiciones del Apéndice A (cegado, derribado, apresado, asustado, etc.) | P1 | done |
 | R-05 | Cobertura (media +2 / tres cuartos +5 / total) | P1 | pending |
 | R-06 | Rango de ataque (normal/largo, desventaja) y alcance cuerpo a cuerpo | P0 | done |
 | R-07 | Movimiento diagonal: no atravesar esquinas de muros | P0 | done |
@@ -53,3 +53,4 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-10 | Movimiento diagonal sin atravesar esquinas | done |
 | D-11 | Muerte y salvaciones de muerte (moribundo/estable/muerto) | done |
 | D-12 | Economía de turno: Dash/Dodge/Disengage y ataques de oportunidad | done |
+| D-13 | Condiciones 5e: modelo, efectos en ataque/prueba/movimiento, acciones del DM y UI | done |

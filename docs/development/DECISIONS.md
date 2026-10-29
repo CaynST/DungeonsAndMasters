@@ -22,3 +22,16 @@ proveedor real; los jugadores pueden subir retratos.
 el mapa, y reservar el púrpura para lo arcano. Tipografía Sora/Inter con mayor contraste.
 **Consecuencia:** se mantiene la legibilidad y se gana identidad; se desvía a propósito del estilo
 "app SaaS" plano.
+
+## ADR-004 — Condiciones como datos + reglas puras, aplicadas por el motor
+**Contexto:** el PHB define 15 condiciones con efectos que cruzan ataques, pruebas, movimiento y
+economía de acciones; el DM solo puede proponer acciones estructuradas.
+**Alternativas:** codificar cada condición dentro de `CombatService`; o modelarlas como datos
+persistidos y una capa pura de decisión.
+**Decisión:** `Condition` (catálogo), `ConditionSet` (datos inmutables en `entity.data`) y
+`ConditionRules` (ventaja, crítico, pruebas, velocidad). El DM aplica o retira con
+`APPLY_CONDITION`/`REMOVE_CONDITION`; el motor valida y persiste. Las duraciones se tickean al
+inicio del turno.
+**Consecuencia:** las condiciones son testeables sin Spring, visibles en la UI y extensibles; las
+aproximaciones (fuente de miedo, resistencia petrificada, salvaciones FUE/DES) quedan documentadas
+en `TECH_DEBT.md`.

@@ -1,5 +1,30 @@
 # PROGRESS
 
+## 2026-10-29 — Condiciones del Apéndice A
+
+**Objetivo:** implementar las condiciones 5e con efectos reales en el motor, aplicación por el DM
+y visibilidad en la UI.
+
+**Acciones**
+- Modelo puro `Condition` / `ConditionSet` / `ConditionRules` con los 15 estados, duración por
+  rondas, agotamiento acumulativo (1-6) y consultas de reglas.
+- Integración: ventaja/desventaja y cancelación, crítico automático cuerpo a cuerpo contra
+  paralizado/inconsciente, desventaja en pruebas, penalti -2/nivel de agotamiento, velocidad 0,
+  movimiento a la mitad (agotamiento 2 / arrastrarse) y bloqueo de acciones incapacitadas.
+- Acciones del DM `APPLY_CONDITION` / `REMOVE_CONDITION` validadas y registradas como eventos.
+- Acción `STAND_UP` (coste: mitad de la velocidad) y tick de duraciones al inicio del turno.
+- UI: insignias de estado en tablero, iniciativa y barra; aviso de incapacitado; botón Levantarse.
+- DM offline: fallar la prueba de percepción/investigación inicial aplica **Cegado** durante 2 rondas.
+
+**Verificación (TDD)**
+- `ConditionTest`, `ConditionSetTest`, `ConditionRulesTest` (modelo puro).
+- `ConditionIntegrationTest` (expiración, bloqueo, penalti, ventaja, DM, `STAND_UP`).
+- `DmActionValidatorTest`, `MockAIProviderTest`.
+- Backend completo: **144 tests** en verde. Frontend: **24 tests** y `pnpm build` en verde.
+
+**Siguiente paso**
+- Cobertura (R-05), luego conjuros/rasgos de clase y las aproximaciones listadas en `TECH_DEBT.md`.
+
 ## 2026-10-29 — Reglas P0: rango y esquinas
 
 **Objetivo:** cerrar las dos brechas P0 detectadas en la auditoría.
