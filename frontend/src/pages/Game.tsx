@@ -17,8 +17,10 @@ import { CharacterSheet } from "@/components/CharacterSheet";
 import { DmPanel } from "@/components/dm/DmPanel";
 import { DiceTray } from "@/components/dice/DiceTray";
 import { ActionBar } from "@/components/actions/ActionBar";
+import { ConditionBadges } from "@/components/ConditionBadges";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { entityConditions, isIncapacitated } from "@/lib/conditions";
 import type { Attack, Cell, GameEvent, PlayerActionPayload } from "@/types/game";
 
 export function Game() {
@@ -135,9 +137,12 @@ export function Game() {
 
   const isMyTurn = !combat?.active || currentParticipant?.entityId === myEntity?.id;
   const isDowned = Boolean(myEntity?.data?.dying) || Boolean(myEntity?.data?.stable);
+  const myConditions = useMemo(() => entityConditions(myEntity), [myEntity]);
+  const incapacitated = isIncapacitated(myEntity);
+  const prone = myConditions.some((condition) => condition.code === "PRONE");
   const deathSuccesses = typeof myEntity?.data?.deathSuccesses === "number" ? myEntity.data.deathSuccesses : 0;
   const deathFailures = typeof myEntity?.data?.deathFailures === "number" ? myEntity.data.deathFailures : 0;
-  const canAct = Boolean(myEntity?.alive) && isMyTurn && !isDowned;
+  const canAct = Boolean(myEntity?.alive) && isMyTurn && !isDowned && !incapacitated;
 
   const spotlightCharacter =
     !combat?.active && gameState && gameState.party.length > 0
@@ -477,6 +482,12 @@ export function Game() {
 
       {/* Action bar */}
       <div className="px-3 pb-3">
+        {myEntity && myConditions.length > 0 && (
+          <div className="panel mb-2 flex flex-wrap items-center gap-2 px-3 py-2">
+            <span className="text-[11px] uppercase tracking-wider text-muted">Estados</span>
+            <ConditionBadges conditions={myConditions} />
+          </div>
+        )}
         <ActionBar
           character={gameState.party.find((c) => c.id === myEntity?.refId)}
           canAct={canAct}
@@ -484,6 +495,8 @@ export function Game() {
           busy={actionBusy}
           checkPending={Boolean(checkPending)}
           downed={isDowned}
+          incapacitated={incapacitated}
+          prone={prone}
           movementUsed={typeof myEntity?.data?.movementUsed === "number" ? myEntity.data.movementUsed : 0}
           movementMax={
             typeof myEntity?.data?.movementMax === "number" ? myEntity.data.movementMax : myEntity?.speed ?? 0
@@ -500,6 +513,7 @@ export function Game() {
           onOpenShop={() => setShowShop(true)}
           shopOpen={gameState.campaign.shopOpen}
           onCombatAction={(type) => act.mutate({ type, actorEntityId: myEntity?.id })}
+          onStandUp={() => act.mutate({ type: "STAND_UP", actorEntityId: myEntity?.id })}
           mode={mode}
           onToggleMode={setMode}
         />

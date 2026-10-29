@@ -1,5 +1,17 @@
 import { useState } from "react";
-import { Dices, Footprints, Lock, MessageSquare, MoveRight, Shield, Store, Swords, Undo2, Wind } from "lucide-react";
+import {
+  ArrowUpFromLine,
+  Dices,
+  Footprints,
+  Lock,
+  MessageSquare,
+  MoveRight,
+  Shield,
+  Store,
+  Swords,
+  Undo2,
+  Wind,
+} from "lucide-react";
 import type { Attack, PlayerCharacter } from "@/types/game";
 import { Button } from "@/components/ui/Button";
 import { formatModifier } from "@/lib/utils";
@@ -11,6 +23,8 @@ interface Props {
   busy?: boolean;
   checkPending?: boolean;
   downed?: boolean;
+  incapacitated?: boolean;
+  prone?: boolean;
   movementUsed?: number;
   movementMax?: number;
   actionUsed?: boolean;
@@ -27,6 +41,7 @@ interface Props {
   mode: "move" | "attack";
   onToggleMode: (mode: "move" | "attack") => void;
   onCombatAction: (type: "DASH" | "DODGE" | "DISENGAGE") => void;
+  onStandUp: () => void;
 }
 
 export function ActionBar({
@@ -36,6 +51,8 @@ export function ActionBar({
   busy,
   checkPending,
   downed,
+  incapacitated,
+  prone,
   movementUsed,
   movementMax,
   actionUsed,
@@ -52,9 +69,11 @@ export function ActionBar({
   mode,
   onToggleMode,
   onCombatAction,
+  onStandUp,
 }: Props) {
-  // While an action is in flight, a check is unresolved or the hero is downed, everything is locked.
-  const locked = Boolean(busy) || Boolean(checkPending) || Boolean(downed);
+  // While an action is in flight, a check is unresolved, the hero is downed or incapacitated,
+  // everything is locked.
+  const locked = Boolean(busy) || Boolean(checkPending) || Boolean(downed) || Boolean(incapacitated);
   const canActNow = canAct && !locked;
   const [diceOpen, setDiceOpen] = useState(false);
 
@@ -64,6 +83,11 @@ export function ActionBar({
         <div className="flex items-center gap-2 rounded-md border border-[#d0566a]/40 bg-[#d0566a]/10 px-3 py-1.5 text-xs text-[#e8b7c0]">
           <Lock className="h-3.5 w-3.5" />
           Estás moribundo. Solo puedes tirar una salvación de muerte.
+        </div>
+      ) : incapacitated ? (
+        <div className="flex items-center gap-2 rounded-md border border-[#d0566a]/40 bg-[#d0566a]/10 px-3 py-1.5 text-xs text-[#e8b7c0]">
+          <Lock className="h-3.5 w-3.5" />
+          Estás incapacitado: no puedes realizar acciones ni reacciones.
         </div>
       ) : checkPending ? (
         <div className="flex items-center gap-2 rounded-md border border-gold/40 bg-gold/10 px-3 py-1.5 text-xs text-gold-soft">
@@ -139,6 +163,17 @@ export function ActionBar({
           >
             <Undo2 className="h-4 w-4" /> Retirada
           </Button>
+          {prone && (
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!canActNow}
+              title="Levantarse cuesta la mitad de tu velocidad"
+              onClick={onStandUp}
+            >
+              <ArrowUpFromLine className="h-4 w-4" /> Levantarse
+            </Button>
+          )}
 
           <div className="mx-1 h-6 w-px bg-parchment/10" />
 
@@ -196,7 +231,7 @@ export function ActionBar({
           <Button variant="ghost" size="sm" disabled={!shopOpen || locked} onClick={onOpenShop}>
             <Store className="h-4 w-4" /> Tienda
           </Button>
-          <Button variant="secondary" size="sm" disabled={!isMyTurn || locked} onClick={onEndTurn}>
+          <Button variant="secondary" size="sm" disabled={!isMyTurn || Boolean(busy)} onClick={onEndTurn}>
             <MoveRight className="h-4 w-4" /> Terminar turno
           </Button>
         </div>

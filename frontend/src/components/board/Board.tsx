@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import type { Cell, Decor, GameEntity, GameMap } from "@/types/game";
+import { entityConditions } from "@/lib/conditions";
 import { cn } from "@/lib/utils";
 import { useGameStore } from "@/store/useGameStore";
 
@@ -406,6 +407,8 @@ function Token({
         </g>
       )}
 
+      <ConditionDots entity={entity} x={x} y={y} cell={cell} />
+
       {floating.map((text) => (
         <motion.text
           key={text.id}
@@ -428,6 +431,41 @@ function Token({
 
 function key(cell: Cell) {
   return `${cell.x},${cell.y}`;
+}
+
+/** Small condition markers around a token, with a native tooltip explaining each one. */
+function ConditionDots({ entity, x, y, cell }: { entity: GameEntity; x: number; y: number; cell: number }) {
+  const conditions = entityConditions(entity);
+  if (conditions.length === 0) return null;
+  const visible = conditions.slice(0, 4);
+  const spread = (visible.length - 1) / 2;
+  return (
+    <g>
+      {visible.map((condition, index) => {
+        const angle = -Math.PI / 2 + (index - spread) * 0.5;
+        const cx = x + Math.cos(angle) * cell * 0.42;
+        const cy = y + Math.sin(angle) * cell * 0.42;
+        return (
+          <g key={condition.code}>
+            <circle
+              cx={cx}
+              cy={cy}
+              r={cell * 0.07}
+              fill={condition.color}
+              stroke="#0c0a08"
+              strokeWidth={1.5}
+            />
+            <title>{`${condition.label}: ${condition.description}`}</title>
+          </g>
+        );
+      })}
+      {conditions.length > visible.length && (
+        <text x={x + cell * 0.38} y={y - cell * 0.28} fontSize={cell * 0.16} fill="#e8e1d5" fontWeight={700}>
+          +{conditions.length - visible.length}
+        </text>
+      )}
+    </g>
+  );
 }
 
 /** Removes duplicate cells, keeping first occurrence (defends against bad persisted maps). */

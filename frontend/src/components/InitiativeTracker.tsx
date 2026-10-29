@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Swords } from "lucide-react";
 import type { CombatState, GameEntity } from "@/types/game";
+import { ConditionBadges } from "@/components/ConditionBadges";
 import { cn, hpColor, hpPercent } from "@/lib/utils";
 
 interface Props {
@@ -63,6 +64,7 @@ export function InitiativeTracker({ combat, entities }: Props) {
                     />
                   </div>
                 )}
+                {entity && <ConditionBadges entity={entity} compact className="mt-1" />}
               </div>
               {isCurrent && <span className="h-2 w-2 animate-pulse rounded-full bg-gold" />}
             </motion.li>
