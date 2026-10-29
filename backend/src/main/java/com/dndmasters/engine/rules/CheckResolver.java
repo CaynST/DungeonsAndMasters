@@ -17,6 +17,14 @@ public class CheckResolver {
     }
 
     public CheckResult resolve(Combatant combatant, String skill, int dc, Advantage advantage) {
+        return resolve(combatant, skill, dc, advantage, 0);
+    }
+
+    /**
+     * Resolves a check with an extra flat modifier (e.g. the -2 per exhaustion level).
+     * Natural 20 always succeeds and natural 1 always fails, as before.
+     */
+    public CheckResult resolve(Combatant combatant, String skill, int dc, Advantage advantage, int extraModifier) {
         DiceRollResult first = dice.roll("1d20");
         int firstRoll = first.rolls().get(0);
 
@@ -31,7 +39,7 @@ public class CheckResolver {
         }
 
         int modifier = combatant.modifier(Skills.abilityFor(skill));
-        int total = chosen + modifier;
+        int total = chosen + modifier + extraModifier;
         boolean success = chosen == 20 || (chosen != 1 && total >= dc);
 
         return new CheckResult(

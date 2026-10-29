@@ -10,6 +10,9 @@ import com.dndmasters.domain.GameMap;
 import com.dndmasters.domain.GamePhase;
 import com.dndmasters.engine.board.GridMath;
 import com.dndmasters.engine.combat.CombatEngine;
+import com.dndmasters.engine.combat.ConditionRules;
+import com.dndmasters.engine.combat.ConditionSet;
+import com.dndmasters.engine.combat.Conditions;
 import com.dndmasters.engine.combat.DeathSaveRules;
 import com.dndmasters.engine.combat.TurnEconomy;
 import com.dndmasters.engine.combat.TurnManager;
@@ -151,7 +154,7 @@ public class CombatService {
         CombatParticipant next = turns.advance(state);
         if (next != null) {
             persist(state);
-            campaigns.resetTurnUsage(next.getEntityId());
+            campaigns.startTurn(campaignId, next.getEntityId());
             events.record(campaignId, state.getSceneId(), "TURN_CHANGED", next.getName(),
                     "Turno de " + next.getName() + " (ronda " + state.getRound() + ").",
                     Map.of("entityId", next.getEntityId(), "round", state.getRound()));
@@ -177,6 +180,10 @@ public class CombatService {
                 turns.markDead(state, current.getEntityId());
                 turns.advance(state);
                 persist(state);
+                CombatParticipant next = state.currentParticipant();
+                if (next != null) {
+                    campaigns.startTurn(campaignId, next.getEntityId());
+                }
                 continue;
             }
             if (isPlayerControlled(actor)) {
@@ -190,15 +197,13 @@ public class CombatService {
             CombatParticipant next = turns.advance(state);
             persist(state);
             if (next != null) {
+                campaigns.startTurn(campaignId, next.getEntityId());
                 recorded.add(events.record(campaignId, state.getSceneId(), "TURN_CHANGED", next.getName(),
                         "Turno de " + next.getName() + " (ronda " + state.getRound() + ").",
                         Map.of("entityId", next.getEntityId(), "round", state.getRound())));
             }
         }
-        // Control is back with a human player: give them a fresh turn economy.
-        if (state.isActive() && state.currentParticipant() != null) {
-            campaigns.resetTurnUsage(state.currentParticipant().getEntityId());
-        }
+        // Every advance above already called startTurn, so the human's economy is fresh.
         return recorded;
     }
 
@@ -216,6 +221,13 @@ public class CombatService {
         GameEntity nearest = targets.stream()
                 .min(Comparator.comparingInt(t -> actor.cell().chebyshevTo(t.cell())))
                 .orElseThrow();
+
+        if (Conditions.of(actor).incapacitated()) {
+            recorded.add(events.record(campaignId, state.getSceneId(), "NPC_TURN", actor.getName(),
+                    actor.getName() + " está incapacitado y pierde su turno.",
+                    Map.of("entityId", actor.getId())));
+            return recorded;
+        }
 
         recorded.add(events.record(campaignId, state.getSceneId(), "NPC_TURN", actor.getName(),
                 actor.getName() + " actúa.", Map.of("entityId", actor.getId())));
@@ -237,7 +249,8 @@ public class CombatService {
     private void moveToward(Long campaignId, CombatState state, GameEntity actor, GameEntity target,
                             List<GameEntity> sceneEntities, List<com.dndmasters.domain.GameEvent> recorded) {
         GameMap map = campaigns.mapForScene(state.getSceneId());
-        if (map == null || actor.getSpeed() <= 0) {
+        int speed = ConditionRules.effectiveSpeed(actor.getSpeed(), Conditions.of(actor));
+        if (map == null || speed <= 0) {
             return;
         }
         Set<Cell> occupied = new HashSet<>();
@@ -246,7 +259,7 @@ public class CombatService {
 
         Cell position = actor.cell();
         int moved = 0;
-        for (int step = 0; step < actor.getSpeed(); step++) {
+        for (int step = 0; step < speed; step++) {
             if (position.isAdjacent(target.cell())) {
                 break;
             }
@@ -318,12 +331,20 @@ public class CombatService {
                                                          List<com.dndmasters.domain.GameEvent> recorded) {
         Combatant attackerC = Combatants.of(attacker);
         Combatant targetC = Combatants.of(target);
-        com.dndmasters.engine.rules.Advantage effective = advantage;
-        if (Boolean.TRUE.equals(target.getData().get("dodging"))) {
-            // Dodging imposes disadvantage on attacks against the creature until its next turn.
-            effective = com.dndmasters.engine.rules.Advantage.DISADVANTAGE;
-        }
-        AttackResult attackResult = attackResolver.resolve(attackerC, targetC, attack, effective);
+        boolean melee = !attack.ranged();
+        ConditionSet attackerConditions = Conditions.of(attacker);
+        ConditionSet targetConditions = Conditions.of(target);
+        boolean dodging = Boolean.TRUE.equals(target.getData().get("dodging"));
+        // Conditions and Dodge combine into a single 5e roll; advantage and disadvantage cancel.
+        com.dndmasters.engine.rules.Advantage effective = ConditionRules
+                .attackAdvantage(attackerConditions, targetConditions, melee, dodging);
+        effective = combine(effective, advantage);
+        AttackResult resolved = attackResolver.resolve(attackerC, targetC, attack, effective);
+        boolean autoCritical = resolved.hit() && ConditionRules.automaticCritical(targetConditions, melee);
+        AttackResult attackResult = autoCritical && !resolved.critical()
+                ? new AttackResult(resolved.attackName(), resolved.dieRoll(), resolved.attackBonus(),
+                        resolved.total(), resolved.targetAc(), true, true, resolved.fumble())
+                : resolved;
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("attackerId", attacker.getId());
@@ -337,6 +358,8 @@ public class CombatService {
         data.put("hit", attackResult.hit());
         data.put("critical", attackResult.critical());
         data.put("fumble", attackResult.fumble());
+        data.put("advantage", effective.name());
+        data.put("autoCritical", autoCritical);
 
         if (attackResult.hit()) {
             DamageResult damage = damageResolver.apply(attack, attackResult, targetC);
@@ -433,6 +456,22 @@ public class CombatService {
         return value instanceof Number n ? n.intValue() : 0;
     }
 
+    /** Advantage and disadvantage cancel when both are present. */
+    private com.dndmasters.engine.rules.Advantage combine(
+            com.dndmasters.engine.rules.Advantage left,
+            com.dndmasters.engine.rules.Advantage right) {
+        if (left == right) {
+            return left;
+        }
+        if (left == com.dndmasters.engine.rules.Advantage.NONE) {
+            return right;
+        }
+        if (right == com.dndmasters.engine.rules.Advantage.NONE) {
+            return left;
+        }
+        return com.dndmasters.engine.rules.Advantage.NONE;
+    }
+
     /**
      * Enemies adjacent to the mover's previous cell may use their reaction to make one melee
      * attack when the mover leaves their reach. Disengage prevents it; one reaction per creature.
@@ -453,6 +492,7 @@ public class CombatService {
                 .filter(GameEntity::isAlive)
                 .filter(e -> e.getId() != mover.getId())
                 .filter(e -> !TurnEconomy.flag(e.getData(), "reactionUsed"))
+                .filter(e -> !Conditions.of(e).incapacitated())
                 .filter(e -> e.cell().chebyshevTo(previousCell) <= 1)
                 .filter(e -> e.cell().chebyshevTo(mover.cell()) > 1)
                 .toList();

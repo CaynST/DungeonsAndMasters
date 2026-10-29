@@ -499,8 +499,34 @@ public class CampaignService {
     @Transactional
     public void resetTurnUsage(Long entityId) {
         entity(entityId).ifPresent(e -> {
-            com.dndmasters.engine.combat.TurnEconomy.reset(e.getData(), e.getSpeed());
+            int speed = com.dndmasters.engine.combat.ConditionRules.effectiveSpeed(
+                    e.getSpeed(), com.dndmasters.engine.combat.Conditions.of(e));
+            com.dndmasters.engine.combat.TurnEconomy.reset(e.getData(), speed);
             saveEntity(e);
+        });
+    }
+
+    /**
+     * Starts a creature's turn: expires timed conditions, then refreshes the turn economy
+     * with the effective speed (exhaustion or grappling can reduce or nullify it).
+     */
+    @Transactional
+    public void startTurn(Long campaignId, Long entityId) {
+        entity(entityId).ifPresent(e -> {
+            List<com.dndmasters.engine.combat.Condition> expired =
+                    com.dndmasters.engine.combat.Conditions.tick(e);
+            com.dndmasters.engine.combat.ConditionSet conditions =
+                    com.dndmasters.engine.combat.Conditions.of(e);
+            int speed = com.dndmasters.engine.combat.ConditionRules.effectiveSpeed(e.getSpeed(), conditions);
+            com.dndmasters.engine.combat.TurnEconomy.reset(e.getData(), speed);
+            saveEntity(e);
+
+            Long sceneId = requireCampaign(campaignId).getActiveSceneId();
+            for (com.dndmasters.engine.combat.Condition condition : expired) {
+                events.record(campaignId, sceneId, "CONDITION_ENDED", e.getName(),
+                        e.getName() + " deja de estar " + condition.label().toLowerCase() + ".",
+                        Map.of("entityId", e.getId(), "condition", condition.name()));
+            }
         });
     }
 

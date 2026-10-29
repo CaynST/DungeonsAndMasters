@@ -28,7 +28,7 @@ public class MockAIProvider implements AIProvider {
         DmResponse response = switch (trigger) {
             case "START" -> intro();
             case "DIALOGUE" -> dialogue(ctx);
-            case "CHECK_RESULT" -> checkResult(sceneOrder, skill, checkSuccess);
+            case "CHECK_RESULT" -> checkResult(ctx, sceneOrder, skill, checkSuccess);
             case "COMBAT_VICTORY" -> victory(sceneOrder);
             case "COMBAT_DEFEAT" -> defeat();
             default -> narrate(sceneOrder, ctx);
@@ -61,13 +61,22 @@ public class MockAIProvider implements AIProvider {
                 List.of(DmAction.requestCheck("investigation", 14)));
     }
 
-    private DmResponse checkResult(int sceneOrder, String skill, boolean success) {
+    private DmResponse checkResult(Map<String, Object> ctx, int sceneOrder, String skill, boolean success) {
         if (sceneOrder != 0) {
             return narrate(sceneOrder, Map.of());
         }
         if (!success) {
-            return DmResponse.narration("Registráis los archivos sin éxito: el polvo os ciega y las letras bailan "
-                    + "ante vuestros ojos. El Archivista deja escapar un suspiro impaciente. Quizá otra mirada lo logre.");
+            Long target = firstCharacterId(ctx);
+            List<DmAction> actions = target == null
+                    ? List.of()
+                    : List.of(DmAction.applyCondition(target, "BLINDED", 2));
+            return new DmResponse(
+                    "Registráis los archivos sin éxito: el polvo os ciega y las letras bailan "
+                            + "ante vuestros ojos. El Archivista deja escapar un suspiro impaciente. "
+                            + "Quizá otra mirada lo logre.",
+                    actions,
+                    false,
+                    null);
         }
         if ("investigation".equalsIgnoreCase(skill)) {
             return new DmResponse(
@@ -125,8 +134,17 @@ public class MockAIProvider implements AIProvider {
         return DmResponse.narration("El Dungeon Master aguarda vuestra decisión.");
     }
 
-    private static String str(Object value) {
-        return value == null ? "" : String.valueOf(value);
+    /** First character in the DM context, used to target narrative conditions. */
+    private Long firstCharacterId(Map<String, Object> ctx) {
+        Object characters = ctx.get("characters");
+        if (characters instanceof List<?> list && !list.isEmpty() && list.get(0) instanceof Map<?, ?> character) {
+            Object id = character.get("id");
+            return id instanceof Number number ? number.longValue() : null;
+        }
+        return null;
+    }
+
+    private static String str(Object value) {        return value == null ? "" : String.valueOf(value);
     }
 
     private static int num(Object value) {

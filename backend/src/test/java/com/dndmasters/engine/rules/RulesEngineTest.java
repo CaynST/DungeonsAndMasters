@@ -41,6 +41,17 @@ class RulesEngineTest {
     }
 
     @Test
+    void checkAppliesExtraPenalty() {
+        Combatant c = combatant(1, 10, 10, new Stats(10, 10, 10, 10, 10, 10));
+        CheckResolver resolver = new CheckResolver(new DiceEngine(StubRandom.of(11))); // d20 = 12
+
+        CheckResult result = resolver.resolve(c, "perception", 12, Advantage.NONE, -2);
+
+        assertThat(result.total()).isEqualTo(10);
+        assertThat(result.success()).isFalse();
+    }
+
+    @Test
     void checkNaturalTwentyAlwaysSucceedsAndNaturalOneAlwaysFails() {
         Combatant c = combatant(1, 10, 10, new Stats(10, 10, 10, 10, 10, 10));
         CheckResolver resolver = new CheckResolver(new DiceEngine(StubRandom.of(19, 0)));

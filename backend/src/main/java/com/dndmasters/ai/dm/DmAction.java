@@ -9,29 +9,40 @@ public record DmAction(
         String enemyName,
         Integer sceneOrder,
         String itemName,
-        String location) {
+        String location,
+        String condition,
+        Integer rounds) {
 
     public static DmAction requestCheck(String skill, int dc) {
-        return new DmAction("REQUEST_CHECK", skill, dc, null, null, null, null, null);
+        return new DmAction("REQUEST_CHECK", skill, dc, null, null, null, null, null, null, null);
     }
 
     public static DmAction shiftScene(int order) {
-        return new DmAction("SHIFT_SCENE", null, null, null, null, order, null, null);
+        return new DmAction("SHIFT_SCENE", null, null, null, null, order, null, null, null, null);
     }
 
     public static DmAction startCombat() {
-        return new DmAction("START_COMBAT", null, null, null, null, null, null, null);
+        return new DmAction("START_COMBAT", null, null, null, null, null, null, null, null, null);
     }
 
     public static DmAction grantReward(String item) {
-        return new DmAction("GRANT_REWARD", null, null, null, null, null, item, null);
+        return new DmAction("GRANT_REWARD", null, null, null, null, null, item, null, null, null);
     }
 
     public static DmAction endAdventure() {
-        return new DmAction("END_ADVENTURE", null, null, null, null, null, null, null);
+        return new DmAction("END_ADVENTURE", null, null, null, null, null, null, null, null, null);
     }
 
     public static DmAction openShop() {
-        return new DmAction("OPEN_SHOP", null, null, null, null, null, null, null);
+        return new DmAction("OPEN_SHOP", null, null, null, null, null, null, null, null, null);
+    }
+
+    /** Applies a condition to a token. {@code rounds} omitted means until removed. */
+    public static DmAction applyCondition(Long entityId, String condition, Integer rounds) {
+        return new DmAction("APPLY_CONDITION", null, null, entityId, null, null, null, null, condition, rounds);
+    }
+
+    public static DmAction removeCondition(Long entityId, String condition) {
+        return new DmAction("REMOVE_CONDITION", null, null, entityId, null, null, null, null, condition, null);
     }
 }

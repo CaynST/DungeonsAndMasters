@@ -18,8 +18,9 @@ public class DungeonMasterService {
             sin texto antes ni después, con esta forma exacta:
             {
               "narration": "texto narrativo breve",
-              "actions": [ { "type": "REQUEST_CHECK|START_COMBAT|SPAWN_ENEMY|SHIFT_SCENE|GRANT_REWARD|END_ADVENTURE|OPEN_SHOP|NARRATE",
-                             "skill": "perception", "dc": 12, "sceneOrder": 1, "enemyName": null, "itemName": null } ],
+              "actions": [ { "type": "REQUEST_CHECK|START_COMBAT|SPAWN_ENEMY|SHIFT_SCENE|GRANT_REWARD|END_ADVENTURE|OPEN_SHOP|APPLY_CONDITION|REMOVE_CONDITION|NARRATE",
+                             "skill": "perception", "dc": 12, "sceneOrder": 1, "enemyName": null, "itemName": null,
+                             "entityId": null, "condition": null, "rounds": null } ],
               "sceneChanged": false,
               "imagePrompt": null
             }
@@ -27,6 +28,11 @@ public class DungeonMasterService {
             QUÉ están intentando y POR QUÉ hace falta la tirada (una frase clara, sin tecnicismos).
             Habilidades válidas: perception, investigation, stealth, athletics, arcana, insight,
             persuasion, intimidation.
+            Condiciones válidas: BLINDED, CHARMED, DEAFENED, EXHAUSTION, FRIGHTENED, GRAPPLED,
+            INCAPACITATED, INVISIBLE, PARALYZED, PETRIFIED, POISONED, PRONE, RESTRAINED, STUNNED,
+            UNCONSCIOUS. Usa APPLY_CONDITION o REMOVE_CONDITION SOLO cuando la ficción lo justifique
+            (veneno, miedo, derribo, parálisis...) y con un entityId que aparezca en el contexto;
+            rounds es la duración en rondas (1-20, omítelo si dura hasta que se cure).
             Si el contexto incluye "spotlight" (el personaje al que le toca decidir), dirígete a él
             por su nombre y pregúntale qué quiere hacer, sin decidir por el jugador.
             Usa OPEN_SHOP SOLO cuando aparezca un mercader o el grupo busque comerciar.

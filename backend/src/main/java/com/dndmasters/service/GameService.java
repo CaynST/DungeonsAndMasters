@@ -18,6 +18,10 @@ import com.dndmasters.domain.InventoryItem;
 import com.dndmasters.domain.PlayerCharacter;
 import com.dndmasters.engine.board.MoveResult;
 import com.dndmasters.engine.board.MovementValidator;
+import com.dndmasters.engine.combat.Condition;
+import com.dndmasters.engine.combat.ConditionRules;
+import com.dndmasters.engine.combat.ConditionSet;
+import com.dndmasters.engine.combat.Conditions;
 import com.dndmasters.engine.combat.DeathSaveRules;
 import com.dndmasters.engine.dice.DiceEngine;
 import com.dndmasters.engine.dice.DiceRollResult;
@@ -140,6 +144,7 @@ public class GameService {
             case PlayerAction.DASH -> combatAction(campaignId, userId, action, PlayerAction.DASH);
             case PlayerAction.DODGE -> combatAction(campaignId, userId, action, PlayerAction.DODGE);
             case PlayerAction.DISENGAGE -> combatAction(campaignId, userId, action, PlayerAction.DISENGAGE);
+            case PlayerAction.STAND_UP -> standUp(campaignId, userId, action);
             default -> ActionResult.error("Tipo de acción desconocido: " + action.getType());
         };
     }
@@ -185,13 +190,21 @@ public class GameService {
         if (isDowned(actor)) {
             return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
         }
+        if (Conditions.of(actor).incapacitated()) {
+            return ActionResult.error("Estás incapacitado y no puedes hacer pruebas.");
+        }
         String skill = action.getSkill() == null ? "perception" : action.getSkill();
         int dc = action.getDc() == null ? 12 : action.getDc();
-        CheckResult checkResult = checkResolver.resolve(Combatants.of(actor), skill, dc);
+        ConditionSet conditions = Conditions.of(actor);
+        Advantage advantage = ConditionRules.checkAdvantage(conditions, skill);
+        int penalty = ConditionRules.checkPenalty(conditions);
+        CheckResult checkResult = checkResolver.resolve(Combatants.of(actor), skill, dc, advantage, penalty);
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("skill", skill);
         data.put("dc", dc);
+        data.put("advantage", advantage.name());
+        data.put("penalty", penalty);
         // Same shape as a dice roll so the frontend can animate it identically.
         data.put("expression", "1d20");
         data.put("rolls", List.of(checkResult.dieRoll()));
@@ -227,6 +240,13 @@ public class GameService {
         if (isDowned(actor)) {
             return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
         }
+        ConditionSet conditions = Conditions.of(actor);
+        if (conditions.incapacitated()) {
+            return ActionResult.error("Estás incapacitado y no puedes usar tu movimiento.");
+        }
+        if (conditions.speedZero()) {
+            return ActionResult.error("No puedes usar tu movimiento: tu velocidad es 0 por una condición.");
+        }
         if (action.getPath() == null || action.getPath().isEmpty()) {
             return ActionResult.error("Ruta de movimiento vacía");
         }
@@ -243,9 +263,15 @@ public class GameService {
         if (!result.ok()) {
             return ActionResult.error(result.reason());
         }
-        // Cumulative movement this turn must respect the allowance (speed, doubled by Dash).
+        // Cumulative movement this turn must respect the allowance (speed, doubled by Dash),
+        // reduced by conditions such as exhaustion, grappling or crawling while prone.
         int used = com.dndmasters.engine.combat.TurnEconomy.movementUsed(actor.getData());
-        int allowance = com.dndmasters.engine.combat.TurnEconomy.movementAllowance(actor.getData(), actor.getSpeed());
+        int effectiveSpeed = ConditionRules.effectiveSpeed(actor.getSpeed(), conditions);
+        int allowance = com.dndmasters.engine.combat.TurnEconomy
+                .movementAllowance(actor.getData(), effectiveSpeed);
+        int cap = effectiveSpeed
+                * (com.dndmasters.engine.combat.TurnEconomy.flag(actor.getData(), "dashUsed") ? 2 : 1);
+        allowance = Math.min(allowance, cap);
         if (used + result.cost() > allowance) {
             return ActionResult.error(
                     "No te queda movimiento: llevas " + used + " de " + allowance + " casillas este turno.");
@@ -274,6 +300,9 @@ public class GameService {
         }
         if (isDowned(actor)) {
             return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
+        }
+        if (Conditions.of(actor).incapacitated()) {
+            return ActionResult.error("Estás incapacitado y no puedes atacar.");
         }
         if (action.getTargetEntityId() == null) {
             return ActionResult.error("Selecciona un objetivo");
@@ -413,8 +442,8 @@ public class GameService {
         return out;
     }
 
-    /** Dash, Dodge and Disengage: standard combat actions that consume the action. */
-    private ActionResult combatAction(Long campaignId, Long userId, PlayerAction action, String type) {
+    /** Standing up from prone costs half the creature's walking speed. */
+    private ActionResult standUp(Long campaignId, Long userId, PlayerAction action) {
         GameEntity actor = resolveActor(campaignId, userId, action);
         if (actor == null) {
             return ActionResult.error("No se encontró el personaje activo");
@@ -429,6 +458,57 @@ public class GameService {
         if (state != null && state.isActive() && !state.isCombatantTurn(actor.getId())) {
             return ActionResult.error("No es tu turno");
         }
+        ConditionSet conditions = Conditions.of(actor);
+        if (!conditions.has(Condition.PRONE)) {
+            return ActionResult.error("No estás derribado.");
+        }
+        if (conditions.incapacitated()) {
+            return ActionResult.error("Estás incapacitado y no puedes levantarte.");
+        }
+        if (conditions.speedZero()) {
+            return ActionResult.error("No puedes levantarte: tu velocidad es 0.");
+        }
+
+        int walkingSpeed = ConditionRules.effectiveSpeed(actor.getSpeed(), conditions.without(Condition.PRONE));
+        int cost = Math.max(1, (walkingSpeed + 1) / 2);
+        int used = com.dndmasters.engine.combat.TurnEconomy.movementUsed(actor.getData());
+        int allowance = com.dndmasters.engine.combat.TurnEconomy
+                .movementAllowance(actor.getData(), walkingSpeed);
+        boolean dashing = com.dndmasters.engine.combat.TurnEconomy.flag(actor.getData(), "dashUsed");
+        allowance = Math.min(allowance, walkingSpeed * (dashing ? 2 : 1));
+        if (used + cost > allowance) {
+            return ActionResult.error("No te queda movimiento para levantarte: necesitas " + cost + " casillas.");
+        }
+
+        Conditions.remove(actor, Condition.PRONE);
+        actor.getData().put("movementUsed", used + cost);
+        actor.getData().put("movementMax", walkingSpeed * (dashing ? 2 : 1));
+        campaigns.saveEntity(actor);
+        GameEvent event = events.record(campaignId, activeSceneId(campaignId), "STAND_UP", actor.getName(),
+                actor.getName() + " se levanta (coste " + cost + " casillas).",
+                Map.of("entityId", actor.getId(), "cost", cost));
+        return new ActionResult(true, null, null, List.of(event), null, null, null, List.of(), false);
+    }
+
+    /** Dash, Dodge and Disengage: standard combat actions that consume the action. */
+    private ActionResult combatAction(Long campaignId, Long userId, PlayerAction action, String type) {
+        GameEntity actor = resolveActor(campaignId, userId, action);
+        if (actor == null) {
+            return ActionResult.error("No se encontró el personaje activo");
+        }
+        if (!ownedBy(actor, userId)) {
+            return ActionResult.error("No controlas ese personaje");
+        }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
+        }
+        if (Conditions.of(actor).incapacitated()) {
+            return ActionResult.error("Estás incapacitado y no puedes realizar esa acción.");
+        }
+        CombatState state = campaigns.activeCombat(campaignId);
+        if (state != null && state.isActive() && !state.isCombatantTurn(actor.getId())) {
+            return ActionResult.error("No es tu turno");
+        }
         if (Boolean.TRUE.equals(actor.getData().get("actionUsed"))) {
             return ActionResult.error("Ya has usado tu acción este turno.");
         }
@@ -436,12 +516,14 @@ public class GameService {
         String message;
         switch (type) {
             case PlayerAction.DASH -> {
-                int allowance = com.dndmasters.engine.combat.TurnEconomy
-                        .movementAllowance(actor.getData(), actor.getSpeed());
-                actor.getData().put("movementMax", allowance + actor.getSpeed());
+                int effectiveSpeed = ConditionRules.effectiveSpeed(actor.getSpeed(), Conditions.of(actor));
+                if (effectiveSpeed <= 0) {
+                    return ActionResult.error("No puedes correr: tu velocidad es 0.");
+                }
+                int dashMax = effectiveSpeed * 2;
+                actor.getData().put("movementMax", dashMax);
                 actor.getData().put("dashUsed", true);
-                message = actor.getName() + " corre: movimiento ampliado a "
-                        + (allowance + actor.getSpeed()) + " casillas.";
+                message = actor.getName() + " corre: movimiento ampliado a " + dashMax + " casillas.";
             }
             case PlayerAction.DODGE -> {
                 actor.getData().put("dodging", true);
@@ -536,6 +618,9 @@ public class GameService {
         if (isDowned(actor)) {
             return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
         }
+        if (Conditions.of(actor).incapacitated()) {
+            return ActionResult.error("Estás incapacitado y no puedes usar objetos.");
+        }
         if (Boolean.TRUE.equals(actor.getData().get("actionUsed"))) {
             return ActionResult.error("Ya has usado tu acción este turno.");
         }
@@ -603,6 +688,7 @@ public class GameService {
             view.put("hp", entity.getHp());
             view.put("maxHp", entity.getMaxHp());
             view.put("ac", entity.getAc());
+            view.put("conditions", Conditions.codes(entity));
             if (entity.getKind() == EntityKind.PLAYER) {
                 view.put("controller", entity.getData().get("controller"));
                 context.getCharacters().add(view);
@@ -693,6 +779,14 @@ public class GameService {
                             "Un mercader despliega su mercancía ante vosotros.", Map.of()));
                     actionsOut.add("OPEN_SHOP");
                 }
+                case "APPLY_CONDITION" -> {
+                    applyCondition(campaignId, sceneId, action, eventsOut);
+                    actionsOut.add("APPLY_CONDITION:" + action.condition());
+                }
+                case "REMOVE_CONDITION" -> {
+                    removeCondition(campaignId, sceneId, action, eventsOut);
+                    actionsOut.add("REMOVE_CONDITION:" + action.condition());
+                }
                 default -> {
                     // NARRATE / SPAWN_ENEMY are non-mechanical for this prototype.
                 }
@@ -701,8 +795,59 @@ public class GameService {
         return new DmApplication(eventsOut, checkRequest, actionsOut, adventureEnded, dm.narration());
     }
 
-    private void grantReward(Long campaignId, Long userId, String itemName) {
-        if (userId == null || itemName == null) {
+    /** Test/internal seam: applies structured DM actions without narration. */
+    @Transactional
+    List<GameEvent> applyDmActions(Long campaignId, Long userId, List<DmAction> actions) {
+        DmResponse response = new DmResponse("", actions == null ? List.of() : actions, false, null);
+        return applyDm(campaignId, userId, response).events();
+    }
+
+    private void applyCondition(Long campaignId, Long sceneId, DmAction action, List<GameEvent> eventsOut) {
+        if (action.entityId() == null) {
+            return;
+        }
+        GameEntity target = campaigns.entity(action.entityId()).orElse(null);
+        if (target == null || !target.isAlive()) {
+            return;
+        }
+        // Conditions only apply to the scene the players are currently in.
+        if (sceneId != null && !sceneId.equals(target.getSceneId())) {
+            return;
+        }
+        Condition condition = Condition.fromCode(action.condition());
+        if (condition == null) {
+            return;
+        }
+        Conditions.add(target, condition, null, null, null, action.rounds());
+        campaigns.saveEntity(target);
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("entityId", target.getId());
+        data.put("condition", condition.name());
+        data.put("rounds", action.rounds() == null ? 0 : action.rounds());
+        eventsOut.add(events.record(campaignId, sceneId, "CONDITION_APPLIED", target.getName(),
+                target.getName() + " sufre " + condition.label().toLowerCase() + ".", data));
+    }
+
+    private void removeCondition(Long campaignId, Long sceneId, DmAction action, List<GameEvent> eventsOut) {
+        if (action.entityId() == null) {
+            return;
+        }
+        GameEntity target = campaigns.entity(action.entityId()).orElse(null);
+        if (target == null) {
+            return;
+        }
+        Condition condition = Condition.fromCode(action.condition());
+        if (condition == null || !Conditions.remove(target, condition)) {
+            return;
+        }
+        campaigns.saveEntity(target);
+        eventsOut.add(events.record(campaignId, sceneId, "CONDITION_REMOVED", target.getName(),
+                target.getName() + " se recupera de " + condition.label().toLowerCase() + ".",
+                Map.of("entityId", target.getId(), "condition", condition.name())));
+    }
+
+    private void grantReward(Long campaignId, Long userId, String itemName) {        if (userId == null || itemName == null) {
             return;
         }
         Long characterId = campaigns.characterIdForUser(campaignId, userId);
