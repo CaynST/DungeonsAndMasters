@@ -8,6 +8,7 @@ import com.dndmasters.engine.rules.AttackResolver;
 import com.dndmasters.engine.rules.CheckResolver;
 import com.dndmasters.engine.rules.DamageResolver;
 import com.dndmasters.engine.rules.InitiativeEngine;
+import com.dndmasters.engine.rules.SaveResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -33,6 +34,11 @@ public class EngineConfig {
     @Bean
     public DamageResolver damageResolver(DiceEngine diceEngine) {
         return new DamageResolver(diceEngine);
+    }
+
+    @Bean
+    public SaveResolver saveResolver(DiceEngine diceEngine) {
+        return new SaveResolver(diceEngine);
     }
 
     @Bean

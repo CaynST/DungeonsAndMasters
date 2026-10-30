@@ -1,7 +1,9 @@
 package com.dndmasters.domain;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,4 +24,5 @@ public class GameState {
     private CombatState combat;
     private List<GameEvent> recentEvents = new ArrayList<>();
     private String objective;
+    private Map<String, com.dndmasters.engine.spells.Spellbook> spellbook = new LinkedHashMap<>();
 }

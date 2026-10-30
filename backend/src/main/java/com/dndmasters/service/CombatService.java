@@ -28,6 +28,7 @@ import com.dndmasters.engine.rules.DamageResolver;
 import com.dndmasters.engine.rules.DamageResult;
 import com.dndmasters.engine.rules.RageRules;
 import com.dndmasters.engine.rules.SneakAttackRules;
+import com.dndmasters.engine.spells.Spell;
 import com.dndmasters.persistence.entity.CombatParticipantEntity;
 import com.dndmasters.persistence.entity.CombatStateEntity;
 import com.dndmasters.persistence.mapper.GameEntityMapper;
@@ -251,7 +252,8 @@ public class CombatService {
         if (attack != null) {
             int attackCount = "AGGRESSIVE".equals(String.valueOf(actor.getData().get("behavior"))) ? 2 : 1;
             for (int i = 0; i < attackCount && nearest.isAlive(); i++) {
-                attack(campaignId, state, actor, nearest, attack, com.dndmasters.engine.rules.Advantage.NONE, recorded);
+                attack(campaignId, state, actor, nearest, attack,
+                        com.dndmasters.engine.rules.Advantage.NONE, true, recorded);
             }
         }
         return recorded;
@@ -326,19 +328,30 @@ public class CombatService {
     @Transactional
     public List<com.dndmasters.domain.GameEvent> attack(Long campaignId, CombatState state, GameEntity attacker,
                                                         GameEntity target, Attack attack) {
-        return attack(campaignId, state, attacker, target, attack, com.dndmasters.engine.rules.Advantage.NONE, new ArrayList<>());
+        return attack(campaignId, state, attacker, target, attack,
+                com.dndmasters.engine.rules.Advantage.NONE, true, new ArrayList<>());
     }
 
     @Transactional
     public List<com.dndmasters.domain.GameEvent> attack(Long campaignId, CombatState state, GameEntity attacker,
                                                         GameEntity target, Attack attack,
                                                         com.dndmasters.engine.rules.Advantage advantage) {
-        return attack(campaignId, state, attacker, target, attack, advantage, new ArrayList<>());
+        return attack(campaignId, state, attacker, target, attack, advantage, true, new ArrayList<>());
+    }
+
+    /** {@code weaponAttack=false} keeps Rage/Sneak Attack out of spell attacks. */
+    @Transactional
+    public List<com.dndmasters.domain.GameEvent> attack(Long campaignId, CombatState state, GameEntity attacker,
+                                                        GameEntity target, Attack attack,
+                                                        com.dndmasters.engine.rules.Advantage advantage,
+                                                        boolean weaponAttack) {
+        return attack(campaignId, state, attacker, target, attack, advantage, weaponAttack, new ArrayList<>());
     }
 
     private List<com.dndmasters.domain.GameEvent> attack(Long campaignId, CombatState state, GameEntity attacker,
                                                          GameEntity target, Attack attack,
                                                          com.dndmasters.engine.rules.Advantage advantage,
+                                                         boolean weaponAttack,
                                                          List<com.dndmasters.domain.GameEvent> recorded) {
         GameMap map = state.getSceneId() == null ? null : campaigns.mapForScene(state.getSceneId());
         CoverRules.Result cover = CoverRules.check(map, attacker.cell(), target.cell(), attack.ranged());
@@ -395,89 +408,141 @@ public class CombatService {
         String coverNote = cover.acBonus() > 0 ? " (cobertura +" + cover.acBonus() + " CA)" : "";
 
         if (attackResult.hit()) {
-            int rageBonus = RageRules.damageBonus(attacker, melee);
+            int rageBonus = weaponAttack ? RageRules.damageBonus(attacker, melee) : 0;
             int bonusDamage = rageBonus;
             boolean sneakAttack = false;
             int sneakDamage = 0;
-            boolean allyAdjacent = state.getSceneId() != null
-                    && SneakAttackRules.allyAdjacent(attacker, target,
-                            campaigns.entitiesInScene(state.getSceneId()));
-            if (SneakAttackRules.canUse(attacker,
-                    effective == com.dndmasters.engine.rules.Advantage.ADVANTAGE,
-                    effective == com.dndmasters.engine.rules.Advantage.DISADVANTAGE,
-                    allyAdjacent)) {
-                sneakAttack = true;
-                sneakDamage = dice.roll(
-                        SneakAttackRules.diceCount(ClassFeatures.level(attacker)) + "d6").total();
-                bonusDamage += sneakDamage;
+            if (weaponAttack) {
+                boolean allyAdjacent = state.getSceneId() != null
+                        && SneakAttackRules.allyAdjacent(attacker, target,
+                                campaigns.entitiesInScene(state.getSceneId()));
+                if (SneakAttackRules.canUse(attacker,
+                        effective == com.dndmasters.engine.rules.Advantage.ADVANTAGE,
+                        effective == com.dndmasters.engine.rules.Advantage.DISADVANTAGE,
+                        allyAdjacent)) {
+                    sneakAttack = true;
+                    sneakDamage = dice.roll(
+                            SneakAttackRules.diceCount(ClassFeatures.level(attacker)) + "d6").total();
+                    bonusDamage += sneakDamage;
+                }
             }
-            boolean resistance = RageRules.resistsPhysicalDamage(target);
+            boolean resistance = weaponAttack && RageRules.resistsPhysicalDamage(target);
             DamageResult damage = damageResolver.apply(attack, attackResult, targetC, bonusDamage, resistance);
             if (sneakAttack) {
                 attacker.getData().put("sneakAttackUsed", true);
                 campaigns.saveEntity(attacker);
             }
-            target.setHp(targetC.getHp());
-            data.put("damage", damage.total());
-            data.put("damageRolls", damage.rolls());
-            data.put("hpAfter", damage.targetHpAfter());
-            data.put("dead", damage.dead());
             data.put("rageBonus", rageBonus);
             data.put("sneakAttack", sneakAttack);
             data.put("sneakAttackDamage", sneakDamage);
             data.put("resisted", resistance);
 
-            boolean playerDown = damage.targetHpAfter() <= 0 && target.getKind() == EntityKind.PLAYER;
-            if (playerDown) {
-                DeathSaveRules.State current = deathState(target);
-                DeathSaveRules.State next = current.dying()
-                        ? DeathSaveRules.onDamage(current, damage.total(), target.getMaxHp(), attackResult.critical())
-                        : DeathSaveRules.State.startDying();
-                applyDeathState(target, next);
-                campaigns.saveEntity(target);
-                data.put("dying", !next.dead());
-                data.put("successes", next.successes());
-                data.put("failures", next.failures());
-            } else {
-                target.setAlive(targetC.isAlive());
-                campaigns.saveEntity(target);
-            }
-
             String verb = attackResult.critical() ? "¡CRÍTICO! " + attacker.getName() + " impacta a "
                     : attacker.getName() + " impacta a ";
-            recorded.add(events.record(campaignId, state.getSceneId(), "ATTACK", attacker.getName(),
-                    verb + target.getName() + " con " + attack.name() + " (" + attackResult.total() + " vs CA "
-                            + attackResult.targetAc() + ")" + coverNote + " y causa " + damage.total() + " de daño.",
-                    data));
-
-            if (playerDown) {
-                DeathSaveRules.State stateAfter = deathState(target);
-                if (stateAfter.dead()) {
-                    turns.markDead(state, target.getId());
-                    if (state.getId() != null) persist(state);
-                    recorded.add(events.record(campaignId, state.getSceneId(), "DEATH", target.getName(),
-                            target.getName() + " muere.", Map.of("entityId", target.getId())));
-                } else {
-                    recorded.add(events.record(campaignId, state.getSceneId(), "DYING", target.getName(),
-                            target.getName() + " cae moribundo (" + stateAfter.successes() + " éxitos, "
-                                    + stateAfter.failures() + " fallos).",
-                            Map.of("entityId", target.getId(), "successes", stateAfter.successes(),
-                                    "failures", stateAfter.failures())));
-                }
-            } else if (!target.isAlive()) {
-                turns.markDead(state, target.getId());
-                if (state.getId() != null) {
-                    persist(state);
-                }
-                recorded.add(events.record(campaignId, state.getSceneId(), "DEATH", target.getName(),
-                        target.getName() + " cae derrotado.", Map.of("entityId", target.getId())));
-            }
+            applyDamageAndConsequences(campaignId, state, attacker, target, attackResult, damage, data, recorded,
+                    "ATTACK", verb + target.getName() + " con " + attack.name() + " ("
+                            + attackResult.total() + " vs CA " + attackResult.targetAc() + ")" + coverNote
+                            + " y causa " + damage.total() + " de daño.");
         } else {
             recorded.add(events.record(campaignId, state.getSceneId(), "ATTACK_MISS", attacker.getName(),
                     attacker.getName() + " falla su ataque contra " + target.getName() + " (" + attackResult.total()
                             + " vs CA " + attackResult.targetAc() + ")" + coverNote + ".",
                     data));
         }
+        return recorded;
+    }
+
+    /**
+     * Applies already-rolled damage and handles dying/death. Shared by weapon attacks and
+     * spell damage so both paths persist the same state and emit the same lifecycle events.
+     */
+    private void applyDamageAndConsequences(Long campaignId, CombatState state, GameEntity attacker,
+                                            GameEntity target, AttackResult attackResult, DamageResult damage,
+                                            Map<String, Object> data,
+                                            List<com.dndmasters.domain.GameEvent> recorded,
+                                            String eventType, String message) {
+        target.setHp(damage.targetHpAfter());
+        data.put("damage", damage.total());
+        data.put("damageRolls", damage.rolls());
+        data.put("hpAfter", damage.targetHpAfter());
+        data.put("dead", damage.dead());
+
+        boolean playerDown = damage.targetHpAfter() <= 0 && target.getKind() == EntityKind.PLAYER;
+        if (playerDown) {
+            DeathSaveRules.State current = deathState(target);
+            DeathSaveRules.State next = current.dying()
+                    ? DeathSaveRules.onDamage(current, damage.total(), target.getMaxHp(), attackResult.critical())
+                    : DeathSaveRules.State.startDying();
+            applyDeathState(target, next);
+            campaigns.saveEntity(target);
+            data.put("dying", !next.dead());
+            data.put("successes", next.successes());
+            data.put("failures", next.failures());
+        } else {
+            target.setAlive(!damage.dead());
+            campaigns.saveEntity(target);
+        }
+
+        recorded.add(events.record(campaignId, state.getSceneId(), eventType, attacker.getName(), message, data));
+
+        if (playerDown) {
+            DeathSaveRules.State stateAfter = deathState(target);
+            if (stateAfter.dead()) {
+                turns.markDead(state, target.getId());
+                if (state.getId() != null) {
+                    persist(state);
+                }
+                recorded.add(events.record(campaignId, state.getSceneId(), "DEATH", target.getName(),
+                        target.getName() + " muere.", Map.of("entityId", target.getId())));
+            } else {
+                recorded.add(events.record(campaignId, state.getSceneId(), "DYING", target.getName(),
+                        target.getName() + " cae moribundo (" + stateAfter.successes() + " éxitos, "
+                                + stateAfter.failures() + " fallos).",
+                        Map.of("entityId", target.getId(), "successes", stateAfter.successes(),
+                                "failures", stateAfter.failures())));
+            }
+        } else if (!target.isAlive()) {
+            turns.markDead(state, target.getId());
+            if (state.getId() != null) {
+                persist(state);
+            }
+            recorded.add(events.record(campaignId, state.getSceneId(), "DEATH", target.getName(),
+                    target.getName() + " cae derrotado.", Map.of("entityId", target.getId())));
+        }
+    }
+
+    /** Applies spell damage without an attack roll (auto-hit or failed save). */
+    @Transactional
+    public List<com.dndmasters.domain.GameEvent> spellDamage(Long campaignId, CombatState state,
+                                                             GameEntity caster, GameEntity target,
+                                                             Spell spell, boolean critical) {
+        Combatant targetC = Combatants.of(target);
+        Attack damageAttack = Attack.ranged(spell.name(), 0, spell.damage(), spell.range());
+        AttackResult hit = new AttackResult(spell.name(), 0, 0, 0, target.getAc(), true, critical, false);
+        DamageResult damage = damageResolver.apply(damageAttack, hit, targetC);
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("casterId", caster.getId());
+        data.put("casterName", caster.getName());
+        data.put("targetId", target.getId());
+        data.put("targetName", target.getName());
+        data.put("spell", spell.id());
+        data.put("spellName", spell.name());
+        data.put("damageType", spell.damageType());
+        data.put("attack", spell.name());
+        data.put("attackerId", caster.getId());
+        data.put("attackerName", caster.getName());
+        data.put("ac", target.getAc());
+        data.put("hit", true);
+        data.put("roll", 0);
+        data.put("total", 0);
+        data.put("fumble", false);
+        data.put("critical", critical);
+
+        List<com.dndmasters.domain.GameEvent> recorded = new ArrayList<>();
+        applyDamageAndConsequences(campaignId, state, caster, target, hit, damage, data, recorded,
+                "SPELL_DAMAGE", caster.getName() + " causa " + damage.total() + " de daño a "
+                        + target.getName() + " con " + spell.name() + ".");
         return recorded;
     }
 

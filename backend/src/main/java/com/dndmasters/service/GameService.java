@@ -5,6 +5,7 @@ import com.dndmasters.ai.dm.DmAction;
 import com.dndmasters.ai.dm.DmContext;
 import com.dndmasters.ai.dm.DmResponse;
 import com.dndmasters.domain.Attack;
+import com.dndmasters.domain.Ability;
 import com.dndmasters.domain.Campaign;
 import com.dndmasters.domain.CampaignStatus;
 import com.dndmasters.domain.CombatState;
@@ -29,10 +30,18 @@ import com.dndmasters.engine.rules.CheckResolver;
 import com.dndmasters.engine.rules.CheckResult;
 import com.dndmasters.engine.rules.Advantage;
 import com.dndmasters.engine.rules.ClassFeatures;
+import com.dndmasters.engine.rules.Combatant;
 import com.dndmasters.engine.rules.CoverRules;
+import com.dndmasters.engine.rules.Modifier;
 import com.dndmasters.engine.rules.RageRules;
 import com.dndmasters.engine.rules.RangeRules;
+import com.dndmasters.engine.rules.SaveResolver;
+import com.dndmasters.engine.rules.SaveResult;
 import com.dndmasters.engine.rules.SecondWindRules;
+import com.dndmasters.engine.spells.Spell;
+import com.dndmasters.engine.spells.SpellCatalog;
+import com.dndmasters.engine.spells.Spellbook;
+import com.dndmasters.engine.spells.Spellcasting;
 import com.dndmasters.engine.rules.Combatants;
 import com.dndmasters.persistence.entity.CharacterEntity;
 import com.dndmasters.persistence.entity.DiceRollEntity;
@@ -68,6 +77,7 @@ public class GameService {
     private final GameEventService events;
     private final DiceEngine dice;
     private final CheckResolver checkResolver;
+    private final SaveResolver saveResolver;
     private final MovementValidator movementValidator;
     private final GameEntityMapper entityMapper;
     private final CharacterRepository characters;
@@ -76,7 +86,7 @@ public class GameService {
 
     public GameService(CampaignService campaigns, CombatService combat, DungeonMasterService dungeonMaster,
                        GameEventService events, DiceEngine dice, CheckResolver checkResolver,
-                       MovementValidator movementValidator, GameEntityMapper entityMapper,
+                       SaveResolver saveResolver, MovementValidator movementValidator, GameEntityMapper entityMapper,
                        CharacterRepository characters, CharacterMapper characterMapper, DiceRollRepository diceRolls) {
         this.campaigns = campaigns;
         this.combat = combat;
@@ -84,6 +94,7 @@ public class GameService {
         this.events = events;
         this.dice = dice;
         this.checkResolver = checkResolver;
+        this.saveResolver = saveResolver;
         this.movementValidator = movementValidator;
         this.entityMapper = entityMapper;
         this.characters = characters;
@@ -151,6 +162,7 @@ public class GameService {
             case PlayerAction.STAND_UP -> standUp(campaignId, userId, action);
             case PlayerAction.SECOND_WIND -> classFeature(campaignId, userId, action, PlayerAction.SECOND_WIND);
             case PlayerAction.RAGE -> classFeature(campaignId, userId, action, PlayerAction.RAGE);
+            case PlayerAction.CAST_SPELL -> castSpell(campaignId, userId, action);
             default -> ActionResult.error("Tipo de acción desconocido: " + action.getType());
         };
     }
@@ -499,6 +511,170 @@ public class GameService {
                 actor.getName() + " se levanta (coste " + cost + " casillas).",
                 Map.of("entityId", actor.getId(), "cost", cost));
         return new ActionResult(true, null, null, List.of(event), null, null, null, List.of(), false);
+    }
+
+    /** Casts a cantrip or a level-1 spell; slots, action economy and targeting are server-side. */
+    private ActionResult castSpell(Long campaignId, Long userId, PlayerAction action) {
+        GameEntity actor = resolveActor(campaignId, userId, action);
+        if (actor == null) {
+            return ActionResult.error("No se encontró el personaje activo");
+        }
+        if (!ownedBy(actor, userId)) {
+            return ActionResult.error("No controlas ese personaje");
+        }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
+        }
+        if (Conditions.of(actor).incapacitated()) {
+            return ActionResult.error("Estás incapacitado y no puedes lanzar conjuros.");
+        }
+        CombatState state = campaigns.activeCombat(campaignId);
+        if (state != null && state.isActive() && !state.isCombatantTurn(actor.getId())) {
+            return ActionResult.error("No es tu turno");
+        }
+
+        String classId = ClassFeatures.idOf(actor);
+        Spellbook book = SpellCatalog.forClass(classId);
+        if (book.spells().isEmpty()) {
+            return ActionResult.error("Tu clase no lanza conjuros.");
+        }
+        Spell spell = SpellCatalog.byId(classId, action.getSpell()).orElse(null);
+        if (spell == null) {
+            return ActionResult.error("No conoces ese conjuro.");
+        }
+
+        boolean bonusAction = spell.bonusAction();
+        if (bonusAction && Boolean.TRUE.equals(actor.getData().get("bonusUsed"))) {
+            return ActionResult.error("Ya has usado tu acción adicional este turno.");
+        }
+        if (!bonusAction && Boolean.TRUE.equals(actor.getData().get("actionUsed"))) {
+            return ActionResult.error("Ya has usado tu acción este turno.");
+        }
+        int usedSlots = actor.getData().get("spellSlotsUsed") instanceof Number number
+                ? number.intValue() : 0;
+        int maxSlots = Spellcasting.maxSlots(ClassFeatures.level(actor));
+        if (spell.level() > 0 && usedSlots >= maxSlots) {
+            return ActionResult.error("No te quedan espacios de conjuro.");
+        }
+
+        GameEntity target = action.getTargetEntityId() == null
+                ? null
+                : campaigns.entity(action.getTargetEntityId()).orElse(null);
+        if (spell.kind() == Spell.Kind.HEAL) {
+            if (target == null || target.getKind() != EntityKind.PLAYER) {
+                target = actor;
+            }
+            if (!target.isAlive() && !isDowned(target)) {
+                return ActionResult.error("No puedes curar a un objetivo muerto.");
+            }
+            int distance = actor.cell().chebyshevTo(target.cell());
+            if (distance > spell.range()) {
+                return ActionResult.error("El objetivo está fuera del alcance del conjuro ("
+                        + distance + " > " + spell.range() + ").");
+            }
+        } else {
+            if (target == null || !target.isAlive()) {
+                return ActionResult.error("Selecciona un objetivo válido.");
+            }
+            if (target.getKind() != EntityKind.ENEMY) {
+                return ActionResult.error("Selecciona un enemigo para ese conjuro.");
+            }
+            int distance = actor.cell().chebyshevTo(target.cell());
+            if (distance > spell.range()) {
+                return ActionResult.error("El objetivo está fuera del alcance del conjuro ("
+                        + distance + " > " + spell.range() + ").");
+            }
+            if (spell.kind() == Spell.Kind.ATTACK) {
+                GameMap map = campaigns.mapForScene(activeSceneId(campaignId));
+                CoverRules.Result cover = CoverRules.check(map, actor.cell(), target.cell(), true);
+                if (cover.blocksAttack()) {
+                    return ActionResult.error(cover.reason());
+                }
+            }
+        }
+
+        if (spell.level() > 0) {
+            actor.getData().put("spellSlotsUsed", usedSlots + 1);
+        }
+        actor.getData().put(bonusAction ? "bonusUsed" : "actionUsed", true);
+        campaigns.saveEntity(actor);
+
+        List<GameEvent> recorded = new ArrayList<>();
+        Map<String, Object> castData = new LinkedHashMap<>();
+        castData.put("entityId", actor.getId());
+        castData.put("spell", spell.id());
+        castData.put("spellName", spell.name());
+        castData.put("level", spell.level());
+        castData.put("slotsUsed", spell.level() > 0 ? usedSlots + 1 : usedSlots);
+        recorded.add(events.record(campaignId, activeSceneId(campaignId), "SPELL_CAST", actor.getName(),
+                actor.getName() + " lanza " + spell.name() + ".", castData));
+
+        CombatState eventState = state != null ? state : transientState(campaignId);
+        switch (spell.kind()) {
+            case ATTACK -> {
+                Attack spellAttack = Attack.ranged(spell.name(), Spellcasting.attackBonus(actor, classId),
+                        spell.damage(), spell.range());
+                recorded.addAll(combat.attack(campaignId, eventState, actor, target, spellAttack,
+                        Advantage.NONE, false));
+            }
+            case AUTO -> recorded.addAll(combat.spellDamage(campaignId, eventState, actor, target, spell, false));
+            case SAVE -> {
+                Ability ability = Ability.valueOf(spell.saveAbility());
+                Combatant targetC = Combatants.of(target);
+                ConditionSet targetConditions = Conditions.of(target);
+                int dc = Spellcasting.saveDc(actor, classId);
+                boolean autoFail = ConditionRules.autoFailsSave(targetConditions, ability);
+                boolean saved;
+                if (autoFail) {
+                    saved = false;
+                    castData.put("saveAutoFail", true);
+                } else {
+                    SaveResult save = saveResolver.resolve(targetC, ability, dc,
+                            ConditionRules.saveAdvantage(targetConditions, ability));
+                    saved = save.success();
+                    castData.put("saveDieRoll", save.dieRoll());
+                    castData.put("saveModifier", save.modifier());
+                    castData.put("saveTotal", save.total());
+                }
+                castData.put("saveAbility", ability.name());
+                castData.put("saveDc", dc);
+                castData.put("saveSuccess", saved);
+                if (saved) {
+                    recorded.add(events.record(campaignId, activeSceneId(campaignId), "SPELL_SAVED", target.getName(),
+                            target.getName() + " supera la salvación de " + ability.name()
+                                    + " contra " + spell.name() + ".", castData));
+                } else {
+                    recorded.addAll(combat.spellDamage(campaignId, eventState, actor, target, spell, false));
+                }
+            }
+            case HEAL -> {
+                int healRoll = dice.roll(spell.heal()).total();
+                int abilityMod = Modifier.of(actor.getStats().get(Spellcasting.abilityFor(classId)));
+                int heal = Math.max(0, healRoll + abilityMod);
+                int newHp = Math.min(target.getMaxHp(), target.getHp() + heal);
+                target.setHp(newHp);
+                target.setAlive(true);
+                target.getData().put("dying", false);
+                target.getData().put("stable", false);
+                target.getData().put("deathSuccesses", 0);
+                target.getData().put("deathFailures", 0);
+                campaigns.saveEntity(target);
+                Map<String, Object> healData = new LinkedHashMap<>(castData);
+                healData.put("targetId", target.getId());
+                healData.put("heal", heal);
+                healData.put("hpAfter", newHp);
+                recorded.add(events.record(campaignId, activeSceneId(campaignId), "SPELL_HEAL", actor.getName(),
+                        actor.getName() + " cura " + heal + " PG a " + target.getName()
+                                + " con " + spell.name() + ".", healData));
+            }
+        }
+
+        Map<String, Object> attackData = recorded.stream()
+                .filter(event -> "ATTACK".equals(event.type()) || "ATTACK_MISS".equals(event.type())
+                        || "SPELL_DAMAGE".equals(event.type()))
+                .findFirst().map(event -> Json.readMap(event.dataJson())).orElse(Map.of());
+        return new ActionResult(true, null, null, recorded, null, null,
+                attackData.isEmpty() ? null : attackData, List.of(), false);
     }
 
     /** Class features that consume the bonus action: Second Wind and Rage. */

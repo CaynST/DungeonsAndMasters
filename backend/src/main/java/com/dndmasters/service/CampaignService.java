@@ -397,6 +397,7 @@ public class CampaignService {
             data.put("ownerId", controllerByCharacterOwner(campaignId).get(character.getId()));
             data.put("classId", com.dndmasters.engine.rules.ClassFeatures.idOf(character.getCls()));
             data.put("level", character.getLevel());
+            data.put("spellSlotsUsed", 0);
             saveEntity(sceneId, scene.getMapId(), "PLAYER", character.getId(), character.getName(),
                     new Placement("PLAYER", character.getName(), spawn.x(), spawn.y()),
                     character.getHp(), character.getMaxHp(), character.getAc(), character.getSpeed(),
@@ -436,6 +437,7 @@ public class CampaignService {
         state.setCombat(combat);
         state.setRecentEvents(events.recent(campaignId));
         state.setObjective(campaign.getObjective());
+        state.setSpellbook(com.dndmasters.engine.spells.SpellCatalog.spellbooks());
         return state;
     }
 
@@ -556,6 +558,7 @@ public class CampaignService {
             e.getData().put("ragesUsed", 0);
             e.getData().put("raging", false);
             e.getData().put("rageRounds", 0);
+            e.getData().put("spellSlotsUsed", 0);
             saveEntity(e);
         });
     }

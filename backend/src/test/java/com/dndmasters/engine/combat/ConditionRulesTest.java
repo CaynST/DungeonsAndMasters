@@ -97,4 +97,18 @@ class ConditionRulesTest {
         assertThat(ConditionRules.effectiveSpeed(6, set(Condition.GRAPPLED))).isZero();
         assertThat(ConditionRules.effectiveSpeed(6, set(Condition.PRONE))).isEqualTo(3);
     }
+
+    @Test
+    void savesUseConditionAdvantageAndAutoFailures() {
+        assertThat(ConditionRules.saveAdvantage(set(Condition.RESTRAINED), com.dndmasters.domain.Ability.DEXTERITY))
+                .isEqualTo(Advantage.DISADVANTAGE);
+        assertThat(ConditionRules.saveAdvantage(set(Condition.RESTRAINED), com.dndmasters.domain.Ability.WISDOM))
+                .isEqualTo(Advantage.NONE);
+        assertThat(ConditionRules.saveAdvantage(exhaustion(3), com.dndmasters.domain.Ability.WISDOM))
+                .isEqualTo(Advantage.DISADVANTAGE);
+        assertThat(ConditionRules.autoFailsSave(set(Condition.PARALYZED),
+                com.dndmasters.domain.Ability.DEXTERITY)).isTrue();
+        assertThat(ConditionRules.autoFailsSave(set(Condition.PARALYZED),
+                com.dndmasters.domain.Ability.WISDOM)).isFalse();
+    }
 }

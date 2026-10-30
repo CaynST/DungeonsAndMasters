@@ -29,6 +29,7 @@ public class PlayerAction {
     public static final String STAND_UP = "STAND_UP";
     public static final String SECOND_WIND = "SECOND_WIND";
     public static final String RAGE = "RAGE";
+    public static final String CAST_SPELL = "CAST_SPELL";
 
     private String type;
     private Long actorEntityId;
@@ -40,4 +41,5 @@ public class PlayerAction {
     private String expression;
     private String text;
     private String item;
+    private String spell;
 }

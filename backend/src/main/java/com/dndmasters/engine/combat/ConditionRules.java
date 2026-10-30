@@ -63,6 +63,19 @@ public final class ConditionRules {
         return -2 * conditions.exhaustionLevel();
     }
 
+    /** Restrained gives disadvantage on DEX saves; exhaustion 3+ on every save. */
+    public static Advantage saveAdvantage(ConditionSet conditions, Ability ability) {
+        boolean disadvantage = (conditions.has(Condition.RESTRAINED) && ability == Ability.DEXTERITY)
+                || conditions.exhaustionLevel() >= 3;
+        return disadvantage ? Advantage.DISADVANTAGE : Advantage.NONE;
+    }
+
+    /** Paralyzed, petrified, stunned and unconscious creatures auto-fail STR/DEX saves. */
+    public static boolean autoFailsSave(ConditionSet conditions, Ability ability) {
+        return conditions.autoFailsStrDexSaves()
+                && (ability == Ability.STRENGTH || ability == Ability.DEXTERITY);
+    }
+
     /**
      * Effective walking speed. Grappled/restrained/paralysed/... are 0, exhaustion 5+ is 0,
      * exhaustion 2+ halves speed and prone creatures can only crawl at half speed.
