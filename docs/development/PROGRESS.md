@@ -1,5 +1,33 @@
 # PROGRESS
 
+## 2026-10-30 — Conjuros
+
+**Objetivo:** avanzar R-10 con un sistema de conjuros real, no solo botones.
+
+**Acciones**
+- `Spell`, `Spellbook`, `SpellCatalog` y `Spellcasting`: listas por clase, espacios, bono de ataque y DC.
+- `SaveResolver` + `ConditionRules.saveAdvantage/autoFailsSave`: salvaciones con ventaja/desventaja
+  y fallo automático por parálisis/aturdimiento/inconsciencia.
+- `GameService.castSpell`: valida clase, objetivo, alcance, cobertura total, acción/acción adicional
+  y espacios; consume el recurso antes de resolver.
+- `CombatService.spellDamage` reutiliza el pipeline de daño/muerte (incluido moribundo/muerte).
+- `GameState.spellbook` expone el catálogo a la UI; el menú **Conjuros** muestra espacios,
+  alcance y descripción, y deshabilita lo que no se puede lanzar.
+- Hechizos: Fuego feérico, Rayo de escarcha, Proyectil mágico (mago); Llama sagrada, Curar heridas
+  y Palabra curativa (clérigo).
+
+**Verificación (TDD)**
+- `SpellCatalogTest`, `SpellcastingTest`, `SaveResolverTest` y casos de salvación en
+  `ConditionRulesTest`.
+- `SpellIntegrationTest` (no lanzadores, truco sin espacio, espacios limitados, curación con
+  acción/adicional, salvación, catálogo en el estado).
+- Backend completo: **199 tests** en verde. Frontend: **27 tests** y `pnpm build` en verde.
+- Verificación visual con Lyra (Maga): menú **Conjuros**, **Espacios 2/2**, Fuego feérico,
+  Rayo de escarcha y Proyectil mágico; sin errores de consola ni HTTP.
+
+**Siguiente paso**
+- Concentración/componentes/áreas y upcasting; o completar los rasgos restantes de R-11.
+
 ## 2026-10-30 — Rasgos de clase
 
 **Objetivo:** avanzar R-11 y completar la acción adicional de R-02 con rasgos reales.

@@ -2,6 +2,12 @@
 
 ## 2026-10-30
 
+- **D-18** `feat(rules)` — Conjuros: catálogo por clase, espacios de nivel 1, ataques de conjuro,
+  salvaciones y curación. Mago: Fuego feérico, Rayo de escarcha y Proyectil mágico; Clérigo:
+  Llama sagrada, Curar heridas y Palabra curativa. `SaveResolver` y `Spellcasting` calculan DC,
+  bono de ataque y espacios; `CombatService` comparte el pipeline de daño/muerte con las armas.
+  UI: menú **Conjuros** con espacios, alcance y descripción.
+
 - **D-17** `fix(db)` — Migraciones V8/V9 actualizan `npc_templates.portrait` y
   `board_entities.portrait` en campañas ya creadas para que apunten a `archivista.png`; V9 corrige
   las fichas ya materializadas. Verificado recargando la campaña de auditoría sin errores HTTP.

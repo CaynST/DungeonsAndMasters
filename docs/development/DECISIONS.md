@@ -55,3 +55,14 @@ depende de ventaja/aliado. El motor ya guarda banderas por entidad y el DM no de
 bonificación/resistencia en `DamageResolver`.
 **Consecuencia:** rasgos testeables sin Spring y extensibles; los usos se reinician al empezar
 combate (no hay descansos todavía) y las armas con sutiliza no se modelan aún.
+
+## ADR-007 — Conjuros con catálogo estático y resolución en el motor
+**Contexto:** el cliente necesita conocer los conjuros disponibles, pero no debe calcular DC,
+espacios ni daño. El prototipo solo tiene personajes de nivel 1 y objetivos individuales.
+**Alternativas:** persistir hechizos por personaje y ampliar el esquema; o un catálogo estático
+expuesto en `GameState`.
+**Decisión:** `SpellCatalog` estático por clase, `GameState.spellbook` para la UI y
+`GameService.castSpell` como autoridad. Los hechizos de ataque reutilizan el pipeline de ataque;
+los de salvación usan `SaveResolver`; los automáticos y curativos usan `spellDamage`/curación.
+**Consecuencia:** no hace falta migración de personajes y la UI no duplica reglas. Concentración,
+componentes, áreas y upcasting quedan como deuda documentada.
