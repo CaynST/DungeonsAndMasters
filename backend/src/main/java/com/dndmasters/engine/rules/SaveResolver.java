@@ -18,6 +18,11 @@ public class SaveResolver {
     }
 
     public SaveResult resolve(Combatant combatant, Ability ability, int dc, Advantage advantage) {
+        return resolve(combatant, ability, dc, advantage, 0);
+    }
+
+    /** @param bonus extra flat bonus, e.g. Bless's 1d4 */
+    public SaveResult resolve(Combatant combatant, Ability ability, int dc, Advantage advantage, int bonus) {
         DiceRollResult first = dice.roll("1d20");
         int firstRoll = first.rolls().get(0);
         int secondRoll = firstRoll;
@@ -31,7 +36,7 @@ public class SaveResolver {
         }
 
         int modifier = combatant.modifier(ability);
-        int total = chosen + modifier;
+        int total = chosen + modifier + bonus;
         return new SaveResult(ability.name(), chosen, secondRoll, modifier, total, dc, total >= dc);
     }
 }

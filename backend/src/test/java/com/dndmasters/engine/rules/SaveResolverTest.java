@@ -50,4 +50,15 @@ class SaveResolverTest {
         assertThat(result.dieRoll()).isEqualTo(4);
         assertThat(result.success()).isFalse();
     }
+
+    @Test
+    void flatBonusIsAddedToTheTotal() {
+        SaveResolver resolver = new SaveResolver(new DiceEngine(StubRandom.of(11))); // 12
+        Combatant target = combatant(14); // DEX +2
+
+        SaveResult result = resolver.resolve(target, Ability.DEXTERITY, 15, Advantage.NONE, 3);
+
+        assertThat(result.total()).isEqualTo(17);
+        assertThat(result.success()).isTrue();
+    }
 }

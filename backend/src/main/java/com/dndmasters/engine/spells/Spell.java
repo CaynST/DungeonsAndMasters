@@ -16,6 +16,7 @@ public record Spell(
         String damageType,
         String saveAbility,
         String heal,
+        String buff,
         boolean bonusAction,
         boolean concentration) {
 
@@ -23,7 +24,8 @@ public record Spell(
         ATTACK,
         SAVE,
         AUTO,
-        HEAL
+        HEAL,
+        BUFF
     }
 
     public boolean isCantrip() {
@@ -33,24 +35,30 @@ public record Spell(
     public static Spell attack(String id, String name, int level, String school, String description,
                                int range, String damage, String damageType) {
         return new Spell(id, name, level, school, description, range, Kind.ATTACK,
-                damage, damageType, null, null, false, false);
+                damage, damageType, null, null, null, false, false);
     }
 
     public static Spell save(String id, String name, int level, String school, String description,
                              int range, String damage, String damageType, String saveAbility) {
         return new Spell(id, name, level, school, description, range, Kind.SAVE,
-                damage, damageType, saveAbility, null, false, false);
+                damage, damageType, saveAbility, null, null, false, false);
     }
 
     public static Spell auto(String id, String name, int level, String school, String description,
                              int range, String damage, String damageType) {
         return new Spell(id, name, level, school, description, range, Kind.AUTO,
-                damage, damageType, null, null, false, false);
+                damage, damageType, null, null, null, false, false);
     }
 
     public static Spell heal(String id, String name, int level, String school, String description,
                              int range, String heal, boolean bonusAction) {
         return new Spell(id, name, level, school, description, range, Kind.HEAL,
-                null, null, null, heal, bonusAction, false);
+                null, null, null, heal, null, bonusAction, false);
+    }
+
+    public static Spell buff(String id, String name, int level, String school, String description,
+                             int range, String buff, boolean bonusAction, boolean concentration) {
+        return new Spell(id, name, level, school, description, range, Kind.BUFF,
+                null, null, null, null, buff, bonusAction, concentration);
     }
 }

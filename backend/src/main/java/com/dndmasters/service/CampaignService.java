@@ -535,6 +535,19 @@ public class CampaignService {
                     e.getData().put("rageRounds", rounds - 1);
                 }
             }
+
+            boolean concentrationEnded = false;
+            if (e.getData().get("concentrationSpell") != null) {
+                int rounds = e.getData().get("concentrationRounds") instanceof Number n ? n.intValue() : 0;
+                if (rounds <= 1) {
+                    e.getData().put("concentrationSpell", null);
+                    e.getData().put("concentrationName", null);
+                    e.getData().put("concentrationRounds", 0);
+                    concentrationEnded = true;
+                } else {
+                    e.getData().put("concentrationRounds", rounds - 1);
+                }
+            }
             saveEntity(e);
 
             Long sceneId = requireCampaign(campaignId).getActiveSceneId();
@@ -547,18 +560,50 @@ public class CampaignService {
                 events.record(campaignId, sceneId, "RAGE_ENDED", e.getName(),
                         e.getName() + " deja de estar enfurecido.", Map.of("entityId", e.getId()));
             }
+            if (concentrationEnded) {
+                clearConcentration(campaignId, e.getId());
+                events.record(campaignId, sceneId, "CONCENTRATION_ENDED", e.getName(),
+                        e.getName() + " pierde la concentración.", Map.of("entityId", e.getId()));
+            }
         });
     }
 
     /** Resets combat-scoped class feature uses when a new combat starts. */
     @Transactional
-    public void resetFeatureUses(Long entityId) {
-        entity(entityId).ifPresent(e -> {
+    public void resetFeatureUses(Long entityId) {        entity(entityId).ifPresent(e -> {
             e.getData().put("secondWindUsed", false);
             e.getData().put("ragesUsed", 0);
             e.getData().put("raging", false);
             e.getData().put("rageRounds", 0);
             e.getData().put("spellSlotsUsed", 0);
+            e.getData().put("blessed", false);
+            e.getData().put("blessedBy", null);
+            e.getData().put("concentrationSpell", null);
+            e.getData().put("concentrationName", null);
+            e.getData().put("concentrationRounds", 0);
+            saveEntity(e);
+        });
+    }
+
+    /** Clears a caster's concentration and every buff it granted in the current scene. */
+    @Transactional
+    public void clearConcentration(Long campaignId, Long casterId) {
+        Long sceneId = requireCampaign(campaignId).getActiveSceneId();
+        if (sceneId != null) {
+            for (GameEntity entity : entitiesInScene(sceneId)) {
+                Object blessedBy = entity.getData().get("blessedBy");
+                if (blessedBy instanceof Number number && casterId != null
+                        && number.longValue() == casterId.longValue()) {
+                    entity.getData().put("blessed", false);
+                    entity.getData().put("blessedBy", null);
+                    saveEntity(entity);
+                }
+            }
+        }
+        entity(casterId).ifPresent(e -> {
+            e.getData().put("concentrationSpell", null);
+            e.getData().put("concentrationName", null);
+            e.getData().put("concentrationRounds", 0);
             saveEntity(e);
         });
     }

@@ -25,8 +25,9 @@ class SpellCatalogTest {
 
         assertThat(book.slots()).isEqualTo(2);
         assertThat(book.spells()).extracting(Spell::id)
-                .contains("sacred_flame", "cure_wounds", "healing_word");
+                .contains("sacred_flame", "cure_wounds", "healing_word", "bless");
         assertThat(book.spells()).anyMatch(spell -> spell.bonusAction());
+        assertThat(book.spells()).anyMatch(Spell::concentration);
     }
 
     @Test

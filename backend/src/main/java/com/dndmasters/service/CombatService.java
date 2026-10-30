@@ -1,6 +1,7 @@
 package com.dndmasters.service;
 
 import com.dndmasters.domain.Attack;
+import com.dndmasters.domain.Ability;
 import com.dndmasters.domain.Cell;
 import com.dndmasters.domain.CombatParticipant;
 import com.dndmasters.domain.CombatState;
@@ -26,6 +27,7 @@ import com.dndmasters.engine.rules.Combatants;
 import com.dndmasters.engine.rules.CoverRules;
 import com.dndmasters.engine.rules.DamageResolver;
 import com.dndmasters.engine.rules.DamageResult;
+import com.dndmasters.engine.rules.Modifier;
 import com.dndmasters.engine.rules.RageRules;
 import com.dndmasters.engine.rules.SneakAttackRules;
 import com.dndmasters.engine.spells.Spell;
@@ -381,7 +383,13 @@ public class CombatService {
         com.dndmasters.engine.rules.Advantage effective = ConditionRules
                 .attackAdvantage(attackerConditions, targetConditions, melee, dodging);
         effective = combine(effective, advantage);
-        AttackResult resolved = attackResolver.resolve(attackerC, targetC, attack, effective);
+        int blessBonus = Boolean.TRUE.equals(attacker.getData().get("blessed"))
+                ? dice.roll("1d4").total() : 0;
+        Attack rollAttack = blessBonus > 0
+                ? new Attack(attack.name(), attack.attackBonus() + blessBonus,
+                        attack.damageExpression(), attack.range(), attack.ranged())
+                : attack;
+        AttackResult resolved = attackResolver.resolve(attackerC, targetC, rollAttack, effective);
         boolean autoCritical = resolved.hit() && ConditionRules.automaticCritical(targetConditions, melee);
         AttackResult attackResult = autoCritical && !resolved.critical()
                 ? new AttackResult(resolved.attackName(), resolved.dieRoll(), resolved.attackBonus(),
@@ -404,6 +412,7 @@ public class CombatService {
         data.put("autoCritical", autoCritical);
         data.put("cover", cover.cover().name());
         data.put("coverBonus", cover.acBonus());
+        data.put("blessBonus", blessBonus);
 
         String coverNote = cover.acBonus() > 0 ? " (cobertura +" + cover.acBonus() + " CA)" : "";
 
@@ -467,6 +476,30 @@ public class CombatService {
         data.put("hpAfter", damage.targetHpAfter());
         data.put("dead", damage.dead());
 
+        boolean concentrationBroken = false;
+        if (target.getKind() == EntityKind.PLAYER
+                && target.getData().get("concentrationSpell") != null
+                && damage.total() > 0) {
+            int conMod = Modifier.of(target.getStats().get(Ability.CONSTITUTION));
+            int bless = Boolean.TRUE.equals(target.getData().get("blessed"))
+                    ? dice.roll("1d4").total() : 0;
+            int saveTotal = dice.roll("1d20").total() + conMod + bless;
+            int dc = Math.max(10, damage.total() / 2);
+            data.put("concentrationSave", saveTotal);
+            data.put("concentrationDc", dc);
+            data.put("concentrationBless", bless);
+            if (saveTotal < dc) {
+                concentrationBroken = true;
+                campaigns.clearConcentration(campaignId, target.getId());
+                target.getData().put("concentrationSpell", null);
+                target.getData().put("concentrationName", null);
+                target.getData().put("concentrationRounds", 0);
+                target.getData().put("blessed", false);
+                target.getData().put("blessedBy", null);
+                data.put("concentrationBroken", true);
+            }
+        }
+
         boolean playerDown = damage.targetHpAfter() <= 0 && target.getKind() == EntityKind.PLAYER;
         if (playerDown) {
             DeathSaveRules.State current = deathState(target);
@@ -484,6 +517,11 @@ public class CombatService {
         }
 
         recorded.add(events.record(campaignId, state.getSceneId(), eventType, attacker.getName(), message, data));
+
+        if (concentrationBroken) {
+            recorded.add(events.record(campaignId, state.getSceneId(), "CONCENTRATION_BROKEN", target.getName(),
+                    target.getName() + " pierde la concentración.", Map.of("entityId", target.getId())));
+        }
 
         if (playerDown) {
             DeathSaveRules.State stateAfter = deathState(target);

@@ -2,8 +2,10 @@ package com.dndmasters.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.dndmasters.domain.Attack;
 import com.dndmasters.domain.Campaign;
 import com.dndmasters.domain.Cell;
+import com.dndmasters.domain.CombatState;
 import com.dndmasters.domain.EntityKind;
 import com.dndmasters.domain.GameEntity;
 import com.dndmasters.domain.GameEvent;
@@ -11,6 +13,10 @@ import com.dndmasters.domain.GameState;
 import com.dndmasters.domain.Stats;
 import com.dndmasters.service.action.ActionResult;
 import com.dndmasters.service.action.PlayerAction;
+import com.dndmasters.util.Json;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,6 +32,9 @@ class SpellIntegrationTest {
 
     @Autowired
     CampaignService campaigns;
+
+    @Autowired
+    CombatService combat;
 
     private Campaign campaignWithPlayer(Long userId, String name) {
         Campaign campaign = game.createCampaign(userId, name);
@@ -193,5 +202,75 @@ class SpellIntegrationTest {
 
         assertThat(state.getSpellbook()).containsKeys("wizard", "cleric");
         assertThat(state.getSpellbook().get("wizard").spells()).isNotEmpty();
+    }
+
+    @Test
+    void blessGrantsConcentrationAndBreaksWhenTheCasterTakesDamage() {
+        Campaign campaign = campaignWithPlayer(9407L, "Spells Bless");
+        GameEntity player = player(campaign);
+        configureCaster(player, "cleric", 10, 16);
+        player.setHp(999);
+        player.setMaxHp(999);
+        campaigns.saveEntity(player);
+
+        ActionResult bless = game.act(campaign.getId(), 9407L,
+                cast("bless", player.getId(), null));
+
+        assertThat(bless.ok()).isTrue();
+        assertThat(bless.events()).anyMatch(event -> "SPELL_BUFF".equals(event.type()));
+        GameEntity reloaded = campaigns.entity(player.getId()).orElseThrow();
+        assertThat(reloaded.getData().get("blessed")).isEqualTo(true);
+        assertThat(reloaded.getData().get("concentrationSpell")).isEqualTo("bless");
+        assertThat(reloaded.getData().get("spellSlotsUsed")).isEqualTo(1);
+
+        GameState state = campaigns.state(campaign.getId());
+        GameEntity blessedPlayer = campaigns.entity(player.getId()).orElseThrow();
+        GameEntity enemy = createEnemy(campaign, player);
+        CombatState transientState = new CombatState();
+        transientState.setCampaignId(campaign.getId());
+        transientState.setSceneId(state.getScene().id());
+        transientState.setActive(false);
+        transientState.setParticipants(new ArrayList<>());
+
+        List<GameEvent> attackEvents = combat.attack(campaign.getId(), transientState, blessedPlayer, enemy,
+                Attack.melee("Prueba bendecida", 100, "1d4"));
+        GameEvent attackEvent = attackEvents.stream()
+                .filter(event -> "ATTACK".equals(event.type()) || "ATTACK_MISS".equals(event.type()))
+                .findFirst().orElseThrow();
+        Map<String, Object> attackData = Json.readMap(attackEvent.dataJson());
+        assertThat(((Number) attackData.get("blessBonus")).intValue()).isPositive();
+
+        boolean broken = false;
+        for (int attempt = 0; attempt < 5 && !broken; attempt++) {
+            List<GameEvent> events = combat.attack(campaign.getId(), transientState, enemy, blessedPlayer,
+                    Attack.melee("Golpe brutal", 100, "10d10"));
+            broken = events.stream().anyMatch(event -> "CONCENTRATION_BROKEN".equals(event.type()));
+        }
+
+        assertThat(broken).isTrue();
+        GameEntity after = campaigns.entity(player.getId()).orElseThrow();
+        assertThat(after.getData().get("concentrationSpell")).isNull();
+        assertThat(after.getData().get("blessed")).isEqualTo(false);
+    }
+
+    @Test
+    void blessExpiresAtTheStartOfTheCastersTurn() {
+        Campaign campaign = campaignWithPlayer(9408L, "Spells Bless Timer");
+        GameEntity player = player(campaign);
+        configureCaster(player, "cleric", 10, 16);
+
+        ActionResult bless = game.act(campaign.getId(), 9408L,
+                cast("bless", player.getId(), null));
+        assertThat(bless.ok()).isTrue();
+
+        GameEntity current = campaigns.entity(player.getId()).orElseThrow();
+        current.getData().put("concentrationRounds", 1);
+        campaigns.saveEntity(current);
+
+        campaigns.startTurn(campaign.getId(), player.getId());
+
+        GameEntity after = campaigns.entity(player.getId()).orElseThrow();
+        assertThat(after.getData().get("concentrationSpell")).isNull();
+        assertThat(after.getData().get("blessed")).isEqualTo(false);
     }
 }

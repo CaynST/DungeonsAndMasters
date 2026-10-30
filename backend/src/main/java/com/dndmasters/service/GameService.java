@@ -560,7 +560,7 @@ public class GameService {
         GameEntity target = action.getTargetEntityId() == null
                 ? null
                 : campaigns.entity(action.getTargetEntityId()).orElse(null);
-        if (spell.kind() == Spell.Kind.HEAL) {
+        if (spell.kind() == Spell.Kind.HEAL || spell.kind() == Spell.Kind.BUFF) {
             if (target == null || target.getKind() != EntityKind.PLAYER) {
                 target = actor;
             }
@@ -629,9 +629,12 @@ public class GameService {
                     saved = false;
                     castData.put("saveAutoFail", true);
                 } else {
+                    int blessBonus = Boolean.TRUE.equals(target.getData().get("blessed"))
+                            ? dice.roll("1d4").total() : 0;
                     SaveResult save = saveResolver.resolve(targetC, ability, dc,
-                            ConditionRules.saveAdvantage(targetConditions, ability));
+                            ConditionRules.saveAdvantage(targetConditions, ability), blessBonus);
                     saved = save.success();
+                    castData.put("blessBonus", blessBonus);
                     castData.put("saveDieRoll", save.dieRoll());
                     castData.put("saveModifier", save.modifier());
                     castData.put("saveTotal", save.total());
@@ -666,6 +669,23 @@ public class GameService {
                 recorded.add(events.record(campaignId, activeSceneId(campaignId), "SPELL_HEAL", actor.getName(),
                         actor.getName() + " cura " + heal + " PG a " + target.getName()
                                 + " con " + spell.name() + ".", healData));
+            }
+            case BUFF -> {
+                campaigns.clearConcentration(campaignId, actor.getId());
+                target.getData().put("blessed", true);
+                target.getData().put("blessedBy", actor.getId());
+                actor.getData().put("concentrationSpell", spell.id());
+                actor.getData().put("concentrationName", spell.name());
+                actor.getData().put("concentrationRounds", 10);
+                campaigns.saveEntity(target);
+                campaigns.saveEntity(actor);
+                Map<String, Object> buffData = new LinkedHashMap<>(castData);
+                buffData.put("targetId", target.getId());
+                buffData.put("buff", spell.buff());
+                buffData.put("rounds", 10);
+                recorded.add(events.record(campaignId, activeSceneId(campaignId), "SPELL_BUFF", actor.getName(),
+                        actor.getName() + " bendice a " + target.getName()
+                                + " con " + spell.name() + ".", buffData));
             }
         }
 
