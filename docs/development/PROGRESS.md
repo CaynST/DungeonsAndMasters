@@ -24,7 +24,8 @@
 
 **Corrección detectada en verificación visual**
 - El PNJ usaba `/images/npcs/archivist.png` (inexistente) en vez de `archivista.png`; se añadió
-  `AdventureGeneratorAssetsTest` (Red→Green) y se corrigió la ruta.
+  `AdventureGeneratorAssetsTest` (Red→Green) y se corrigió la ruta. Las campañas existentes se
+  arreglan con las migraciones V8 (plantillas) y V9 (fichas del tablero).
 
 **Siguiente paso**
 - Completar R-11 (Estilo de combate, Inspiración, Canalizar divinidad) o R-10 (conjuros).

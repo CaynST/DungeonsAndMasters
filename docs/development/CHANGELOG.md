@@ -2,6 +2,10 @@
 
 ## 2026-10-30
 
+- **D-17** `fix(db)` — Migraciones V8/V9 actualizan `npc_templates.portrait` y
+  `board_entities.portrait` en campañas ya creadas para que apunten a `archivista.png`; V9 corrige
+  las fichas ya materializadas. Verificado recargando la campaña de auditoría sin errores HTTP.
+
 - **D-16** `fix(content)` — El retrato del PNJ generado apuntaba a `archivist.png`, pero el asset
   real es `archivista.png`; el `GET` devolvía 500 y la ficha quedaba sin imagen. Nuevo test
   `AdventureGeneratorAssetsTest` que verifica que los retratos materializados existen.
