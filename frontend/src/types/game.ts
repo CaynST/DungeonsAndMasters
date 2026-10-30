@@ -15,6 +15,29 @@ export interface Attack {
   ranged: boolean;
 }
 
+export type SpellKind = "ATTACK" | "SAVE" | "AUTO" | "HEAL";
+
+export interface Spell {
+  id: string;
+  name: string;
+  level: number;
+  school: string;
+  description: string;
+  range: number;
+  kind: SpellKind;
+  damage?: string;
+  damageType?: string;
+  saveAbility?: string;
+  heal?: string;
+  bonusAction: boolean;
+  concentration: boolean;
+}
+
+export interface Spellbook {
+  spells: Spell[];
+  slots: number;
+}
+
 export interface InventoryItem {
   name: string;
   description?: string;
@@ -183,6 +206,7 @@ export interface GameState {
   combat: CombatState | null;
   recentEvents: GameEvent[];
   objective?: string;
+  spellbook?: Record<string, Spellbook>;
 }
 
 export interface CheckRequest {
@@ -378,4 +402,5 @@ export interface PlayerActionPayload {
   expression?: string;
   text?: string;
   item?: string;
+  spell?: string;
 }

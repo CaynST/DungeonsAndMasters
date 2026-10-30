@@ -143,6 +143,12 @@ export function Game() {
     [gameState?.party, myEntity?.refId],
   );
   const classId = classIdOf(myCharacter?.cls, myCharacter?.creationData);
+  const spellbook = classId ? gameState?.spellbook?.[classId] : undefined;
+  const spells = spellbook?.spells ?? [];
+  const spellSlotsMax = spellbook?.slots ?? 0;
+  const spellSlotsUsed = typeof myEntity?.data?.spellSlotsUsed === "number"
+    ? myEntity.data.spellSlotsUsed
+    : 0;
   const myConditions = useMemo(() => entityConditions(myEntity), [myEntity]);
   const incapacitated = isIncapacitated(myEntity);
   const prone = myConditions.some((condition) => condition.code === "PRONE");
@@ -508,6 +514,9 @@ export function Game() {
           secondWindUsed={Boolean(myEntity?.data?.secondWindUsed)}
           raging={Boolean(myEntity?.data?.raging)}
           ragesUsed={typeof myEntity?.data?.ragesUsed === "number" ? myEntity.data.ragesUsed : 0}
+          spells={spells}
+          spellSlotsMax={spellSlotsMax}
+          spellSlotsUsed={spellSlotsUsed}
           movementUsed={typeof myEntity?.data?.movementUsed === "number" ? myEntity.data.movementUsed : 0}
           movementMax={
             typeof myEntity?.data?.movementMax === "number" ? myEntity.data.movementMax : myEntity?.speed ?? 0
@@ -527,6 +536,14 @@ export function Game() {
           onStandUp={() => act.mutate({ type: "STAND_UP", actorEntityId: myEntity?.id })}
           onSecondWind={() => act.mutate({ type: "SECOND_WIND", actorEntityId: myEntity?.id })}
           onRage={() => act.mutate({ type: "RAGE", actorEntityId: myEntity?.id })}
+          onCastSpell={(spellId) =>
+            act.mutate({
+              type: "CAST_SPELL",
+              spell: spellId,
+              actorEntityId: myEntity?.id,
+              targetEntityId: selectedEntity?.id,
+            })
+          }
           mode={mode}
           onToggleMode={setMode}
         />

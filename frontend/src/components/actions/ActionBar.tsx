@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   ArrowUpFromLine,
+  BookOpen,
   Dices,
   Flame,
   Footprints,
@@ -15,7 +16,7 @@ import {
   Undo2,
   Wind,
 } from "lucide-react";
-import type { Attack, PlayerCharacter } from "@/types/game";
+import type { Attack, PlayerCharacter, Spell } from "@/types/game";
 import { Button } from "@/components/ui/Button";
 import { formatModifier } from "@/lib/utils";
 
@@ -36,6 +37,9 @@ interface Props {
   secondWindUsed?: boolean;
   raging?: boolean;
   ragesUsed?: number;
+  spells?: Spell[];
+  spellSlotsMax?: number;
+  spellSlotsUsed?: number;
   selectedTargetName?: string;
   selectedAttack?: Attack;
   onSelectAttack: (attack: Attack) => void;
@@ -52,6 +56,7 @@ interface Props {
   onStandUp: () => void;
   onSecondWind: () => void;
   onRage: () => void;
+  onCastSpell: (spellId: string) => void;
 }
 
 export function ActionBar({
@@ -71,6 +76,9 @@ export function ActionBar({
   secondWindUsed,
   raging,
   ragesUsed,
+  spells = [],
+  spellSlotsMax = 0,
+  spellSlotsUsed = 0,
   selectedTargetName,
   selectedAttack,
   onSelectAttack,
@@ -87,12 +95,14 @@ export function ActionBar({
   onStandUp,
   onSecondWind,
   onRage,
+  onCastSpell,
 }: Props) {
   // While an action is in flight, a check is unresolved, the hero is downed or incapacitated,
   // everything is locked.
   const locked = Boolean(busy) || Boolean(checkPending) || Boolean(downed) || Boolean(incapacitated);
   const canActNow = canAct && !locked;
   const [diceOpen, setDiceOpen] = useState(false);
+  const [spellOpen, setSpellOpen] = useState(false);
 
   return (
     <div className="panel flex flex-col gap-2 p-3">
@@ -252,6 +262,63 @@ export function ActionBar({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {spells.length > 0 && (
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={locked}
+                onClick={() => setSpellOpen((value) => !value)}
+              >
+                <BookOpen className="h-4 w-4" /> Conjuros
+                <span className="ml-1 text-[10px] text-muted">
+                  {Math.max(0, spellSlotsMax - spellSlotsUsed)}/{spellSlotsMax}
+                </span>
+              </Button>
+              {spellOpen && (
+                <div className="absolute bottom-full right-0 z-30 mb-2 w-80 rounded-lg border border-[#3a2a1a] bg-[#1a130d] p-2 shadow-lg">
+                  <div className="mb-2 flex items-center justify-between px-1 text-[10px] uppercase tracking-wider text-muted">
+                    <span>Conjuros</span>
+                    <span>
+                      Espacios {Math.max(0, spellSlotsMax - spellSlotsUsed)}/{spellSlotsMax}
+                    </span>
+                  </div>
+                  <div className="max-h-72 space-y-1 overflow-y-auto">
+                    {spells.map((spell) => {
+                      const bonusSpell = spell.bonusAction;
+                      const used = bonusSpell ? bonusUsed : actionUsed;
+                      const noSlot = spell.level > 0 && spellSlotsUsed >= spellSlotsMax;
+                      const disabled = !canActNow || Boolean(used) || noSlot;
+                      return (
+                        <button
+                          key={spell.id}
+                          disabled={disabled}
+                          onClick={() => {
+                            onCastSpell(spell.id);
+                            setSpellOpen(false);
+                          }}
+                          className="w-full rounded-md border border-parchment/10 bg-surface/60 px-2.5 py-2 text-left transition hover:border-gold/40 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-sm text-ink">{spell.name}</span>
+                            <span className="shrink-0 text-[10px] uppercase tracking-wider text-muted">
+                              {spell.level === 0 ? "Truco" : `Nv ${spell.level}`}
+                              {spell.bonusAction ? " · Adicional" : ""}
+                            </span>
+                          </div>
+                          <p className="mt-0.5 text-[11px] leading-snug text-muted">{spell.description}</p>
+                          <p className="mt-1 text-[10px] text-[#9b7cff]">
+                            {spell.range} casillas · {spellKindLabel(spell)}
+                            {noSlot ? " · Sin espacios" : ""}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           <div className="relative">
             <Button variant="ghost" size="sm" disabled={locked} onClick={() => setDiceOpen((value) => !value)}>
               <Dices className="h-4 w-4" /> Dados
@@ -286,4 +353,28 @@ export function ActionBar({
       </div>
     </div>
   );
+}
+
+const ABILITY_LABELS: Record<string, string> = {
+  STRENGTH: "FUE",
+  DEXTERITY: "DES",
+  CONSTITUTION: "CON",
+  INTELLIGENCE: "INT",
+  WISDOM: "SAB",
+  CHARISMA: "CAR",
+};
+
+function spellKindLabel(spell: Spell): string {
+  switch (spell.kind) {
+    case "ATTACK":
+      return "ataque de conjuro";
+    case "SAVE":
+      return `salvación ${ABILITY_LABELS[spell.saveAbility ?? ""] ?? spell.saveAbility ?? ""}`.trim();
+    case "AUTO":
+      return "impacto automático";
+    case "HEAL":
+      return "curación";
+    default:
+      return "";
+  }
 }
