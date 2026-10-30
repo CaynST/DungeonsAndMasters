@@ -21,6 +21,7 @@ import { ConditionBadges } from "@/components/ConditionBadges";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { entityConditions, isIncapacitated } from "@/lib/conditions";
+import { classIdOf } from "@/lib/classes";
 import type { Attack, Cell, GameEvent, PlayerActionPayload } from "@/types/game";
 
 export function Game() {
@@ -137,6 +138,11 @@ export function Game() {
 
   const isMyTurn = !combat?.active || currentParticipant?.entityId === myEntity?.id;
   const isDowned = Boolean(myEntity?.data?.dying) || Boolean(myEntity?.data?.stable);
+  const myCharacter = useMemo(
+    () => gameState?.party.find((character) => character.id === myEntity?.refId),
+    [gameState?.party, myEntity?.refId],
+  );
+  const classId = classIdOf(myCharacter?.cls, myCharacter?.creationData);
   const myConditions = useMemo(() => entityConditions(myEntity), [myEntity]);
   const incapacitated = isIncapacitated(myEntity);
   const prone = myConditions.some((condition) => condition.code === "PRONE");
@@ -489,7 +495,7 @@ export function Game() {
           </div>
         )}
         <ActionBar
-          character={gameState.party.find((c) => c.id === myEntity?.refId)}
+          character={myCharacter}
           canAct={canAct}
           isMyTurn={isMyTurn}
           busy={actionBusy}
@@ -497,6 +503,11 @@ export function Game() {
           downed={isDowned}
           incapacitated={incapacitated}
           prone={prone}
+          bonusUsed={Boolean(myEntity?.data?.bonusUsed)}
+          classId={classId}
+          secondWindUsed={Boolean(myEntity?.data?.secondWindUsed)}
+          raging={Boolean(myEntity?.data?.raging)}
+          ragesUsed={typeof myEntity?.data?.ragesUsed === "number" ? myEntity.data.ragesUsed : 0}
           movementUsed={typeof myEntity?.data?.movementUsed === "number" ? myEntity.data.movementUsed : 0}
           movementMax={
             typeof myEntity?.data?.movementMax === "number" ? myEntity.data.movementMax : myEntity?.speed ?? 0
@@ -514,6 +525,8 @@ export function Game() {
           shopOpen={gameState.campaign.shopOpen}
           onCombatAction={(type) => act.mutate({ type, actorEntityId: myEntity?.id })}
           onStandUp={() => act.mutate({ type: "STAND_UP", actorEntityId: myEntity?.id })}
+          onSecondWind={() => act.mutate({ type: "SECOND_WIND", actorEntityId: myEntity?.id })}
+          onRage={() => act.mutate({ type: "RAGE", actorEntityId: myEntity?.id })}
           mode={mode}
           onToggleMode={setMode}
         />

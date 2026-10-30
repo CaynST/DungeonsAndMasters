@@ -2,11 +2,14 @@ import { useState } from "react";
 import {
   ArrowUpFromLine,
   Dices,
+  Flame,
   Footprints,
+  HeartPulse,
   Lock,
   MessageSquare,
   MoveRight,
   Shield,
+  Sparkles,
   Store,
   Swords,
   Undo2,
@@ -28,6 +31,11 @@ interface Props {
   movementUsed?: number;
   movementMax?: number;
   actionUsed?: boolean;
+  bonusUsed?: boolean;
+  classId?: string | null;
+  secondWindUsed?: boolean;
+  raging?: boolean;
+  ragesUsed?: number;
   selectedTargetName?: string;
   selectedAttack?: Attack;
   onSelectAttack: (attack: Attack) => void;
@@ -42,6 +50,8 @@ interface Props {
   onToggleMode: (mode: "move" | "attack") => void;
   onCombatAction: (type: "DASH" | "DODGE" | "DISENGAGE") => void;
   onStandUp: () => void;
+  onSecondWind: () => void;
+  onRage: () => void;
 }
 
 export function ActionBar({
@@ -56,6 +66,11 @@ export function ActionBar({
   movementUsed,
   movementMax,
   actionUsed,
+  bonusUsed,
+  classId,
+  secondWindUsed,
+  raging,
+  ragesUsed,
   selectedTargetName,
   selectedAttack,
   onSelectAttack,
@@ -70,6 +85,8 @@ export function ActionBar({
   onToggleMode,
   onCombatAction,
   onStandUp,
+  onSecondWind,
+  onRage,
 }: Props) {
   // While an action is in flight, a check is unresolved, the hero is downed or incapacitated,
   // everything is locked.
@@ -115,6 +132,13 @@ export function ActionBar({
             <span className="text-muted">Acción</span>
             <span className={actionUsed ? "font-semibold text-[#d0566a]" : "font-semibold text-[#6fd3a0]"}>
               {actionUsed ? "usada" : "libre"}
+            </span>
+          </span>
+          <span className="stat-chip mr-1 inline-flex items-center gap-1.5 px-2 py-1 text-[11px]">
+            <Sparkles className="h-3 w-3 text-[#e0b84a]" />
+            <span className="text-muted">Adicional</span>
+            <span className={bonusUsed ? "font-semibold text-[#d0566a]" : "font-semibold text-[#6fd3a0]"}>
+              {bonusUsed ? "usada" : "libre"}
             </span>
           </span>
 
@@ -172,6 +196,30 @@ export function ActionBar({
               onClick={onStandUp}
             >
               <ArrowUpFromLine className="h-4 w-4" /> Levantarse
+            </Button>
+          )}
+          {classId === "fighter" && (
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!canActNow || Boolean(bonusUsed) || Boolean(secondWindUsed)}
+              title={secondWindUsed
+                ? "Ya has usado Segundo aliento; necesitas un descanso"
+                : "Segundo aliento: 1d10 + nivel PG (acción adicional, 1 uso)"}
+              onClick={onSecondWind}
+            >
+              <HeartPulse className="h-4 w-4" /> Segundo aliento
+            </Button>
+          )}
+          {classId === "barbarian" && (
+            <Button
+              variant={raging ? "danger" : "secondary"}
+              size="sm"
+              disabled={!canActNow || Boolean(bonusUsed) || Boolean(raging) || (ragesUsed ?? 0) >= 2}
+              title="Furia: +2 al daño cuerpo a cuerpo y resistencia física (acción adicional, 2 usos)"
+              onClick={onRage}
+            >
+              <Flame className="h-4 w-4" /> {raging ? "Furia activa" : `Furia (${2 - (ragesUsed ?? 0)})`}
             </Button>
           )}
 
