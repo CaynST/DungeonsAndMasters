@@ -20,7 +20,7 @@
 - `ClassFeaturesTest`, `SecondWindRulesTest`, `RageRulesTest`, `SneakAttackRulesTest` y el caso
   de bonificación/resistencia en `RulesEngineTest`.
 - `ClassFeatureIntegrationTest` (curación, límites de Furia, ataque furtivo, fin de Furia).
-- Backend completo: **179 tests** en verde. Frontend: **27 tests** y `pnpm build` en verde.
+- Backend completo: **180 tests** en verde. Frontend: **27 tests** y `pnpm build` en verde.
 
 **Corrección detectada en verificación visual**
 - El PNJ usaba `/images/npcs/archivist.png` (inexistente) en vez de `archivista.png`; se añadió
