@@ -57,3 +57,4 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-14 | Cobertura 5e: línea de visión, +2/+5 CA y bloqueo total | done |
 | D-15 | Rasgos de clase: Segundo aliento, Furia y Ataque furtivo | done |
 | D-18 | Conjuros: trucos, espacios, ataques, salvaciones y curación | done |
+| D-19 | Concentración y Bendición (+1d4 a ataques/salvaciones, rotura por daño) | done |

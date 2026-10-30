@@ -66,3 +66,12 @@ expuesto en `GameState`.
 los de salvación usan `SaveResolver`; los automáticos y curativos usan `spellDamage`/curación.
 **Consecuencia:** no hace falta migración de personajes y la UI no duplica reglas. Concentración,
 componentes, áreas y upcasting quedan como deuda documentada.
+
+## ADR-008 — Concentración con banderas en lanzador y objetivos
+**Contexto:** la concentración 5e requiere una sola instancia por lanzador, duración y rotura por
+daño; el prototipo no tiene descansos ni un gestor de efectos genérico.
+**Decisión:** el lanzador guarda `concentrationSpell/Name/Rounds`; los objetivos guardan
+`blessed`/`blessedBy`. `startTurn` tickea la duración, `clearConcentration` limpia los buffs del
+lanzador y `CombatService` hace la salvación de CON al recibir daño.
+**Consecuencia:** concentración observable y testeable sin un sistema de efectos completo. Los
+componentes, áreas y upcasting siguen pendientes; el buff actual es específico de Bendición.

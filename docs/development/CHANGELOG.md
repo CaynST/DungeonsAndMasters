@@ -2,6 +2,12 @@
 
 ## 2026-10-30
 
+- **D-19** `feat(rules)` — Concentración: **Bendición** (Clérigo, nivel 1) da +1d4 a tiradas de
+  ataque y salvaciones durante 10 rondas. El lanzador guarda `concentrationSpell/Rounds`; el buff
+  vive en `blessed`/`blessedBy`; se rompe al recibir daño (salvación de CON CD 10 o mitad del daño)
+  y al expirar. `SaveResolver` acepta bonificación plana; la UI muestra **Bendito** y
+  **Conc. Bendición (rondas)**.
+
 - **D-18** `feat(rules)` — Conjuros: catálogo por clase, espacios de nivel 1, ataques de conjuro,
   salvaciones y curación. Mago: Fuego feérico, Rayo de escarcha y Proyectil mágico; Clérigo:
   Llama sagrada, Curar heridas y Palabra curativa. `SaveResolver` y `Spellcasting` calculan DC,

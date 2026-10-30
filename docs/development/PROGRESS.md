@@ -25,8 +25,19 @@
 - Verificación visual con Lyra (Maga): menú **Conjuros**, **Espacios 2/2**, Fuego feérico,
   Rayo de escarcha y Proyectil mágico; sin errores de consola ni HTTP.
 
+**Concentración (2026-10-30)**
+- **Bendición** (Clérigo): +1d4 a ataques y salvaciones, 10 rondas, concentración.
+- `CombatService` suma el d4 al ataque y comprueba concentración al recibir daño
+  (CON CD 10 o mitad del daño); `CampaignService.startTurn` tickea la duración y
+  `clearConcentration` limpia el buff en todos los objetivos.
+- UI: chip **Conc. Bendición (rondas)** y estado **Bendito**.
+- Tests: `SpellCatalogTest`, `SaveResolverTest`, `SpellIntegrationTest` (buff, ataque bendecido,
+  rotura por daño, expiración). Backend **202 tests**; frontend **27 tests** y build.
+- Verificación visual con Thorin: Bendición lanzada, **BENDITO**, **Conc. Bendición (10)** y
+  espacios **1/2**, sin errores.
+
 **Siguiente paso**
-- Concentración/componentes/áreas y upcasting; o completar los rasgos restantes de R-11.
+- Componentes/áreas/upcasting o completar los rasgos restantes de R-11.
 
 ## 2026-10-30 — Rasgos de clase
 
