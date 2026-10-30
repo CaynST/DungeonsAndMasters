@@ -40,6 +40,8 @@ interface Props {
   spells?: Spell[];
   spellSlotsMax?: number;
   spellSlotsUsed?: number;
+  concentrationName?: string | null;
+  concentrationRounds?: number;
   selectedTargetName?: string;
   selectedAttack?: Attack;
   onSelectAttack: (attack: Attack) => void;
@@ -79,6 +81,8 @@ export function ActionBar({
   spells = [],
   spellSlotsMax = 0,
   spellSlotsUsed = 0,
+  concentrationName,
+  concentrationRounds,
   selectedTargetName,
   selectedAttack,
   onSelectAttack,
@@ -151,6 +155,15 @@ export function ActionBar({
               {bonusUsed ? "usada" : "libre"}
             </span>
           </span>
+          {concentrationName && (
+            <span className="stat-chip mr-1 inline-flex items-center gap-1.5 px-2 py-1 text-[11px]">
+              <Sparkles className="h-3 w-3 text-[#9b7cff]" />
+              <span className="text-muted">Conc.</span>
+              <span className="font-semibold text-[#c9a6ff]">
+                {concentrationName} ({concentrationRounds ?? 0})
+              </span>
+            </span>
+          )}
 
           <Button
             variant={mode === "move" ? "primary" : "secondary"}
@@ -374,6 +387,8 @@ function spellKindLabel(spell: Spell): string {
       return "impacto automático";
     case "HEAL":
       return "curación";
+    case "BUFF":
+      return "mejora";
     default:
       return "";
   }

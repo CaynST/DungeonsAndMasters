@@ -149,6 +149,13 @@ export function Game() {
   const spellSlotsUsed = typeof myEntity?.data?.spellSlotsUsed === "number"
     ? myEntity.data.spellSlotsUsed
     : 0;
+  const concentrationName = typeof myEntity?.data?.concentrationName === "string"
+    ? myEntity.data.concentrationName
+    : null;
+  const concentrationRounds = typeof myEntity?.data?.concentrationRounds === "number"
+    ? myEntity.data.concentrationRounds
+    : 0;
+  const blessed = Boolean(myEntity?.data?.blessed);
   const myConditions = useMemo(() => entityConditions(myEntity), [myEntity]);
   const incapacitated = isIncapacitated(myEntity);
   const prone = myConditions.some((condition) => condition.code === "PRONE");
@@ -494,10 +501,11 @@ export function Game() {
 
       {/* Action bar */}
       <div className="px-3 pb-3">
-        {myEntity && myConditions.length > 0 && (
+        {myEntity && (myConditions.length > 0 || blessed || concentrationName) && (
           <div className="panel mb-2 flex flex-wrap items-center gap-2 px-3 py-2">
             <span className="text-[11px] uppercase tracking-wider text-muted">Estados</span>
             <ConditionBadges conditions={myConditions} />
+            {blessed && <Badge tone="gold">Bendito</Badge>}
           </div>
         )}
         <ActionBar
@@ -517,6 +525,8 @@ export function Game() {
           spells={spells}
           spellSlotsMax={spellSlotsMax}
           spellSlotsUsed={spellSlotsUsed}
+          concentrationName={concentrationName}
+          concentrationRounds={concentrationRounds}
           movementUsed={typeof myEntity?.data?.movementUsed === "number" ? myEntity.data.movementUsed : 0}
           movementMax={
             typeof myEntity?.data?.movementMax === "number" ? myEntity.data.movementMax : myEntity?.speed ?? 0
