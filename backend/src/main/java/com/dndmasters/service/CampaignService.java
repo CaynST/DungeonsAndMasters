@@ -395,6 +395,8 @@ public class CampaignService {
             data.put("class", character.getCls());
             data.put("race", character.getRace());
             data.put("ownerId", controllerByCharacterOwner(campaignId).get(character.getId()));
+            data.put("classId", com.dndmasters.engine.rules.ClassFeatures.idOf(character.getCls()));
+            data.put("level", character.getLevel());
             saveEntity(sceneId, scene.getMapId(), "PLAYER", character.getId(), character.getName(),
                     new Placement("PLAYER", character.getName(), spawn.x(), spawn.y()),
                     character.getHp(), character.getMaxHp(), character.getAc(), character.getSpeed(),
@@ -519,6 +521,18 @@ public class CampaignService {
                     com.dndmasters.engine.combat.Conditions.of(e);
             int speed = com.dndmasters.engine.combat.ConditionRules.effectiveSpeed(e.getSpeed(), conditions);
             com.dndmasters.engine.combat.TurnEconomy.reset(e.getData(), speed);
+
+            boolean rageEnded = false;
+            if (Boolean.TRUE.equals(e.getData().get("raging"))) {
+                int rounds = e.getData().get("rageRounds") instanceof Number n ? n.intValue() : 0;
+                if (rounds <= 1) {
+                    e.getData().put("raging", false);
+                    e.getData().put("rageRounds", 0);
+                    rageEnded = true;
+                } else {
+                    e.getData().put("rageRounds", rounds - 1);
+                }
+            }
             saveEntity(e);
 
             Long sceneId = requireCampaign(campaignId).getActiveSceneId();
@@ -527,6 +541,22 @@ public class CampaignService {
                         e.getName() + " deja de estar " + condition.label().toLowerCase() + ".",
                         Map.of("entityId", e.getId(), "condition", condition.name()));
             }
+            if (rageEnded) {
+                events.record(campaignId, sceneId, "RAGE_ENDED", e.getName(),
+                        e.getName() + " deja de estar enfurecido.", Map.of("entityId", e.getId()));
+            }
+        });
+    }
+
+    /** Resets combat-scoped class feature uses when a new combat starts. */
+    @Transactional
+    public void resetFeatureUses(Long entityId) {
+        entity(entityId).ifPresent(e -> {
+            e.getData().put("secondWindUsed", false);
+            e.getData().put("ragesUsed", 0);
+            e.getData().put("raging", false);
+            e.getData().put("rageRounds", 0);
+            saveEntity(e);
         });
     }
 

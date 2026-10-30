@@ -28,8 +28,11 @@ import com.dndmasters.engine.dice.DiceRollResult;
 import com.dndmasters.engine.rules.CheckResolver;
 import com.dndmasters.engine.rules.CheckResult;
 import com.dndmasters.engine.rules.Advantage;
+import com.dndmasters.engine.rules.ClassFeatures;
 import com.dndmasters.engine.rules.CoverRules;
+import com.dndmasters.engine.rules.RageRules;
 import com.dndmasters.engine.rules.RangeRules;
+import com.dndmasters.engine.rules.SecondWindRules;
 import com.dndmasters.engine.rules.Combatants;
 import com.dndmasters.persistence.entity.CharacterEntity;
 import com.dndmasters.persistence.entity.DiceRollEntity;
@@ -146,6 +149,8 @@ public class GameService {
             case PlayerAction.DODGE -> combatAction(campaignId, userId, action, PlayerAction.DODGE);
             case PlayerAction.DISENGAGE -> combatAction(campaignId, userId, action, PlayerAction.DISENGAGE);
             case PlayerAction.STAND_UP -> standUp(campaignId, userId, action);
+            case PlayerAction.SECOND_WIND -> classFeature(campaignId, userId, action, PlayerAction.SECOND_WIND);
+            case PlayerAction.RAGE -> classFeature(campaignId, userId, action, PlayerAction.RAGE);
             default -> ActionResult.error("Tipo de acción desconocido: " + action.getType());
         };
     }
@@ -493,6 +498,83 @@ public class GameService {
         GameEvent event = events.record(campaignId, activeSceneId(campaignId), "STAND_UP", actor.getName(),
                 actor.getName() + " se levanta (coste " + cost + " casillas).",
                 Map.of("entityId", actor.getId(), "cost", cost));
+        return new ActionResult(true, null, null, List.of(event), null, null, null, List.of(), false);
+    }
+
+    /** Class features that consume the bonus action: Second Wind and Rage. */
+    private ActionResult classFeature(Long campaignId, Long userId, PlayerAction action, String type) {
+        GameEntity actor = resolveActor(campaignId, userId, action);
+        if (actor == null) {
+            return ActionResult.error("No se encontró el personaje activo");
+        }
+        if (!ownedBy(actor, userId)) {
+            return ActionResult.error("No controlas ese personaje");
+        }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
+        }
+        if (Conditions.of(actor).incapacitated()) {
+            return ActionResult.error("Estás incapacitado y no puedes usar rasgos de clase.");
+        }
+        CombatState state = campaigns.activeCombat(campaignId);
+        if (state != null && state.isActive() && !state.isCombatantTurn(actor.getId())) {
+            return ActionResult.error("No es tu turno");
+        }
+        if (Boolean.TRUE.equals(actor.getData().get("bonusUsed"))) {
+            return ActionResult.error("Ya has usado tu acción adicional este turno.");
+        }
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        String message;
+        switch (type) {
+            case PlayerAction.SECOND_WIND -> {
+                if (!ClassFeatures.is(actor, "fighter")) {
+                    return ActionResult.error("Solo los guerreros pueden usar Segundo aliento.");
+                }
+                if (Boolean.TRUE.equals(actor.getData().get("secondWindUsed"))) {
+                    return ActionResult.error("Ya has usado Segundo aliento; necesitas un descanso.");
+                }
+                int roll = dice.roll("1d10").rolls().get(0);
+                int heal = SecondWindRules.healAmount(roll, ClassFeatures.level(actor));
+                int newHp = Math.min(actor.getMaxHp(), actor.getHp() + heal);
+                actor.setHp(newHp);
+                actor.setAlive(true);
+                actor.getData().put("dying", false);
+                actor.getData().put("stable", false);
+                actor.getData().put("deathSuccesses", 0);
+                actor.getData().put("deathFailures", 0);
+                actor.getData().put("secondWindUsed", true);
+                message = actor.getName() + " recupera " + heal + " PG con Segundo aliento ("
+                        + newHp + "/" + actor.getMaxHp() + ").";
+                data.put("heal", heal);
+                data.put("hpAfter", newHp);
+            }
+            case PlayerAction.RAGE -> {
+                if (!ClassFeatures.is(actor, "barbarian")) {
+                    return ActionResult.error("Solo los bárbaros pueden enfurecerse.");
+                }
+                if (RageRules.isRaging(actor)) {
+                    return ActionResult.error("Ya estás enfurecido.");
+                }
+                if (RageRules.ragesUsed(actor) >= RageRules.MAX_RAGES) {
+                    return ActionResult.error("No te quedan usos de Furia; necesitas un descanso.");
+                }
+                actor.getData().put("raging", true);
+                actor.getData().put("rageRounds", RageRules.DURATION_ROUNDS);
+                actor.getData().put("ragesUsed", RageRules.ragesUsed(actor) + 1);
+                message = actor.getName()
+                        + " entra en Furia: +2 al daño cuerpo a cuerpo y resistencia al daño físico.";
+                data.put("ragesUsed", actor.getData().get("ragesUsed"));
+                data.put("rounds", RageRules.DURATION_ROUNDS);
+            }
+            default -> {
+                return ActionResult.error("Rasgo de clase desconocido");
+            }
+        }
+        actor.getData().put("bonusUsed", true);
+        campaigns.saveEntity(actor);
+        data.put("entityId", actor.getId());
+        GameEvent event = events.record(campaignId, activeSceneId(campaignId), type, actor.getName(), message, data);
         return new ActionResult(true, null, null, List.of(event), null, null, null, List.of(), false);
     }
 

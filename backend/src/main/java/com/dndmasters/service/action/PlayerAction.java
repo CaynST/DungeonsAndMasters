@@ -27,6 +27,8 @@ public class PlayerAction {
     public static final String DODGE = "DODGE";
     public static final String DISENGAGE = "DISENGAGE";
     public static final String STAND_UP = "STAND_UP";
+    public static final String SECOND_WIND = "SECOND_WIND";
+    public static final String RAGE = "RAGE";
 
     private String type;
     private Long actorEntityId;

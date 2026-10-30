@@ -16,13 +16,18 @@ import com.dndmasters.engine.combat.Conditions;
 import com.dndmasters.engine.combat.DeathSaveRules;
 import com.dndmasters.engine.combat.TurnEconomy;
 import com.dndmasters.engine.combat.TurnManager;
+import com.dndmasters.engine.dice.DiceEngine;
+import com.dndmasters.engine.dice.DiceRollResult;
 import com.dndmasters.engine.rules.AttackResolver;
 import com.dndmasters.engine.rules.AttackResult;
+import com.dndmasters.engine.rules.ClassFeatures;
 import com.dndmasters.engine.rules.Combatant;
 import com.dndmasters.engine.rules.Combatants;
 import com.dndmasters.engine.rules.CoverRules;
 import com.dndmasters.engine.rules.DamageResolver;
 import com.dndmasters.engine.rules.DamageResult;
+import com.dndmasters.engine.rules.RageRules;
+import com.dndmasters.engine.rules.SneakAttackRules;
 import com.dndmasters.persistence.entity.CombatParticipantEntity;
 import com.dndmasters.persistence.entity.CombatStateEntity;
 import com.dndmasters.persistence.mapper.GameEntityMapper;
@@ -55,11 +60,12 @@ public class CombatService {
     private final TurnManager turns;
     private final AttackResolver attackResolver;
     private final DamageResolver damageResolver;
+    private final DiceEngine dice;
 
     public CombatService(CampaignService campaigns, GameEventService events, GameEntityMapper entityMapper,
                          CombatStateRepository combatStates, CombatParticipantRepository combatParticipants,
                          BoardEntityRepository boardEntities, CombatEngine combatEngine, TurnManager turns,
-                         AttackResolver attackResolver, DamageResolver damageResolver) {
+                         AttackResolver attackResolver, DamageResolver damageResolver, DiceEngine dice) {
         this.campaigns = campaigns;
         this.events = events;
         this.entityMapper = entityMapper;
@@ -70,6 +76,7 @@ public class CombatService {
         this.turns = turns;
         this.attackResolver = attackResolver;
         this.damageResolver = damageResolver;
+        this.dice = dice;
     }
 
     @Transactional
@@ -85,8 +92,11 @@ public class CombatService {
         }
         CombatState state = combatEngine.start(campaignId, sceneId, combatants);
         persist(state);
-        // Fresh turn economy for everyone at the start of combat.
-        state.getParticipants().forEach(p -> campaigns.resetTurnUsage(p.getEntityId()));
+        // Fresh turn economy and class feature uses for everyone at the start of combat.
+        state.getParticipants().forEach(p -> {
+            campaigns.resetTurnUsage(p.getEntityId());
+            campaigns.resetFeatureUses(p.getEntityId());
+        });
         campaigns.updateCampaignPhase(campaignId, GamePhase.COMBAT, sceneId);
 
         List<Map<String, Object>> order = state.getParticipants().stream()
@@ -385,12 +395,37 @@ public class CombatService {
         String coverNote = cover.acBonus() > 0 ? " (cobertura +" + cover.acBonus() + " CA)" : "";
 
         if (attackResult.hit()) {
-            DamageResult damage = damageResolver.apply(attack, attackResult, targetC);
+            int rageBonus = RageRules.damageBonus(attacker, melee);
+            int bonusDamage = rageBonus;
+            boolean sneakAttack = false;
+            int sneakDamage = 0;
+            boolean allyAdjacent = state.getSceneId() != null
+                    && SneakAttackRules.allyAdjacent(attacker, target,
+                            campaigns.entitiesInScene(state.getSceneId()));
+            if (SneakAttackRules.canUse(attacker,
+                    effective == com.dndmasters.engine.rules.Advantage.ADVANTAGE,
+                    effective == com.dndmasters.engine.rules.Advantage.DISADVANTAGE,
+                    allyAdjacent)) {
+                sneakAttack = true;
+                sneakDamage = dice.roll(
+                        SneakAttackRules.diceCount(ClassFeatures.level(attacker)) + "d6").total();
+                bonusDamage += sneakDamage;
+            }
+            boolean resistance = RageRules.resistsPhysicalDamage(target);
+            DamageResult damage = damageResolver.apply(attack, attackResult, targetC, bonusDamage, resistance);
+            if (sneakAttack) {
+                attacker.getData().put("sneakAttackUsed", true);
+                campaigns.saveEntity(attacker);
+            }
             target.setHp(targetC.getHp());
             data.put("damage", damage.total());
             data.put("damageRolls", damage.rolls());
             data.put("hpAfter", damage.targetHpAfter());
             data.put("dead", damage.dead());
+            data.put("rageBonus", rageBonus);
+            data.put("sneakAttack", sneakAttack);
+            data.put("sneakAttackDamage", sneakDamage);
+            data.put("resisted", resistance);
 
             boolean playerDown = damage.targetHpAfter() <= 0 && target.getKind() == EntityKind.PLAYER;
             if (playerDown) {

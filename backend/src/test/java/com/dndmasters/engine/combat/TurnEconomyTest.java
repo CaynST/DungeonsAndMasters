@@ -17,6 +17,7 @@ class TurnEconomyTest {
         data.put("dodging", true);
         data.put("disengaged", true);
         data.put("reactionUsed", true);
+        data.put("sneakAttackUsed", true);
 
         TurnEconomy.reset(data, 6);
 
@@ -25,6 +26,7 @@ class TurnEconomyTest {
         assertThat(TurnEconomy.flag(data, "dodging")).isFalse();
         assertThat(TurnEconomy.flag(data, "disengaged")).isFalse();
         assertThat(TurnEconomy.flag(data, "reactionUsed")).isFalse();
+        assertThat(TurnEconomy.flag(data, "sneakAttackUsed")).isFalse();
         assertThat(TurnEconomy.movementUsed(data)).isZero();
         assertThat(TurnEconomy.movementAllowance(data, 6)).isEqualTo(6);
     }

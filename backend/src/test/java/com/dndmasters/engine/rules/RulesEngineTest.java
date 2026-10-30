@@ -120,6 +120,23 @@ class RulesEngineTest {
     }
 
     @Test
+    void damageResolverAddsBonusDamageAndHalvesForResistance() {
+        Combatant attacker = combatant(1, 30, 10, new Stats(10, 10, 10, 10, 10, 10));
+        Combatant target = combatant(2, 30, 10, new Stats(10, 10, 10, 10, 10, 10));
+        Attack attack = Attack.melee("Longsword", 5, "1d8+3");
+        // Attack roll 20 (critical), damage d8 = 7 → 14 doubled + 3 + 2 bonus = 19, halved = 9.
+        DiceEngine dice = new DiceEngine(StubRandom.of(19, 6));
+        AttackResult attackResult = new AttackResolver(dice).resolve(attacker, target, attack);
+
+        DamageResult damage = new DamageResolver(dice).apply(attack, attackResult, target, 2, true);
+
+        assertThat(attackResult.critical()).isTrue();
+        assertThat(damage.diceTotal()).isEqualTo(14);
+        assertThat(damage.total()).isEqualTo(9);
+        assertThat(damage.targetHpAfter()).isEqualTo(21);
+    }
+
+    @Test
     void advantageTakesHigherDieAndDisadvantageTakesLower() {
         Combatant attacker = combatant(1, 20, 15, new Stats(10, 10, 10, 10, 10, 10));
         Combatant target = combatant(2, 20, 15, new Stats(10, 10, 10, 10, 10, 10));

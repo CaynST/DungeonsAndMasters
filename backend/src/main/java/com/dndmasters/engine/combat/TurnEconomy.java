@@ -21,6 +21,7 @@ public final class TurnEconomy {
         data.put("disengaged", false);
         data.put("reactionUsed", false);
         data.put("dashUsed", false);
+        data.put("sneakAttackUsed", false);
     }
 
     public static int movementAllowance(Map<String, Object> data, int speed) {
