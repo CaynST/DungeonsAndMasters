@@ -17,7 +17,7 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | R-08 | Terreno difícil (coste doble) | P2 | pending |
 | R-09 | Sorpresa | P2 | pending |
 | R-10 | Conjuros: trucos, espacios, concentración, componentes | P1 | pending |
-| R-11 | Rasgos de clase (Estilo de combate, Segundo aliento, Ataque furtivo, Furia, Inspiración, Canalizar divinidad, etc.) | P1 | pending |
+| R-11 | Rasgos de clase (Estilo de combate, Segundo aliento, Ataque furtivo, Furia, Inspiración, Canalizar divinidad, etc.) | P1 | in_progress |
 | R-12 | Trasfondos PHB faltantes: Charlatán, Artista, Artesano gremial, Ermitaño, Forastero, Marinero | P2 | pending |
 | R-13 | Competencias de armadura/arma/herramienta e idiomas | P2 | pending |
 | R-14 | Descanso corto/largo y dados de golpe | P2 | pending |
@@ -55,3 +55,4 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-12 | Economía de turno: Dash/Dodge/Disengage y ataques de oportunidad | done |
 | D-13 | Condiciones 5e: modelo, efectos en ataque/prueba/movimiento, acciones del DM y UI | done |
 | D-14 | Cobertura 5e: línea de visión, +2/+5 CA y bloqueo total | done |
+| D-15 | Rasgos de clase: Segundo aliento, Furia y Ataque furtivo | done |

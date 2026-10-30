@@ -1,5 +1,30 @@
 # PROGRESS
 
+## 2026-10-30 — Rasgos de clase
+
+**Objetivo:** avanzar R-11 y completar la acción adicional de R-02 con rasgos reales.
+
+**Acciones**
+- `ClassFeatures` normaliza clases en inglés/español y lee `classId`/`level` del estado.
+- **Segundo aliento** (Guerrero): acción adicional, `1d10 + nivel` PG, un uso por combate.
+- **Furia** (Bárbaro): acción adicional, `+2` daño cuerpo a cuerpo, resistencia al daño físico,
+  10 rondas y 2 usos; termina al inicio del turno si se agota.
+- **Ataque furtivo** (Pícaro): `+1d6` una vez por turno con ventaja o un aliado consciente
+  adyacente al objetivo; no aplica con desventaja.
+- `DamageResolver` acepta bonificación plana y resistencia; el ataque registra `rageBonus`,
+  `sneakAttack`, `sneakAttackDamage` y `resisted`.
+- UI: chip de **acción adicional**, botones **Segundo aliento** y **Furia**; el estado de Furia y
+  los usos se leen de la entidad.
+
+**Verificación (TDD)**
+- `ClassFeaturesTest`, `SecondWindRulesTest`, `RageRulesTest`, `SneakAttackRulesTest` y el caso
+  de bonificación/resistencia en `RulesEngineTest`.
+- `ClassFeatureIntegrationTest` (curación, límites de Furia, ataque furtivo, fin de Furia).
+- Backend completo: **179 tests** en verde. Frontend: **27 tests** y `pnpm build` en verde.
+
+**Siguiente paso**
+- Completar R-11 (Estilo de combate, Inspiración, Canalizar divinidad) o R-10 (conjuros).
+
 ## 2026-10-29 — Cobertura
 
 **Objetivo:** implementar R-05 con la rejilla como fuente de verdad.

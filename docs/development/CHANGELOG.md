@@ -1,5 +1,13 @@
 # CHANGELOG (desarrollo)
 
+## 2026-10-30
+
+- **D-15** `feat(rules)` — Rasgos de clase con acción adicional: **Segundo aliento** (Guerrero,
+  1d10 + nivel PG, 1 uso por combate), **Furia** (Bárbaro, +2 daño cuerpo a cuerpo, resistencia
+  física, 10 rondas, 2 usos) y **Ataque furtivo** (Pícaro, +1d6 una vez por turno con ventaja o
+  aliado adyacente). `DamageResolver` acepta bonificación y resistencia; la barra muestra la acción
+  adicional y los botones de rasgo.
+
 ## 2026-10-29
 
 - **D-14** `feat(rules)` — Cobertura 5e: `CoverRules` calcula la línea de visión en la rejilla

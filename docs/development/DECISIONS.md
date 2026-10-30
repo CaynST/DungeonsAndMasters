@@ -45,3 +45,13 @@ los obstáculos suman cobertura media (+2 CA) o de tres cuartos (+5 CA). El cuer
 casilla no tiene casilla intermedia y no recibe cobertura.
 **Consecuencia:** reglas deterministas y testeables; las esquinas y la cobertura por criaturas
 quedan como aproximaciones documentadas en `TECH_DEBT.md`.
+
+## ADR-006 — Rasgos de clase como datos + reglas puras, con acción adicional
+**Contexto:** Segundo aliento y Furia consumen la acción adicional; Ataque furtivo es pasivo y
+depende de ventaja/aliado. El motor ya guarda banderas por entidad y el DM no debe calcularlas.
+**Alternativas:** codificar cada rasgo en `CombatService`; o extraer reglas puras y datos.
+**Decisión:** `ClassFeatures` normaliza la clase; `SecondWindRules`, `RageRules` y
+`SneakAttackRules` deciden; `GameService` valida la acción adicional y `CombatService` aplica
+bonificación/resistencia en `DamageResolver`.
+**Consecuencia:** rasgos testeables sin Spring y extensibles; los usos se reinician al empezar
+combate (no hay descansos todavía) y las armas con sutiliza no se modelan aún.
