@@ -22,6 +22,10 @@
 - `ClassFeatureIntegrationTest` (curación, límites de Furia, ataque furtivo, fin de Furia).
 - Backend completo: **179 tests** en verde. Frontend: **27 tests** y `pnpm build` en verde.
 
+**Corrección detectada en verificación visual**
+- El PNJ usaba `/images/npcs/archivist.png` (inexistente) en vez de `archivista.png`; se añadió
+  `AdventureGeneratorAssetsTest` (Red→Green) y se corrigió la ruta.
+
 **Siguiente paso**
 - Completar R-11 (Estilo de combate, Inspiración, Canalizar divinidad) o R-10 (conjuros).
 

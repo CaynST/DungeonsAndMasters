@@ -216,7 +216,7 @@ public class AdventureGenerator {
     public AdventureDefinition materialize(AdventurePlan plan, Random random) {
         Map<String, EnemyDefinition> enemies = new LinkedHashMap<>();
         List<NpcDefinition> npcs = List.of(new NpcDefinition("El Guía",
-                "Un lugareño nervioso que conoce los rumores del lugar.", "/images/npcs/archivist.png",
+                "Un lugareño nervioso que conoce los rumores del lugar.", "/images/npcs/archivista.png",
                 List.of("No deberíais haber venido... pero ya es tarde.", "El villano no perdona. Nadie vuelve.")));
         List<ItemDefinition> items = List.of(
                 new ItemDefinition(stripArticle(plan.villain() == null ? "el botín" : plan.villain()) + " trofeo",
