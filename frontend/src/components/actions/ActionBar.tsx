@@ -389,6 +389,8 @@ function spellKindLabel(spell: Spell): string {
       return "curación";
     case "BUFF":
       return "mejora";
+    case "AREA":
+      return "área";
     default:
       return "";
   }

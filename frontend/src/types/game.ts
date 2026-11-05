@@ -15,7 +15,7 @@ export interface Attack {
   ranged: boolean;
 }
 
-export type SpellKind = "ATTACK" | "SAVE" | "AUTO" | "HEAL" | "BUFF";
+export type SpellKind = "ATTACK" | "SAVE" | "AUTO" | "HEAL" | "BUFF" | "AREA";
 
 export interface Spell {
   id: string;
