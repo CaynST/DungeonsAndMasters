@@ -13,7 +13,10 @@ public final class SpellCatalog {
             Spell.attack("ray_of_frost", "Rayo de escarcha", 0, "Evocación",
                     "Un rayo gélido. Ataque de conjuro; 1d8 de daño de frío.", 12, "1d8", "cold"),
             Spell.auto("magic_missile", "Proyectil mágico", 1, "Evocación",
-                    "Tres dardos que impactan automáticamente; 3d4+3 de daño de fuerza.", 24, "3d4+3", "force"));
+                    "Tres dardos que impactan automáticamente; 3d4+3 de daño de fuerza.", 24, "3d4+3", "force"),
+            Spell.area("thunderwave", "Onda de trueno", 1, "Evocación",
+                    "Cubo de 15 pies centrado en ti: las criaturas a 2 casillas hacen salvación de "
+                            + "Constitución; 2d8 de daño de trueno.", 2, "2d8", "thunder", "CONSTITUTION"));
 
     private static final List<Spell> CLERIC = List.of(
             Spell.save("sacred_flame", "Llama sagrada", 0, "Evocación",

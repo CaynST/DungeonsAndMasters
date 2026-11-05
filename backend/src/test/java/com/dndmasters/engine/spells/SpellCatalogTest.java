@@ -15,8 +15,9 @@ class SpellCatalogTest {
 
         assertThat(book.slots()).isEqualTo(2);
         assertThat(book.spells()).extracting(Spell::id)
-                .contains("fire_bolt", "ray_of_frost", "magic_missile");
+                .contains("fire_bolt", "ray_of_frost", "magic_missile", "thunderwave");
         assertThat(book.spells()).anyMatch(spell -> spell.level() == 0);
+        assertThat(book.spells()).anyMatch(spell -> spell.kind() == Spell.Kind.AREA);
     }
 
     @Test

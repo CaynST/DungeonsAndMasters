@@ -40,6 +40,7 @@ import com.dndmasters.engine.rules.SaveResult;
 import com.dndmasters.engine.rules.SecondWindRules;
 import com.dndmasters.engine.spells.Spell;
 import com.dndmasters.engine.spells.SpellCatalog;
+import com.dndmasters.engine.spells.SpellTargeting;
 import com.dndmasters.engine.spells.Spellbook;
 import com.dndmasters.engine.spells.Spellcasting;
 import com.dndmasters.engine.rules.Combatants;
@@ -560,7 +561,9 @@ public class GameService {
         GameEntity target = action.getTargetEntityId() == null
                 ? null
                 : campaigns.entity(action.getTargetEntityId()).orElse(null);
-        if (spell.kind() == Spell.Kind.HEAL || spell.kind() == Spell.Kind.BUFF) {
+        if (spell.kind() == Spell.Kind.AREA) {
+            // Self-centred area: no target selection is required.
+        } else if (spell.kind() == Spell.Kind.HEAL || spell.kind() == Spell.Kind.BUFF) {
             if (target == null || target.getKind() != EntityKind.PLAYER) {
                 target = actor;
             }
@@ -620,28 +623,8 @@ public class GameService {
             case AUTO -> recorded.addAll(combat.spellDamage(campaignId, eventState, actor, target, spell, false));
             case SAVE -> {
                 Ability ability = Ability.valueOf(spell.saveAbility());
-                Combatant targetC = Combatants.of(target);
-                ConditionSet targetConditions = Conditions.of(target);
                 int dc = Spellcasting.saveDc(actor, classId);
-                boolean autoFail = ConditionRules.autoFailsSave(targetConditions, ability);
-                boolean saved;
-                if (autoFail) {
-                    saved = false;
-                    castData.put("saveAutoFail", true);
-                } else {
-                    int blessBonus = Boolean.TRUE.equals(target.getData().get("blessed"))
-                            ? dice.roll("1d4").total() : 0;
-                    SaveResult save = saveResolver.resolve(targetC, ability, dc,
-                            ConditionRules.saveAdvantage(targetConditions, ability), blessBonus);
-                    saved = save.success();
-                    castData.put("blessBonus", blessBonus);
-                    castData.put("saveDieRoll", save.dieRoll());
-                    castData.put("saveModifier", save.modifier());
-                    castData.put("saveTotal", save.total());
-                }
-                castData.put("saveAbility", ability.name());
-                castData.put("saveDc", dc);
-                castData.put("saveSuccess", saved);
+                boolean saved = resolveTargetSave(target, ability, dc, castData);
                 if (saved) {
                     recorded.add(events.record(campaignId, activeSceneId(campaignId), "SPELL_SAVED", target.getName(),
                             target.getName() + " supera la salvación de " + ability.name()
@@ -687,6 +670,25 @@ public class GameService {
                         actor.getName() + " bendice a " + target.getName()
                                 + " con " + spell.name() + ".", buffData));
             }
+            case AREA -> {
+                Ability ability = Ability.valueOf(spell.saveAbility());
+                int dc = Spellcasting.saveDc(actor, classId);
+                List<GameEntity> targets = SpellTargeting.creaturesInCube(actor,
+                        campaigns.entitiesInScene(activeSceneId(campaignId)), spell.range());
+                for (GameEntity areaTarget : targets) {
+                    Map<String, Object> saveData = new LinkedHashMap<>(castData);
+                    saveData.put("targetId", areaTarget.getId());
+                    saveData.put("targetName", areaTarget.getName());
+                    boolean saved = resolveTargetSave(areaTarget, ability, dc, saveData);
+                    if (saved) {
+                        recorded.add(events.record(campaignId, activeSceneId(campaignId), "SPELL_SAVED",
+                                areaTarget.getName(), areaTarget.getName() + " supera la salvación de "
+                                        + ability.name() + " contra " + spell.name() + ".", saveData));
+                    } else {
+                        recorded.addAll(combat.spellDamage(campaignId, eventState, actor, areaTarget, spell, false));
+                    }
+                }
+            }
         }
 
         Map<String, Object> attackData = recorded.stream()
@@ -695,6 +697,28 @@ public class GameService {
                 .findFirst().map(event -> Json.readMap(event.dataJson())).orElse(Map.of());
         return new ActionResult(true, null, null, recorded, null, null,
                 attackData.isEmpty() ? null : attackData, List.of(), false);
+    }
+
+    /** Resolves a target's save with its conditions and Bless bonus. */
+    private boolean resolveTargetSave(GameEntity target, Ability ability, int dc, Map<String, Object> data) {
+        ConditionSet conditions = Conditions.of(target);
+        data.put("saveAbility", ability.name());
+        data.put("saveDc", dc);
+        if (ConditionRules.autoFailsSave(conditions, ability)) {
+            data.put("saveAutoFail", true);
+            data.put("saveSuccess", false);
+            return false;
+        }
+        int blessBonus = Boolean.TRUE.equals(target.getData().get("blessed"))
+                ? dice.roll("1d4").total() : 0;
+        SaveResult save = saveResolver.resolve(Combatants.of(target), ability, dc,
+                ConditionRules.saveAdvantage(conditions, ability), blessBonus);
+        data.put("blessBonus", blessBonus);
+        data.put("saveDieRoll", save.dieRoll());
+        data.put("saveModifier", save.modifier());
+        data.put("saveTotal", save.total());
+        data.put("saveSuccess", save.success());
+        return save.success();
     }
 
     /** Class features that consume the bonus action: Second Wind and Rage. */

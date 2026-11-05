@@ -69,22 +69,26 @@ class SpellIntegrationTest {
     }
 
     private GameEntity createEnemy(Campaign campaign, GameEntity player) {
+        return createEnemyAt(campaign, player, "Objetivo de conjuro", 1, 0);
+    }
+
+    private GameEntity createEnemyAt(Campaign campaign, GameEntity player, String name, int dx, int dy) {
         GameState state = campaigns.state(campaign.getId());
         GameEntity enemy = new GameEntity();
         enemy.setSceneId(state.getScene().id());
         enemy.setMapId(state.getMap().getId());
         enemy.setKind(EntityKind.ENEMY);
-        enemy.setName("Objetivo de conjuro");
+        enemy.setName(name);
         enemy.setHp(999);
         enemy.setMaxHp(999);
         enemy.setAc(12);
         enemy.setSpeed(6);
         enemy.setAlive(true);
-        enemy.moveTo(new Cell(player.getX() + 1, player.getY()));
+        enemy.moveTo(new Cell(player.getX() + dx, player.getY() + dy));
         campaigns.saveEntity(enemy);
         return campaigns.state(campaign.getId()).getEntities().stream()
                 .filter(entity -> entity.getKind() == EntityKind.ENEMY
-                        && "Objetivo de conjuro".equals(entity.getName()))
+                        && name.equals(entity.getName()))
                 .findFirst().orElseThrow();
     }
 
@@ -254,6 +258,27 @@ class SpellIntegrationTest {
     }
 
     @Test
+    void thunderwaveHitsNearbyCreaturesAndSkipsFarOnes() {
+        Campaign campaign = campaignWithPlayer(9409L, "Spells Area");
+        GameEntity player = player(campaign);
+        configureCaster(player, "wizard", 16, 10);
+        GameEntity near = createEnemyAt(campaign, player, "Cerca 1", 1, 0);
+        GameEntity nearDiagonal = createEnemyAt(campaign, player, "Cerca 2", 0, 2);
+        GameEntity far = createEnemyAt(campaign, player, "Lejos", 5, 0);
+
+        ActionResult result = game.act(campaign.getId(), 9409L,
+                cast("thunderwave", player.getId(), null));
+
+        assertThat(result.ok()).isTrue();
+        assertThat(result.events()).anyMatch(event -> "SPELL_CAST".equals(event.type()));
+        assertAffected(result.events(), near, true);
+        assertAffected(result.events(), nearDiagonal, true);
+        assertAffected(result.events(), far, false);
+        GameEntity reloaded = campaigns.entity(player.getId()).orElseThrow();
+        assertThat(reloaded.getData().get("spellSlotsUsed")).isEqualTo(1);
+    }
+
+    @Test
     void blessExpiresAtTheStartOfTheCastersTurn() {
         Campaign campaign = campaignWithPlayer(9408L, "Spells Bless Timer");
         GameEntity player = player(campaign);
@@ -272,5 +297,15 @@ class SpellIntegrationTest {
         GameEntity after = campaigns.entity(player.getId()).orElseThrow();
         assertThat(after.getData().get("concentrationSpell")).isNull();
         assertThat(after.getData().get("blessed")).isEqualTo(false);
+    }
+
+    private void assertAffected(List<GameEvent> events, GameEntity target, boolean expected) {
+        boolean affected = events.stream()
+                .filter(event -> "SPELL_SAVED".equals(event.type()) || "SPELL_DAMAGE".equals(event.type()))
+                .map(event -> Json.readMap(event.dataJson()))
+                .anyMatch(data -> data.get("targetId") instanceof Number number
+                        && target.getId() != null
+                        && number.longValue() == target.getId());
+        assertThat(affected).as("target " + target.getName()).isEqualTo(expected);
     }
 }

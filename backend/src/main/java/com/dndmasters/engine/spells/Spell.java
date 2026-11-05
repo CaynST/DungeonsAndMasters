@@ -25,7 +25,8 @@ public record Spell(
         SAVE,
         AUTO,
         HEAL,
-        BUFF
+        BUFF,
+        AREA
     }
 
     public boolean isCantrip() {
@@ -60,5 +61,12 @@ public record Spell(
                              int range, String buff, boolean bonusAction, boolean concentration) {
         return new Spell(id, name, level, school, description, range, Kind.BUFF,
                 null, null, null, null, buff, bonusAction, concentration);
+    }
+
+    /** Area spell centred on the caster; {@code radius} is expressed in grid squares. */
+    public static Spell area(String id, String name, int level, String school, String description,
+                             int radius, String damage, String damageType, String saveAbility) {
+        return new Spell(id, name, level, school, description, radius, Kind.AREA,
+                damage, damageType, saveAbility, null, null, false, false);
     }
 }
