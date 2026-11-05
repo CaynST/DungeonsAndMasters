@@ -1,5 +1,27 @@
 # PROGRESS
 
+## 2026-11-05 — Conjuros de área
+
+**Objetivo:** añadir el primer conjuro de área manteniendo el motor como autoridad.
+
+**Acciones**
+- `SpellTargeting.creaturesInCube`: criaturas vivas (PJ/ENEMIGO/PNJ) dentro del radio Chebyshev,
+  excluyendo lanzador y objetos.
+- `Spell.Kind.AREA` y `Spell.area(...)`: **Onda de trueno** (Mago, nivel 1), 2 casillas, salvación
+  de CON, 2d8 de trueno.
+- `GameService.castSpell` resuelve salvación y daño por cada objetivo; reutiliza
+  `resolveTargetSave` y `CombatService.spellDamage`.
+- UI: el menú muestra el conjuro como **área**; no requiere seleccionar un objetivo.
+
+**Verificación (TDD)**
+- `SpellTargetingTest` (incluye cerca, aliado, lejano, muerto y objeto).
+- `SpellCatalogTest` (Onda de trueno y tipo AREA).
+- `SpellIntegrationTest` (afecta a enemigos cercanos, no al lejano, consume espacio).
+- Backend completo: **204 tests** en verde. Frontend: **27 tests** y `pnpm build` en verde.
+
+**Siguiente paso**
+- Componentes, más formas de área y upcasting; o completar R-11.
+
 ## 2026-11-05 — Arquitectura self-hosted (propuesta, sin código)
 
 **Objetivo:** guardar la idea de hostear partidas y unirse por enlace/IP/código sin implementarla

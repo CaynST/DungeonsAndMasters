@@ -63,3 +63,4 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-15 | Rasgos de clase: Segundo aliento, Furia y Ataque furtivo | done |
 | D-18 | Conjuros: trucos, espacios, ataques, salvaciones y curación | done |
 | D-19 | Concentración y Bendición (+1d4 a ataques/salvaciones, rotura por daño) | done |
+| D-21 | Conjuros de área: Onda de trueno (cubo, salvación de CON, 2d8) | done |

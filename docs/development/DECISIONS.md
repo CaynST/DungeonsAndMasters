@@ -86,3 +86,11 @@ túnel gestionado y escritorio en una fase posterior. Documento completo en
 **Consecuencia:** no se toca el motor ni el modelo de datos para el MVP; se evita la complejidad de
 P2P y se traslada el coste de cómputo/banda al host. La seguridad, invitaciones y backups pasan a
 ser responsabilidad del host y deben endurecerse antes de exponerlo a Internet.
+
+## ADR-010 — Áreas por radio Chebyshev centradas en el lanzador
+**Contexto:** el tablero usa rejilla y la primera área del prototipo es un cubo de 15 pies centrado
+en el lanzador; una geometría continua sería desproporcionada.
+**Decisión:** `SpellTargeting.creaturesInCube` selecciona criaturas vivas a distancia Chebyshev
+≤ radio, excluyendo lanzador y objetos. `Spell.Kind.AREA` usa `range` como radio.
+**Consecuencia:** Onda de trueno es determinista y testeable; conos, cubos desplazados, línea de
+visión y daño a aliados con reglas completas quedan como deuda documentada.

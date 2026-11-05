@@ -8,7 +8,7 @@ Deuda consciente del prototipo, ordenada por impacto en la fidelidad con el PHB.
 | R-03 | Hechas Carrera/Retirada/Esquivar; faltan Ayudar/Ocultarse/Preparado/Buscar/Usar objeto | Medio | P1 | Enum de acciones + efectos por turno |
 | R-04 | Condiciones implementadas; fuente de miedo/encanto, resistencia petrificada, nivel 6 de agotamiento y salvaciones FUE/DES automáticas quedan aproximados | Medio | P2 | Fuente por condición, resistencias y salvaciones genéricas |
 | R-05 | Cobertura implementada para ataques; faltan salvaciones de Destreza y cobertura otorgada por criaturas | Bajo | P2 | Añadir salvaciones genéricas y criaturas como cobertura |
-| R-10 | Conjuros para mago/clérigo con espacios y concentración; faltan componentes, áreas, upcasting y competencia en salvaciones | Medio | P1 | Componentes, áreas y upcasting |
+| R-10 | Conjuros para mago/clérigo con espacios, concentración y un área (Onda de trueno); faltan componentes, otras formas de área, upcasting y competencia en salvaciones | Medio | P1 | Componentes, más áreas y upcasting |
 | R-11 | Hechos Segundo aliento, Furia y Ataque furtivo; faltan Estilo de combate, Inspiración, Canalizar divinidad, etc. | Medio | P1 | Rasgos restantes por clase/nivel con hooks en el motor |
 | R-12 | 7 de 13 trasfondos PHB | Bajo | P2 | Añadir los 6 restantes al RuleSet |
 | R-14 | Sin descansos ni dados de golpe | Medio | P2 | Descanso corto/largo en el servicio |

@@ -2,6 +2,11 @@
 
 ## 2026-11-05
 
+- **D-21** `feat(rules)` — Conjuros de área: **Onda de trueno** (Mago, nivel 1) afecta a las
+  criaturas a 2 casillas del lanzador; salvación de Constitución y 2d8 de trueno. `SpellTargeting`
+  selecciona criaturas vivas en el cubo; `GameService` resuelve salvación y daño por objetivo.
+  El menú muestra el conjuro como **área**.
+
 - **D-20** `docs(architecture)` — Guardada la arquitectura de partidas autoalojadas
   host-autoritativas (`ARCHITECTURE_SELF_HOSTED.md`), con fases LAN → túnel → escritorio → código
   corto, huecos actuales del código, criterios de aceptación y riesgos. Añadidas U-08 a U-12 y
