@@ -75,3 +75,14 @@ daño; el prototipo no tiene descansos ni un gestor de efectos genérico.
 lanzador y `CombatService` hace la salvación de CON al recibir daño.
 **Consecuencia:** concentración observable y testeable sin un sistema de efectos completo. Los
 componentes, áreas y upcasting siguen pendientes; el buff actual es específico de Bendición.
+
+## ADR-009 — Partidas autoalojadas host-autoritativas (propuesta)
+**Contexto:** la idea de compartir una partida con amigos mediante IP/enlace/código no requiere P2P;
+el motor ya es server-authoritative y SQLite es suficiente para una mesa pequeña.
+**Alternativas:** P2P WebRTC con consenso; servidor central en la nube; host autoalojado.
+**Decisión:** host-autoritativo, mismo origen para frontend/API/WS, LAN con enlace/QR, Internet con
+túnel gestionado y escritorio en una fase posterior. Documento completo en
+`docs/development/ARCHITECTURE_SELF_HOSTED.md`.
+**Consecuencia:** no se toca el motor ni el modelo de datos para el MVP; se evita la complejidad de
+P2P y se traslada el coste de cómputo/banda al host. La seguridad, invitaciones y backups pasan a
+ser responsabilidad del host y deben endurecerse antes de exponerlo a Internet.

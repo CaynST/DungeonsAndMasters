@@ -36,6 +36,11 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | U-05 | Responsive del juego (sidebar fija, barra horizontal) | P2 | pending |
 | U-06 | Limpiar campañas de prueba de la Home / paginación | P3 | pending |
 | U-07 | Generación dinámica de escenas por el DM a mitad de aventura | P2 | pending |
+| U-08 | Modo host autoalojado: servir frontend desde Spring, SPA fallback, enlace/QR y enlace de campaña | P2 | pending |
+| U-09 | Pantalla "Unirse a servidor" y URL configurable de API/WebSocket | P2 | pending |
+| U-10 | Acceso remoto por túnel gestionado (Cloudflare/Tailscale) + hardening e invitaciones | P2 | pending |
+| U-11 | App de escritorio con modos Host/Unirse (Tauri/Electron) | P3 | pending |
+| U-12 | Código corto/rendezvous (solo si el producto lo exige) | P3 | pending |
 
 ## Hecho en esta sesión
 

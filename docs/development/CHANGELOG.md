@@ -1,5 +1,12 @@
 # CHANGELOG (desarrollo)
 
+## 2026-11-05
+
+- **D-20** `docs(architecture)` — Guardada la arquitectura de partidas autoalojadas
+  host-autoritativas (`ARCHITECTURE_SELF_HOSTED.md`), con fases LAN → túnel → escritorio → código
+  corto, huecos actuales del código, criterios de aceptación y riesgos. Añadidas U-08 a U-12 y
+  ADR-009. **Sin implementación.**
+
 ## 2026-10-30
 
 - **D-19** `feat(rules)` — Concentración: **Bendición** (Clérigo, nivel 1) da +1d4 a tiradas de

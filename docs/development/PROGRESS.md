@@ -1,5 +1,29 @@
 # PROGRESS
 
+## 2026-11-05 — Arquitectura self-hosted (propuesta, sin código)
+
+**Objetivo:** guardar la idea de hostear partidas y unirse por enlace/IP/código sin implementarla
+todavía.
+
+**Acciones**
+- Creado `docs/development/ARCHITECTURE_SELF_HOSTED.md` con fases, huecos actuales del código,
+  criterios de aceptación, riesgos y no objetivos.
+- Añadidas tareas U-08 a U-12 en `TODO.md` y ADR-009 en `DECISIONS.md`.
+- Confirmado que el enfoque correcto es **host-autoritativo**, no P2P: mismo origen, LAN primero,
+  túnel para Internet, escritorio después y código corto solo con rendezvous.
+- No se modificó código de producción.
+
+**Estado del proyecto en este punto**
+- Última unidad completada: **concentración + Bendición** (R-10 parcial).
+- Backend: 202 tests en verde; frontend: 27 tests y build en verde.
+- Pendiente inmediato de reglas: componentes/áreas/upcasting de conjuros (R-10) o rasgos restantes
+  de R-11.
+- Cambios locales sin commitear: `AGENTS.md`, `application.yml`, `vite.config.ts` (configuración de
+  puerto 8081 del usuario).
+
+**Siguiente paso**
+- Retomar R-10/R-11; la arquitectura self-hosted queda esperando decisión de producto.
+
 ## 2026-10-30 — Conjuros
 
 **Objetivo:** avanzar R-10 con un sistema de conjuros real, no solo botones.
