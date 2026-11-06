@@ -27,6 +27,7 @@ import com.dndmasters.engine.rules.Combatants;
 import com.dndmasters.engine.rules.CoverRules;
 import com.dndmasters.engine.rules.DamageResolver;
 import com.dndmasters.engine.rules.DamageResult;
+import com.dndmasters.engine.rules.FightingStyleRules;
 import com.dndmasters.engine.rules.Modifier;
 import com.dndmasters.engine.rules.RageRules;
 import com.dndmasters.engine.rules.SneakAttackRules;
@@ -385,10 +386,12 @@ public class CombatService {
         effective = combine(effective, advantage);
         int blessBonus = Boolean.TRUE.equals(attacker.getData().get("blessed"))
                 ? dice.roll("1d4").total() : 0;
-        Attack rollAttack = blessBonus > 0
-                ? new Attack(attack.name(), attack.attackBonus() + blessBonus,
-                        attack.damageExpression(), attack.range(), attack.ranged())
-                : attack;
+        Object styleValue = attacker.getData().get("fightingStyle");
+        String fightingStyle = styleValue instanceof String value ? value : "";
+        int styleAttackBonus = weaponAttack
+                ? FightingStyleRules.archeryBonus(fightingStyle, attack.ranged()) : 0;
+        int attackBonusBonus = blessBonus + styleAttackBonus;
+        Attack rollAttack = attackBonusBonus > 0 ? attack.withAttackBonus(attackBonusBonus) : attack;
         AttackResult resolved = attackResolver.resolve(attackerC, targetC, rollAttack, effective);
         boolean autoCritical = resolved.hit() && ConditionRules.automaticCritical(targetConditions, melee);
         AttackResult attackResult = autoCritical && !resolved.critical()
@@ -413,12 +416,15 @@ public class CombatService {
         data.put("cover", cover.cover().name());
         data.put("coverBonus", cover.acBonus());
         data.put("blessBonus", blessBonus);
+        data.put("fightingStyleAttackBonus", styleAttackBonus);
 
         String coverNote = cover.acBonus() > 0 ? " (cobertura +" + cover.acBonus() + " CA)" : "";
 
         if (attackResult.hit()) {
             int rageBonus = weaponAttack ? RageRules.damageBonus(attacker, melee) : 0;
-            int bonusDamage = rageBonus;
+            int duelingBonus = weaponAttack
+                    ? FightingStyleRules.duelingBonus(fightingStyle, melee, attack.twoHanded()) : 0;
+            int bonusDamage = rageBonus + duelingBonus;
             boolean sneakAttack = false;
             int sneakDamage = 0;
             if (weaponAttack) {
@@ -442,6 +448,7 @@ public class CombatService {
                 campaigns.saveEntity(attacker);
             }
             data.put("rageBonus", rageBonus);
+            data.put("duelingBonus", duelingBonus);
             data.put("sneakAttack", sneakAttack);
             data.put("sneakAttackDamage", sneakDamage);
             data.put("resisted", resistance);

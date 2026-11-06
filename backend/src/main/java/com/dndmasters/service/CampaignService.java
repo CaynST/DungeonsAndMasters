@@ -399,6 +399,7 @@ public class CampaignService {
             data.put("level", character.getLevel());
             data.put("spellSlotsUsed", 0);
             data.put("spellFocus", com.dndmasters.engine.spells.SpellComponentRules.hasFocus(character));
+            data.put("fightingStyle", character.getCreationData().get("fightingStyle"));
             saveEntity(sceneId, scene.getMapId(), "PLAYER", character.getId(), character.getName(),
                     new Placement("PLAYER", character.getName(), spawn.x(), spawn.y()),
                     character.getHp(), character.getMaxHp(), character.getAc(), character.getSpeed(),

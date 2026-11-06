@@ -46,7 +46,8 @@ public final class CharacterDtos {
             AbilityScores scores,
             List<String> skills,
             String armor,
-            String weapon) {
+            String weapon,
+            String fightingStyle) {
     }
 
     // ---- Ruleset catalogue served to the frontend ----

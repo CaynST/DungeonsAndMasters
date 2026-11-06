@@ -5,6 +5,7 @@ import com.dndmasters.domain.Attack;
 import com.dndmasters.domain.InventoryItem;
 import com.dndmasters.domain.PlayerCharacter;
 import com.dndmasters.domain.Stats;
+import com.dndmasters.engine.rules.FightingStyleRules;
 import com.dndmasters.engine.rules.Modifier;
 import com.dndmasters.rules.Edition;
 import com.dndmasters.rules.RuleSet;
@@ -39,19 +40,19 @@ public class CharacterBuilder {
             Map.entry("placas", new ArmorProfile("Armadura de placas", 18, false)));
 
     private static final Map<String, WeaponProfile> WEAPONS = Map.ofEntries(
-            Map.entry("longsword", new WeaponProfile("Longsword", "1d8", Ability.STRENGTH, false, 1)),
-            Map.entry("shortsword", new WeaponProfile("Espada corta", "1d6", Ability.DEXTERITY, false, 1)),
-            Map.entry("greataxe", new WeaponProfile("Hacha grande", "1d12", Ability.STRENGTH, false, 1)),
-            Map.entry("handaxe", new WeaponProfile("Hacha de mano", "1d6", Ability.STRENGTH, false, 1)),
-            Map.entry("warhammer", new WeaponProfile("Martillo de guerra", "1d8", Ability.STRENGTH, false, 1)),
-            Map.entry("mace", new WeaponProfile("Maza", "1d6", Ability.STRENGTH, false, 1)),
-            Map.entry("quarterstaff", new WeaponProfile("Bastón", "1d6", Ability.STRENGTH, false, 1)),
-            Map.entry("dagger", new WeaponProfile("Daga", "1d4", Ability.DEXTERITY, true, 4)),
-            Map.entry("rapier", new WeaponProfile("Estoque", "1d8", Ability.DEXTERITY, false, 1)),
-            Map.entry("scimitar", new WeaponProfile("Cimitarra", "1d6", Ability.DEXTERITY, false, 1)),
-            Map.entry("shortbow", new WeaponProfile("Arco corto", "1d6", Ability.DEXTERITY, true, 16)),
-            Map.entry("longbow", new WeaponProfile("Arco largo", "1d8", Ability.DEXTERITY, true, 24)),
-            Map.entry("javelin", new WeaponProfile("Jabalina", "1d6", Ability.STRENGTH, true, 8)));
+            Map.entry("longsword", new WeaponProfile("Longsword", "1d8", Ability.STRENGTH, false, 1, false)),
+            Map.entry("shortsword", new WeaponProfile("Espada corta", "1d6", Ability.DEXTERITY, false, 1, false)),
+            Map.entry("greataxe", new WeaponProfile("Hacha grande", "1d12", Ability.STRENGTH, false, 1, true)),
+            Map.entry("handaxe", new WeaponProfile("Hacha de mano", "1d6", Ability.STRENGTH, false, 1, false)),
+            Map.entry("warhammer", new WeaponProfile("Martillo de guerra", "1d8", Ability.STRENGTH, false, 1, false)),
+            Map.entry("mace", new WeaponProfile("Maza", "1d6", Ability.STRENGTH, false, 1, false)),
+            Map.entry("quarterstaff", new WeaponProfile("Bastón", "1d6", Ability.STRENGTH, false, 1, false)),
+            Map.entry("dagger", new WeaponProfile("Daga", "1d4", Ability.DEXTERITY, true, 4, false)),
+            Map.entry("rapier", new WeaponProfile("Estoque", "1d8", Ability.DEXTERITY, false, 1, false)),
+            Map.entry("scimitar", new WeaponProfile("Cimitarra", "1d6", Ability.DEXTERITY, false, 1, false)),
+            Map.entry("shortbow", new WeaponProfile("Arco corto", "1d6", Ability.DEXTERITY, true, 16, false)),
+            Map.entry("longbow", new WeaponProfile("Arco largo", "1d8", Ability.DEXTERITY, true, 24, false)),
+            Map.entry("javelin", new WeaponProfile("Jabalina", "1d6", Ability.STRENGTH, true, 8, false)));
 
     private final RuleSetRegistry registry;
 
@@ -78,6 +79,8 @@ public class CharacterBuilder {
         int ac = armor.flat() || !armor.dexterity()
                 ? armor.base()
                 : armor.base() + Modifier.of(stats.dexterity());
+        String fightingStyle = resolveFightingStyle(request, characterClass);
+        ac += FightingStyleRules.defenseBonus(fightingStyle, !"Ninguna".equals(armor.name()));
 
         String weaponId = request.weapon() == null || request.weapon().isBlank()
                 ? characterClass.weapons().get(0)
@@ -103,21 +106,38 @@ public class CharacterBuilder {
         character.setPredefined(false);
 
         // Store creation metadata for later (level-up, re-render, verification).
-        character.setCreationData(Map.of(
-                "edition", request.edition().name(),
-                "speciesId", species.id(),
-                "classId", characterClass.id(),
-                "backgroundId", background.id(),
-                "savingThrows", characterClass.savingThrows(),
-                "skills", skillIds,
-                "proficiencyBonus", PROFICIENCY_BONUS,
-                "hitDie", characterClass.hitDie(),
-                "baseScores", request.baseScores()));
+        Map<String, Object> creationData = new LinkedHashMap<>();
+        creationData.put("edition", request.edition().name());
+        creationData.put("speciesId", species.id());
+        creationData.put("classId", characterClass.id());
+        creationData.put("backgroundId", background.id());
+        creationData.put("savingThrows", characterClass.savingThrows());
+        creationData.put("skills", skillIds);
+        creationData.put("proficiencyBonus", PROFICIENCY_BONUS);
+        creationData.put("hitDie", characterClass.hitDie());
+        creationData.put("baseScores", request.baseScores());
+        if (fightingStyle != null) {
+            creationData.put("fightingStyle", fightingStyle);
+        }
+        character.setCreationData(creationData);
         return character;
     }
 
-    private void validatePointBuy(CharacterBuildRequest request) {
-        if (!PointBuy.isValid(request.baseScores())) {
+    private String resolveFightingStyle(CharacterBuildRequest request, RuleSet.CharacterClass characterClass) {
+        if (request.fightingStyle() == null || request.fightingStyle().isBlank()) {
+            return null;
+        }
+        if (!"fighter".equals(characterClass.id()) && !"paladin".equals(characterClass.id())) {
+            throw new IllegalArgumentException("Solo guerreros y paladinos eligen estilo de combate");
+        }
+        String style = FightingStyleRules.normalize(request.fightingStyle());
+        if (!FightingStyleRules.isKnown(style)) {
+            throw new IllegalArgumentException("Estilo de combate no válido: " + request.fightingStyle());
+        }
+        return style;
+    }
+
+    private void validatePointBuy(CharacterBuildRequest request) {        if (!PointBuy.isValid(request.baseScores())) {
             throw new IllegalArgumentException("La distribución de puntos no es válida (deben sumar 27)");
         }
         for (Map.Entry<Ability, Integer> entry : request.baseScores().entrySet()) {
@@ -190,7 +210,9 @@ public class CharacterBuilder {
         String expression = weapon.damage() + damageMod;
         return weapon.ranged()
                 ? Attack.ranged(weapon.name(), bonus, expression, weapon.range())
-                : Attack.melee(weapon.name(), bonus, expression);
+                : weapon.twoHanded()
+                        ? Attack.meleeTwoHanded(weapon.name(), bonus, expression)
+                        : Attack.melee(weapon.name(), bonus, expression);
     }
 
     private List<InventoryItem> startingInventory(RuleSet.CharacterClass characterClass, ArmorProfile armor,
@@ -292,6 +314,7 @@ public class CharacterBuilder {
         }
     }
 
-    private record WeaponProfile(String name, String damage, Ability ability, boolean ranged, int range) {
+    private record WeaponProfile(String name, String damage, Ability ability, boolean ranged, int range,
+                                 boolean twoHanded) {
     }
 }

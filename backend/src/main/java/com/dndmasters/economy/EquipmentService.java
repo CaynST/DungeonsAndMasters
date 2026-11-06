@@ -3,6 +3,7 @@ package com.dndmasters.economy;
 import com.dndmasters.domain.Ability;
 import com.dndmasters.domain.Attack;
 import com.dndmasters.domain.PlayerCharacter;
+import com.dndmasters.engine.rules.FightingStyleRules;
 import com.dndmasters.engine.rules.Modifier;
 import com.dndmasters.persistence.entity.CharacterEntity;
 import com.dndmasters.persistence.mapper.CharacterMapper;
@@ -26,7 +27,8 @@ public class EquipmentService {
     private record ArmorProfile(String name, int base, boolean dexterity) {
     }
 
-    private record WeaponProfile(String name, String damage, Ability ability, boolean ranged, int range) {
+    private record WeaponProfile(String name, String damage, Ability ability, boolean ranged, int range,
+                                 boolean twoHanded) {
     }
 
     private static final Map<String, ArmorProfile> ARMOR = Map.ofEntries(
@@ -36,15 +38,15 @@ public class EquipmentService {
             Map.entry("plate", new ArmorProfile("Armadura de placas", 18, false)));
 
     private static final Map<String, WeaponProfile> WEAPONS = Map.ofEntries(
-            Map.entry("longsword", new WeaponProfile("Espada larga", "1d8", Ability.STRENGTH, false, 1)),
-            Map.entry("shortsword", new WeaponProfile("Espada corta", "1d6", Ability.DEXTERITY, false, 1)),
-            Map.entry("greataxe", new WeaponProfile("Hacha grande", "1d12", Ability.STRENGTH, false, 1)),
-            Map.entry("warhammer", new WeaponProfile("Martillo de guerra", "1d8", Ability.STRENGTH, false, 1)),
-            Map.entry("mace", new WeaponProfile("Maza", "1d6", Ability.STRENGTH, false, 1)),
-            Map.entry("dagger", new WeaponProfile("Daga", "1d4", Ability.DEXTERITY, true, 4)),
-            Map.entry("rapier", new WeaponProfile("Estoque", "1d8", Ability.DEXTERITY, false, 1)),
-            Map.entry("shortbow", new WeaponProfile("Arco corto", "1d6", Ability.DEXTERITY, true, 16)),
-            Map.entry("longbow", new WeaponProfile("Arco largo", "1d8", Ability.DEXTERITY, true, 24)));
+            Map.entry("longsword", new WeaponProfile("Espada larga", "1d8", Ability.STRENGTH, false, 1, false)),
+            Map.entry("shortsword", new WeaponProfile("Espada corta", "1d6", Ability.DEXTERITY, false, 1, false)),
+            Map.entry("greataxe", new WeaponProfile("Hacha grande", "1d12", Ability.STRENGTH, false, 1, true)),
+            Map.entry("warhammer", new WeaponProfile("Martillo de guerra", "1d8", Ability.STRENGTH, false, 1, false)),
+            Map.entry("mace", new WeaponProfile("Maza", "1d6", Ability.STRENGTH, false, 1, false)),
+            Map.entry("dagger", new WeaponProfile("Daga", "1d4", Ability.DEXTERITY, true, 4, false)),
+            Map.entry("rapier", new WeaponProfile("Estoque", "1d8", Ability.DEXTERITY, false, 1, false)),
+            Map.entry("shortbow", new WeaponProfile("Arco corto", "1d6", Ability.DEXTERITY, true, 16, false)),
+            Map.entry("longbow", new WeaponProfile("Arco largo", "1d8", Ability.DEXTERITY, true, 24, false)));
 
     private static final Set<String> WEAPON_NAMES = WEAPONS.values().stream().map(WeaponProfile::name)
             .collect(java.util.stream.Collectors.toSet());
@@ -119,6 +121,9 @@ public class EquipmentService {
         if (shield) {
             ac += 2;
         }
+        String style = data.get("fightingStyle") instanceof String value ? value : "";
+        boolean wearingArmor = armorId != null && ARMOR.containsKey(armorId);
+        ac += FightingStyleRules.defenseBonus(style, wearingArmor);
         character.setAc(ac);
 
         if (weaponId != null && WEAPONS.containsKey(weaponId)) {
@@ -129,7 +134,9 @@ public class EquipmentService {
             String damage = weapon.damage() + (abilityMod == 0 ? "" : (abilityMod > 0 ? "+" + abilityMod : String.valueOf(abilityMod)));
             Attack equipped = weapon.ranged()
                     ? Attack.ranged(weapon.name(), bonus, damage, weapon.range())
-                    : Attack.melee(weapon.name(), bonus, damage);
+                    : weapon.twoHanded()
+                            ? Attack.meleeTwoHanded(weapon.name(), bonus, damage)
+                            : Attack.melee(weapon.name(), bonus, damage);
 
             List<Attack> attacks = new ArrayList<>();
             attacks.add(equipped);

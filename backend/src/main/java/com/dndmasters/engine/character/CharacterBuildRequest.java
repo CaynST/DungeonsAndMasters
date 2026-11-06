@@ -19,7 +19,16 @@ public record CharacterBuildRequest(
         Map<Ability, Integer> baseScores,
         List<String> chosenSkills,
         String armor,
-        String weapon) {
+        String weapon,
+        String fightingStyle) {
+
+    /** Backwards-compatible constructor for callers that do not choose a fighting style. */
+    public CharacterBuildRequest(String name, Edition edition, String speciesId, String classId,
+                                 String backgroundId, Map<Ability, Integer> baseScores,
+                                 List<String> chosenSkills, String armor, String weapon) {
+        this(name, edition, speciesId, classId, backgroundId, baseScores, chosenSkills,
+                armor, weapon, null);
+    }
 
     public CharacterBuildRequest {
         if (name == null || name.isBlank()) {
@@ -35,7 +44,7 @@ public record CharacterBuildRequest(
     public static CharacterBuildRequest simple(String name, Edition edition, String speciesId,
                                                String classId, String backgroundId) {
         return new CharacterBuildRequest(name, edition, speciesId, classId, backgroundId,
-                PointBuy.standardArray(), List.of(), null, null);
+                PointBuy.standardArray(), List.of(), null, null, null);
     }
 
     public RuleSet.Species species(RuleSet set) {

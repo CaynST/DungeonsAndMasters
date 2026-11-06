@@ -70,7 +70,8 @@ public class CharacterController {
                 request.scores() == null ? com.dndmasters.engine.character.PointBuy.standardArray() : request.scores().toMap(),
                 request.skills(),
                 request.armor(),
-                request.weapon());
+                request.weapon(),
+                request.fightingStyle());
         return characterService.create(userId, build, request.subclass());
     }
 

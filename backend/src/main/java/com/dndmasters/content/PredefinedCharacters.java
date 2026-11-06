@@ -5,6 +5,7 @@ import com.dndmasters.domain.InventoryItem;
 import com.dndmasters.domain.PlayerCharacter;
 import com.dndmasters.domain.Stats;
 import java.util.List;
+import java.util.Map;
 
 /** The four pre-generated heroes used by the demo. */
 public final class PredefinedCharacters {
@@ -19,6 +20,7 @@ public final class PredefinedCharacters {
     public static PlayerCharacter kael() {
         PlayerCharacter c = base("Kael", "Fighter", "Human", 28, 16, 14, 16, 13, 10, 12, 8,
                 "#C2410C", "sword", "/images/heroes/kael.png");
+        c.setCreationData(Map.of("fightingStyle", "dueling"));
         c.setAttacks(List.of(
                 Attack.melee("Longsword", 5, "1d8+3"),
                 Attack.ranged("Jabalina", 4, "1d6+2", 8)));

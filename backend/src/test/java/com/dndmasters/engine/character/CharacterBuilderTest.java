@@ -80,6 +80,31 @@ class CharacterBuilderTest {
     }
 
     @Test
+    void defenseFightingStyleAddsOneAcAndIsStored() {
+        CharacterBuildRequest request = new CharacterBuildRequest(
+                "Kael", Edition.DND_5E_2014, "human", "fighter", "soldier",
+                scores(15, 12, 14, 10, 10, 8), List.of("athletics", "perception"),
+                "cadena", "longsword", "defense");
+
+        PlayerCharacter character = builder.build(request);
+
+        assertThat(character.getAc()).isEqualTo(17); // chain 16 + Defense 1
+        assertThat(character.getCreationData().get("fightingStyle")).isEqualTo("defense");
+    }
+
+    @Test
+    void rejectsFightingStyleForNonMartialClasses() {
+        CharacterBuildRequest request = new CharacterBuildRequest(
+                "Lyra", Edition.DND_5E_2014, "high-elf", "wizard", "sage",
+                scores(8, 14, 12, 15, 10, 10), List.of("arcana", "history"),
+                "ninguna", "quarterstaff", "defense");
+
+        assertThatThrownBy(() -> builder.build(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("guerreros");
+    }
+
+    @Test
     void derivesAttackFromWeaponAndAbilityAndProficiency() {
         CharacterBuildRequest request = new CharacterBuildRequest(
                 "Kael", Edition.DND_5E_2014, "human", "fighter", "soldier",
