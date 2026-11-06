@@ -50,6 +50,7 @@ export function CharacterCreation() {
   const [scores, setScores] = useState<AbilityScores>(BASE);
   const [skills, setSkills] = useState<string[]>([]);
   const [subclass, setSubclass] = useState("");
+  const [fightingStyle, setFightingStyle] = useState("defense");
 
   const ruleset = useQuery({
     queryKey: ["ruleset", editionId],
@@ -105,6 +106,7 @@ export function CharacterCreation() {
       skills,
       armor: klass.startingArmor,
       weapon: klass.weapons[0],
+      fightingStyle: klass.id === "fighter" || klass.id === "paladin" ? fightingStyle : undefined,
     });
   };
 
@@ -183,6 +185,8 @@ export function CharacterCreation() {
             skills={skills}
             subclass={subclass}
             setSubclass={setSubclass}
+            fightingStyle={fightingStyle}
+            setFightingStyle={setFightingStyle}
             edition={ruleset.data}
           />
         )}
@@ -454,6 +458,8 @@ function ReviewStep({
   skills,
   subclass,
   setSubclass,
+  fightingStyle,
+  setFightingStyle,
   edition,
 }: {
   name: string;
@@ -465,6 +471,8 @@ function ReviewStep({
   skills: string[];
   subclass: string;
   setSubclass: (value: string) => void;
+  fightingStyle: string;
+  setFightingStyle: (value: string) => void;
   edition: RulesetView;
 }) {
   // Preview of final scores with bonuses applied (mirrors backend logic).
@@ -497,6 +505,23 @@ function ReviewStep({
                 {option}
               </option>
             ))}
+          </select>
+        </label>
+      )}
+
+      {(klass.id === "fighter" || klass.id === "paladin") && (
+        <label className="mb-5 block max-w-sm">
+          <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted">
+            Estilo de combate
+          </span>
+          <select
+            value={fightingStyle}
+            onChange={(event) => setFightingStyle(event.target.value)}
+            className="h-10 w-full rounded-lg border border-parchment/15 bg-black/35 px-3 text-ink outline-none focus:border-gold/50"
+          >
+            <option value="defense">Defensa (+1 CA con armadura)</option>
+            <option value="archery">Arquería (+2 a ataques a distancia)</option>
+            <option value="dueling">Duelo (+2 daño con arma a una mano)</option>
           </select>
         </label>
       )}

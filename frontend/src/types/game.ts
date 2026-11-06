@@ -328,6 +328,7 @@ export interface CreateCharacterPayload {
   skills: string[];
   armor?: string;
   weapon?: string;
+  fightingStyle?: string;
 }
 
 export interface AuthResponse {
