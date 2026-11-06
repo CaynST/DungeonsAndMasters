@@ -65,3 +65,4 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-19 | Concentración y Bendición (+1d4 a ataques/salvaciones, rotura por daño) | done |
 | D-21 | Conjuros de área: Onda de trueno (cubo, salvación de CON, 2d8) | done |
 | D-22 | Componentes materiales de conjuros: foco/bolsa, metadata V/S/M y UI | done |
+| D-23 | Estilo de combate: Defensa, Arquería y Duelo (+ selección en creación) | done |

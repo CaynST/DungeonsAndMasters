@@ -1,5 +1,27 @@
 # PROGRESS
 
+## 2026-11-05 — Estilo de combate (R-11)
+
+**Objetivo:** añadir el primer rasgo de clase pasivo con elección en la creación.
+
+**Acciones**
+- `FightingStyleRules`: Defensa (+1 CA con armadura), Arquería (+2 ataques a distancia) y Duelo
+  (+2 daño con arma a una mano).
+- `CharacterBuildRequest`/DTO/UI incorporan `fightingStyle`; solo Guerrero/Paladín.
+- `CharacterBuilder` aplica Defensa a la CA y guarda el estilo; `EquipmentService` lo conserva al
+  equipar.
+- `Attack` distingue `twoHanded`; Duelo no se aplica a armas a dos manos.
+- `CombatService` aplica Arquería al ataque y Duelo al daño; los eventos registran las
+  bonificaciones.
+- Kael recibe **Duelo** en bases nuevas y en las existentes mediante `V10`.
+
+**Verificación (TDD)**
+- `FightingStyleRulesTest`, dos casos nuevos en `CharacterBuilderTest`, `FightingStyleIntegrationTest`.
+- Backend completo: **218 tests** en verde. Frontend: **27 tests** y `pnpm build` en verde.
+
+**Siguiente paso**
+- Completar R-11: Inspiración bárdica, Canalizar divinidad, Gran arma/Protección.
+
 ## 2026-11-05 — Componentes de conjuros
 
 **Objetivo:** cerrar el alcance de R-10 con componentes V/S/M y foco material.

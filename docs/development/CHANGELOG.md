@@ -2,6 +2,11 @@
 
 ## 2026-11-05
 
+- **D-23** `feat(rules)` — Estilo de combate: **Defensa** (+1 CA con armadura), **Arquería**
+  (+2 a ataques a distancia) y **Duelo** (+2 daño con arma a una mano). Selección en creación para
+  Guerrero/Paladín; `Attack` distingue armas a dos manos; `EquipmentService` conserva Defensa al
+  equipar. Kael recibe Duelo mediante la migración V10.
+
 - **D-22** `feat(rules)` — Componentes de conjuros: metadata V/S/M, **M** exige foco o bolsa de
   componentes, los lanzadores reciben foco en el inventario inicial y la UI muestra los componentes.
   Bendición requiere `V, S, M` (agua bendita); los trucos y conjuros V/S no lo necesitan.

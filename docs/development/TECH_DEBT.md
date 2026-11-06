@@ -9,7 +9,7 @@ Deuda consciente del prototipo, ordenada por impacto en la fidelidad con el PHB.
 | R-04 | Condiciones implementadas; fuente de miedo/encanto, resistencia petrificada, nivel 6 de agotamiento y salvaciones FUE/DES automáticas quedan aproximados | Medio | P2 | Fuente por condición, resistencias y salvaciones genéricas |
 | R-05 | Cobertura implementada para ataques; faltan salvaciones de Destreza y cobertura otorgada por criaturas | Bajo | P2 | Añadir salvaciones genéricas y criaturas como cobertura |
 | R-10 | Conjuros con espacios, concentración, área y componentes materiales; los componentes V/S son descriptivos (sin silencio/manos libres) y faltan upcasting y más formas de área | Bajo | P2 | Silencio/manos, upcasting y áreas |
-| R-11 | Hechos Segundo aliento, Furia y Ataque furtivo; faltan Estilo de combate, Inspiración, Canalizar divinidad, etc. | Medio | P1 | Rasgos restantes por clase/nivel con hooks en el motor |
+| R-11 | Hechos Segundo aliento, Furia, Ataque furtivo y Estilo de combate (Defensa/Arquería/Duelo); faltan Inspiración bárdica, Canalizar divinidad, Gran arma/Protección, etc. | Medio | P1 | Rasgos restantes por clase/nivel |
 | R-12 | 7 de 13 trasfondos PHB | Bajo | P2 | Añadir los 6 restantes al RuleSet |
 | R-14 | Sin descansos ni dados de golpe | Medio | P2 | Descanso corto/largo en el servicio |
 

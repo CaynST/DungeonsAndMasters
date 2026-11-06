@@ -103,3 +103,12 @@ foco o bolsa. El inventario inicial de lanzadores incluye el foco; los tokens an
 foco de su personaje.
 **Consecuencia:** la regla material es real y testeable sin bloquear a los personajes existentes.
 V/S quedan descriptivos y se documentan en `TECH_DEBT.md`.
+
+## ADR-012 — Estilo de combate como dato de personaje + reglas puras
+**Contexto:** Defensa modifica la CA (que se recalcula al equipar), Arquería el ataque y Duelo el
+daño; el cliente no debe calcular ninguna.
+**Decisión:** `fightingStyle` se guarda en `creationData` y se copia a la entidad. `FightingStyleRules`
+decide los bonos; `CharacterBuilder`/`EquipmentService` aplican Defensa y `CombatService` aplica
+Arquería/Duelo. `Attack.twoHanded` permite excluir armas a dos manos de Duelo.
+**Consecuencia:** el rasgo es testeable y sobrevive a cambios de equipo. Solo se ofrecen tres estilos;
+Gran arma y Protección quedan como deuda.
