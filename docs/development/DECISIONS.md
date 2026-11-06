@@ -94,3 +94,12 @@ en el lanzador; una geometría continua sería desproporcionada.
 ≤ radio, excluyendo lanzador y objetos. `Spell.Kind.AREA` usa `range` como radio.
 **Consecuencia:** Onda de trueno es determinista y testeable; conos, cubos desplazados, línea de
 visión y daño a aliados con reglas completas quedan como deuda documentada.
+
+## ADR-011 — Componentes materiales mediante foco/bolsa
+**Contexto:** R-10 pedía componentes; modelar manos libres, silencio y componentes verbales/somáticos
+requiere un sistema de equipo y condiciones que el prototipo aún no tiene.
+**Decisión:** metadata `components/material` en `Spell`; solo **M** se enforcea y se cubre con un
+foco o bolsa. El inventario inicial de lanzadores incluye el foco; los tokens antiguos derivan el
+foco de su personaje.
+**Consecuencia:** la regla material es real y testeable sin bloquear a los personajes existentes.
+V/S quedan descriptivos y se documentan en `TECH_DEBT.md`.

@@ -1,5 +1,25 @@
 # PROGRESS
 
+## 2026-11-05 — Componentes de conjuros
+
+**Objetivo:** cerrar el alcance de R-10 con componentes V/S/M y foco material.
+
+**Acciones**
+- `Spell` incorpora `components` y `material`; la UI muestra `V, S, M` y el material en el tooltip.
+- `SpellComponentRules`: un conjuro con **M** exige foco/bolsa; V/S no.
+- `CharacterBuilder` añade foco arcano/símbolo sagrado/foco druídico/instrumento a lanzadores.
+- `CampaignService` persiste `spellFocus`; `GameService` lo comprueba y, para tokens antiguos,
+  deriva el foco del inventario del personaje.
+- Bendición pasa a `V, S, M` (agua bendita); Palabra curativa a `V`.
+
+**Verificación (TDD)**
+- `SpellComponentRulesTest`, ampliación de `SpellCatalogTest` y
+  `SpellIntegrationTest#materialComponentsRequireAFocus`.
+- Backend completo: **209 tests** en verde. Frontend: **27 tests** y `pnpm build` en verde.
+
+**Siguiente paso**
+- R-10 queda cerrado en su alcance actual; continuar con R-11 (rasgos restantes) o deuda P2.
+
 ## 2026-11-05 — Conjuros de área
 
 **Objetivo:** añadir el primer conjuro de área manteniendo el motor como autoridad.

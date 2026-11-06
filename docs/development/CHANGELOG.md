@@ -2,6 +2,10 @@
 
 ## 2026-11-05
 
+- **D-22** `feat(rules)` — Componentes de conjuros: metadata V/S/M, **M** exige foco o bolsa de
+  componentes, los lanzadores reciben foco en el inventario inicial y la UI muestra los componentes.
+  Bendición requiere `V, S, M` (agua bendita); los trucos y conjuros V/S no lo necesitan.
+
 - **D-21** `feat(rules)` — Conjuros de área: **Onda de trueno** (Mago, nivel 1) afecta a las
   criaturas a 2 casillas del lanzador; salvación de Constitución y 2d8 de trueno. `SpellTargeting`
   selecciona criaturas vivas en el cubo; `GameService` resuelve salvación y daño por objetivo.
