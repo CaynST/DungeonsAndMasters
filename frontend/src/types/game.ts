@@ -30,6 +30,8 @@ export interface Spell {
   saveAbility?: string;
   heal?: string;
   buff?: string;
+  components?: string;
+  material?: string;
   bonusAction: boolean;
   concentration: boolean;
 }

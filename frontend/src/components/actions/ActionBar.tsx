@@ -306,6 +306,7 @@ export function ActionBar({
                         <button
                           key={spell.id}
                           disabled={disabled}
+                          title={spell.material ? `Componente material: ${spell.material}` : undefined}
                           onClick={() => {
                             onCastSpell(spell.id);
                             setSpellOpen(false);
@@ -322,6 +323,7 @@ export function ActionBar({
                           <p className="mt-0.5 text-[11px] leading-snug text-muted">{spell.description}</p>
                           <p className="mt-1 text-[10px] text-[#9b7cff]">
                             {spell.range} casillas · {spellKindLabel(spell)}
+                            {spell.components ? ` · ${spell.components}` : ""}
                             {noSlot ? " · Sin espacios" : ""}
                           </p>
                         </button>
