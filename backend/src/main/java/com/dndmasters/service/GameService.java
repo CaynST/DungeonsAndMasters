@@ -40,6 +40,7 @@ import com.dndmasters.engine.rules.SaveResult;
 import com.dndmasters.engine.rules.SecondWindRules;
 import com.dndmasters.engine.spells.Spell;
 import com.dndmasters.engine.spells.SpellCatalog;
+import com.dndmasters.engine.spells.SpellComponentRules;
 import com.dndmasters.engine.spells.SpellTargeting;
 import com.dndmasters.engine.spells.Spellbook;
 import com.dndmasters.engine.spells.Spellcasting;
@@ -543,6 +544,10 @@ public class GameService {
         if (spell == null) {
             return ActionResult.error("No conoces ese conjuro.");
         }
+        if (!SpellComponentRules.canCast(spell, hasSpellFocus(actor))) {
+            return ActionResult.error("Necesitas un foco o una bolsa de componentes para lanzar "
+                    + spell.name() + ".");
+        }
 
         boolean bonusAction = spell.bonusAction();
         if (bonusAction && Boolean.TRUE.equals(actor.getData().get("bonusUsed"))) {
@@ -697,6 +702,21 @@ public class GameService {
                 .findFirst().map(event -> Json.readMap(event.dataJson())).orElse(Map.of());
         return new ActionResult(true, null, null, recorded, null, null,
                 attackData.isEmpty() ? null : attackData, List.of(), false);
+    }
+
+    /** Material components need a focus/pouch; existing tokens may predate the data flag. */
+    private boolean hasSpellFocus(GameEntity actor) {
+        Object stored = actor.getData().get("spellFocus");
+        if (stored instanceof Boolean value) {
+            return value;
+        }
+        if (actor.getRefId() == null) {
+            return false;
+        }
+        return characters.findById(actor.getRefId())
+                .map(characterMapper::toDomain)
+                .map(SpellComponentRules::hasFocus)
+                .orElse(false);
     }
 
     /** Resolves a target's save with its conditions and Bless bonus. */

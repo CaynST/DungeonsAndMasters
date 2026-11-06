@@ -62,4 +62,16 @@ class SpellCatalogTest {
                 SpellCatalog.spellbooks().get("wizard").spells().stream()
                         .anyMatch(spell -> spell.id().equals(id)));
     }
+
+    @Test
+    void everySpellDeclaresComponents() {
+        for (Spellbook book : SpellCatalog.spellbooks().values()) {
+            for (Spell spell : book.spells()) {
+                assertThat(spell.components()).as(spell.id()).isNotBlank();
+            }
+        }
+        Spell bless = SpellCatalog.byId("cleric", "bless").orElseThrow();
+        assertThat(bless.components()).contains("M");
+        assertThat(bless.material()).isNotBlank();
+    }
 }

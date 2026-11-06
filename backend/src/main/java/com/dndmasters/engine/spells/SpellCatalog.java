@@ -25,10 +25,12 @@ public final class SpellCatalog {
             Spell.heal("cure_wounds", "Curar heridas", 1, "Evocación",
                     "Toque curativo: 1d8 + modificador de Sabiduría PG.", 1, "1d8", false),
             Spell.heal("healing_word", "Palabra curativa", 1, "Evocación",
-                    "Palabra a distancia como acción adicional: 1d4 + modificador de Sabiduría PG.", 12, "1d4", true),
+                    "Palabra a distancia como acción adicional: 1d4 + modificador de Sabiduría PG.",
+                    12, "1d4", true).withComponents("V", null),
             Spell.buff("bless", "Bendición", 1, "Encantamiento",
                     "Concentración: el objetivo suma 1d4 a sus tiradas de ataque y salvaciones durante 10 rondas.",
-                    6, "bless", false, true));
+                    6, "bless", false, true)
+                    .withComponents("V, S, M", "un poco de agua bendita"));
 
     private static final Map<String, Spellbook> BOOKS = Map.of(
             "wizard", new Spellbook(WIZARD, 2),

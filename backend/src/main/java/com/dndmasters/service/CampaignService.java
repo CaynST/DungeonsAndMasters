@@ -398,6 +398,7 @@ public class CampaignService {
             data.put("classId", com.dndmasters.engine.rules.ClassFeatures.idOf(character.getCls()));
             data.put("level", character.getLevel());
             data.put("spellSlotsUsed", 0);
+            data.put("spellFocus", com.dndmasters.engine.spells.SpellComponentRules.hasFocus(character));
             saveEntity(sceneId, scene.getMapId(), "PLAYER", character.getId(), character.getName(),
                     new Placement("PLAYER", character.getName(), spawn.x(), spawn.y()),
                     character.getHp(), character.getMaxHp(), character.getAc(), character.getSpeed(),

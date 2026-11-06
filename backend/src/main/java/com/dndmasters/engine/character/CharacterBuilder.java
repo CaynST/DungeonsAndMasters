@@ -202,6 +202,19 @@ public class CharacterBuilder {
         items.add(InventoryItem.of(weapon.name(), "Arma de " + characterClass.name()));
         items.add(InventoryItem.of("Poción de Curación", "Recupera 2d4+2 HP."));
         items.add(InventoryItem.of("Mochila de aventurero", "Raciones, antorcha y yesca."));
+        switch (characterClass.id()) {
+            case "wizard", "sorcerer", "warlock" ->
+                    items.add(InventoryItem.of("Foco arcano", "Foco para componentes materiales."));
+            case "cleric", "paladin" ->
+                    items.add(InventoryItem.of("Símbolo sagrado", "Foco para componentes materiales."));
+            case "druid", "ranger" ->
+                    items.add(InventoryItem.of("Foco druídico", "Foco para componentes materiales."));
+            case "bard" ->
+                    items.add(InventoryItem.of("Instrumento musical", "Foco para componentes materiales."));
+            default -> {
+                // Non-casters do not need a spellcasting focus.
+            }
+        }
         return items;
     }
 

@@ -62,6 +62,7 @@ class SpellIntegrationTest {
         player.getData().put("class", classId);
         player.getData().put("level", 1);
         player.getData().put("spellSlotsUsed", 0);
+        player.getData().put("spellFocus", true);
         player.getData().put("actionUsed", false);
         player.getData().put("bonusUsed", false);
         player.setStats(new Stats(10, 10, 10, intelligence, wisdom, 10));
@@ -220,7 +221,7 @@ class SpellIntegrationTest {
         ActionResult bless = game.act(campaign.getId(), 9407L,
                 cast("bless", player.getId(), null));
 
-        assertThat(bless.ok()).isTrue();
+        assertThat(bless.ok()).as(bless.message()).isTrue();
         assertThat(bless.events()).anyMatch(event -> "SPELL_BUFF".equals(event.type()));
         GameEntity reloaded = campaigns.entity(player.getId()).orElseThrow();
         assertThat(reloaded.getData().get("blessed")).isEqualTo(true);
@@ -279,6 +280,30 @@ class SpellIntegrationTest {
     }
 
     @Test
+    void materialComponentsRequireAFocus() {
+        Campaign campaign = campaignWithPlayer(9411L, "Spells Components");
+        GameEntity player = player(campaign);
+        configureCaster(player, "cleric", 10, 16);
+        player.getData().put("spellFocus", false);
+        campaigns.saveEntity(player);
+
+        ActionResult missing = game.act(campaign.getId(), 9411L,
+                cast("bless", player.getId(), null));
+
+        assertThat(missing.ok()).isFalse();
+        assertThat(missing.message()).containsIgnoringCase("foco");
+
+        GameEntity reloaded = campaigns.entity(player.getId()).orElseThrow();
+        reloaded.getData().put("spellFocus", true);
+        campaigns.saveEntity(reloaded);
+
+        ActionResult withFocus = game.act(campaign.getId(), 9411L,
+                cast("bless", player.getId(), null));
+        assertThat(withFocus.ok()).isTrue();
+        assertThat(withFocus.events()).anyMatch(event -> "SPELL_BUFF".equals(event.type()));
+    }
+
+    @Test
     void blessExpiresAtTheStartOfTheCastersTurn() {
         Campaign campaign = campaignWithPlayer(9408L, "Spells Bless Timer");
         GameEntity player = player(campaign);
@@ -286,7 +311,7 @@ class SpellIntegrationTest {
 
         ActionResult bless = game.act(campaign.getId(), 9408L,
                 cast("bless", player.getId(), null));
-        assertThat(bless.ok()).isTrue();
+        assertThat(bless.ok()).as(bless.message()).isTrue();
 
         GameEntity current = campaigns.entity(player.getId()).orElseThrow();
         current.getData().put("concentrationRounds", 1);
