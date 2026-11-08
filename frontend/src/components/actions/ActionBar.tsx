@@ -11,6 +11,7 @@ import {
   HeartPulse,
   Lock,
   MessageSquare,
+  Moon,
   MoveRight,
   Music,
   Package,
@@ -58,6 +59,9 @@ interface Props {
   hidden?: boolean;
   readied?: boolean;
   objectInteractionUsed?: boolean;
+  inCombat?: boolean;
+  hitDiceRemaining?: number;
+  hitDiceMax?: number;
   selectedAttack?: Attack;
   onSelectAttack: (attack: Attack) => void;
   onAttack: () => void;
@@ -82,6 +86,8 @@ interface Props {
   onReady: () => void;
   onUseObject: (item: string) => void;
   onInteract: () => void;
+  onShortRest: () => void;
+  onLongRest: () => void;
 }
 
 export function ActionBar({
@@ -114,6 +120,9 @@ export function ActionBar({
   hidden,
   readied,
   objectInteractionUsed,
+  inCombat,
+  hitDiceRemaining = 1,
+  hitDiceMax = 1,
   selectedAttack,
   onSelectAttack,
   onAttack,
@@ -138,6 +147,8 @@ export function ActionBar({
   onReady,
   onUseObject,
   onInteract,
+  onShortRest,
+  onLongRest,
 }: Props) {
   // While an action is in flight, a check is unresolved, the hero is downed or incapacitated,
   // everything is locked.
@@ -146,12 +157,17 @@ export function ActionBar({
   const [diceOpen, setDiceOpen] = useState(false);
   const [spellOpen, setSpellOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [restOpen, setRestOpen] = useState(false);
   // Potions keep their own USE_ITEM flow; Use object lists every other item.
   const usableItems = (character?.inventory ?? []).filter(
     (item) => !/poción|pocion|elixir|vial/i.test(item.name),
   );
   const runAction = (callback: () => void) => {
     setActionsOpen(false);
+    callback();
+  };
+  const runRest = (callback: () => void) => {
+    setRestOpen(false);
     callback();
   };
 
@@ -510,6 +526,70 @@ export function ActionBar({
               )}
             </div>
           )}
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={locked}
+              title="Descanso corto o largo (solo fuera de combate)"
+              aria-expanded={restOpen}
+              onClick={() => setRestOpen((value) => !value)}
+            >
+              <Moon className="h-4 w-4" /> Descanso
+            </Button>
+            {restOpen && (
+              <div className="absolute bottom-full left-0 z-30 mb-2 w-[min(19rem,calc(100vw-2rem))] rounded-lg border border-[#3a2a1a] bg-[#1a130d] p-2 shadow-lg">
+                <div className="mb-2 flex items-center justify-between px-1 text-[10px] uppercase tracking-wider text-muted">
+                  <span>Descanso</span>
+                  <span>
+                    Dados de golpe {hitDiceRemaining}/{hitDiceMax}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-1">
+                  <button
+                    type="button"
+                    disabled={!canActNow || Boolean(inCombat) || hitDiceRemaining <= 0}
+                    title="Descanso corto: gasta un dado de golpe y recupera su tirada + CON"
+                    onClick={() => runRest(onShortRest)}
+                    className={ACTION_ITEM}
+                  >
+                    <HeartPulse className="h-3.5 w-3.5 text-[#6fd3a0]" />
+                    <span className="flex flex-col">
+                      <span>Descanso corto</span>
+                      <span className="text-[10px] text-muted">
+                        Gasta 1 dado de golpe · no recupera espacios de conjuro
+                      </span>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!canActNow || Boolean(inCombat)}
+                    title="Descanso largo: recupera PG, espacios de conjuro y rasgos de clase"
+                    onClick={() => runRest(onLongRest)}
+                    className={ACTION_ITEM}
+                  >
+                    <Moon className="h-3.5 w-3.5 text-[#9b7cff]" />
+                    <span className="flex flex-col">
+                      <span>Descanso largo</span>
+                      <span className="text-[10px] text-muted">
+                        PG al máximo, recursos y la mitad de los dados de golpe
+                      </span>
+                    </span>
+                  </button>
+                </div>
+                {inCombat && (
+                  <p className="mt-2 border-t border-parchment/10 px-1 pt-2 text-[11px] text-[#e8b7c0]">
+                    No puedes descansar durante un combate.
+                  </p>
+                )}
+                {!inCombat && hitDiceRemaining <= 0 && (
+                  <p className="mt-2 border-t border-parchment/10 px-1 pt-2 text-[11px] text-muted">
+                    No te quedan dados de golpe: necesitas un descanso largo.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
           <div className="relative">
             <Button variant="ghost" size="sm" disabled={locked} onClick={() => setDiceOpen((value) => !value)}>
               <Dices className="h-4 w-4" /> Dados

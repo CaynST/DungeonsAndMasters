@@ -166,6 +166,12 @@ export function Game() {
     ? myEntity.data.inspirationDie
     : 0;
   const inspirationPending = Boolean(myEntity?.data?.inspirationPending);
+  const hitDiceMax = typeof myEntity?.data?.hitDiceMax === "number"
+    ? myEntity.data.hitDiceMax
+    : Math.max(1, myCharacter?.level ?? 1);
+  const hitDiceRemaining = typeof myEntity?.data?.hitDiceRemaining === "number"
+    ? myEntity.data.hitDiceRemaining
+    : hitDiceMax;
   const myConditions = useMemo(() => entityConditions(myEntity), [myEntity]);
   const incapacitated = isIncapacitated(myEntity);
   const prone = myConditions.some((condition) => condition.code === "PRONE");
@@ -542,6 +548,9 @@ export function Game() {
           hidden={Boolean(myEntity?.data?.hidden)}
           readied={Boolean(myEntity?.data?.readied)}
           objectInteractionUsed={Boolean(myEntity?.data?.objectInteractionUsed)}
+          inCombat={Boolean(combat?.active)}
+          hitDiceRemaining={hitDiceRemaining}
+          hitDiceMax={hitDiceMax}
           selectedAllyName={selectedAllyName}
           spells={spells}
           spellSlotsMax={spellSlotsMax}
@@ -597,6 +606,8 @@ export function Game() {
               text: "interactúa con un objeto de la escena.",
             })
           }
+          onShortRest={() => act.mutate({ type: "SHORT_REST", actorEntityId: myEntity?.id })}
+          onLongRest={() => act.mutate({ type: "LONG_REST", actorEntityId: myEntity?.id })}
           onCastSpell={(spellId) =>
             act.mutate({
               type: "CAST_SPELL",
