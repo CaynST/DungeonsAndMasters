@@ -24,7 +24,6 @@ fuera de alcance.
 **Acciones intentadas:** se revisaron `CharacterBuilder`, `CharacterBuildRequest`, `RuleSet2014`,
 `ClassFeatures` y la creación de personaje; no hay nivel 2, dominio ni recurso de Canalizar
 divinidad.
-**Decisión necesaria:** elegir dominio(s) y confirmar el soporte de nivel 2 (o aceptar que el
-prototipo se queda en nivel 1 sin Canalizar divinidad). Recomendación: mantener nivel 1 y dejar el
-rasgo fuera de la demo hasta que exista una historia de subida de nivel.
-**Estado:** abierto (bloquea el resto de R-11).
+**Decisión (2026-11-08):** opción **A** — mantener nivel 1 y diferir Canalizar divinidad hasta que
+haya subida de nivel y dominio. R-11 se cierra para nivel 1; el trabajo futuro queda en **R-19**.
+**Estado:** diferido por decisión de producto, no bloquea la demo actual.

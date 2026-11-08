@@ -1,7 +1,7 @@
 # TODO
 
 Estados: `pending` · `in_progress` · `blocked` · `done`.
-Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
+Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido) · P3 (opcional).
 
 ## Reglas (compatibilidad con el PHB)
 
@@ -17,7 +17,7 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | R-08 | Terreno difícil (coste doble) | P2 | done |
 | R-09 | Sorpresa | P2 | done |
 | R-10 | Conjuros: trucos, espacios, concentración, componentes | P1 | done |
-| R-11 | Rasgos de clase (Estilo de combate, Segundo aliento, Ataque furtivo, Furia, Inspiración, Canalizar divinidad, etc.) | P1 | in_progress |
+| R-11 | Rasgos de clase de nivel 1: Estilo de combate, Segundo aliento, Ataque furtivo, Furia e Inspiración (Canalizar divinidad diferido a R-19/B-03) | P1 | done |
 | R-12 | Trasfondos PHB faltantes: Charlatán, Artista, Artesano gremial, Ermitaño, Forastero, Marinero | P2 | done |
 | R-13 | Competencias de armadura/arma/herramienta e idiomas | P2 | done |
 | R-14 | Descanso corto/largo y dados de golpe | P2 | done |
@@ -26,6 +26,7 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | R-17 | d100 en la mesa de dados | P3 | done |
 | R-18 | Consumo de munición en combate (flechas/virotes) para ataques de arma a distancia de jugadores | P3 | done |
 | R-18b | Penalización de carga en el movimiento (separada de R-18 para no alterar reglas de combate ajenas) | P3 | pending |
+| R-19 | Canalizar divinidad y dominios de clérigo (nivel 2) — decisión A: diferido hasta que exista subida de nivel | P2 | pending |
 
 ## Producto / UX
 
@@ -64,8 +65,11 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-13 | Condiciones 5e: modelo, efectos en ataque/prueba/movimiento, acciones del DM y UI | done |
 | D-14 | Cobertura 5e: línea de visión, +2/+5 CA y bloqueo total | done |
 | D-15 | Rasgos de clase: Segundo aliento, Furia y Ataque furtivo | done |
+| D-16 | Retrato del PNJ: ruta `archivista.png` corregida y test de assets | done |
+| D-17 | Migraciones V8/V9 para retratos existentes de PNJ/fichas | done |
 | D-18 | Conjuros: trucos, espacios, ataques, salvaciones y curación | done |
 | D-19 | Concentración y Bendición (+1d4 a ataques/salvaciones, rotura por daño) | done |
+| D-20 | Arquitectura self-hosted/escritorio documentada como propuesta (sin implementar) | done |
 | D-21 | Conjuros de área: Onda de trueno (cubo, salvación de CON, 2d8) | done |
 | D-22 | Componentes materiales de conjuros: foco/bolsa, metadata V/S/M y UI | done |
 | D-23 | Estilo de combate: Defensa, Arquería y Duelo (+ selección en creación) | done |
@@ -88,3 +92,4 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-40 | Descanso corto/largo, dados de golpe y menú de descanso (R-14) | done |
 | D-41 | Accesibilidad AA en pantallas no-VTT: foco, teclado, contraste, aria, reduced-motion | done |
 | D-42 | Consumo de munición (flechas/virotes) en ataques de arma a distancia de jugadores (R-18) | done |
+| D-43 | Reconciliación documental: IDs D-16/17/20, conteos, B-03 = A y alcance U-07A | done |

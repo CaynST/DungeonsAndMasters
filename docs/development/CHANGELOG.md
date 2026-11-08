@@ -2,6 +2,11 @@
 
 ## 2026-11-08
 
+- **D-43** `docs(development)` — Reconciliación documental tras la auditoría: IDs D-16/D-17/D-20
+  restaurados en TODO, clave D-42 para munición, conteos finales (333 backend / 80 frontend),
+  arquitectura 8080 en HEAD con nota de override local 8081, y decisión **B-03 = A** (Canalizar
+  divinidad diferido a R-19).
+
 - **U-07A** `feat(dm)` — **Invocación de enemigos del bestiario** en la escena actual. `Bestiary`
   resuelve nombres sin distinguir mayúsculas; `SpawnPlacement` elige una casilla libre determinista
   (refuerza enemigos o se aleja del grupo, nunca muro/obstáculo/puerta cerrada/ocupada);
@@ -12,7 +17,7 @@
   `ENEMY_SPAWN_FAILED`, sin excepciones. Sin generación de escenas/mapas (U-07B) ni cambios de
   frontend. Verificación: **333 tests** backend en verde.
 
-- **R-18** `feat(rules)` — **Consumo de munición** en ataques de arma a distancia de jugadores.
+- **D-42** `feat(rules)` — **Consumo de munición** en ataques de arma a distancia de jugadores.
   `AmmunitionRules` mapea de forma explícita arcos → `Flechas` y ballestas → `Virotes` (incluidos
   nombres en inglés); armas arrojadizas, cuerpo a cuerpo y conjuros no consumen. `GameService`
   descuenta una unidad de la ficha persistida antes de gastar la acción, y rechaza el ataque con un
@@ -27,7 +32,7 @@
   errores anunciados, `aria-invalid`/`aria-describedby`, `caption`/`scope` en tablas, barra de vida
   como `progressbar`, contraste AA en textos atenuados y estados no asequibles, nombres accesibles
   en iconos y objetivo táctil de 24 px en "Usar". Sin cambios en el VTT ni en creación de
-  personajes. Verificación: 75 tests, build y lint (solo avisos preexistentes) en verde; contraste
+  personajes. Verificación: 80 tests, build y lint (solo avisos preexistentes) en verde; contraste
   comprobado por cálculo, sin axe/Lighthouse ni lector de pantalla real.
 
 - **D-40** `feat(rest)` — R-14: **descanso corto y largo** con dados de golpe. `PlayerAction`
@@ -49,8 +54,9 @@
   aproximación de crítico y la falta de empuñadura versátil quedan en ADR-019/TECH_DEBT. Nuevo
   `DiceEngine.rollRerollingLowFaces`; selección en creación para guerrero/paladín.
 
-- **B-03** `docs(development)` — **Canalizar divinidad** no se implementa: exige decidir dominio
-  divino y soporte de nivel 2. R-11 queda parcialmente completo y bloqueado por producto.
+- **B-03** `docs(development)` — **Canalizar divinidad** queda **diferido por decisión de producto
+  (opción A)**: se retoma cuando exista nivel 2 y dominio (R-19). R-11 se cierra para el alcance de
+  nivel 1.
 
 - **D-37** `feat(ui)` — Segunda pasada visual de **Home, Lobby, Crónica y estados vacíos/carga**:
   `EmptyState` y `Skeleton` compartidos, etiquetas de estado/fase de campaña centralizadas,

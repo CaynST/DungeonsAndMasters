@@ -40,7 +40,8 @@ campaña, jugar y recibir eventos WebSocket sin proxy ni CORS manual.
 
 - `frontend/dist` existe, pero `WebConfig` solo sirve `/uploads/**`.
 - No hay fallback de SPA; un deep link de React Router devolvería 404.
-- `scripts/*.sh` siguen apuntando a `8080`; `application.yml` usa `8081`.
+- `scripts/*.sh` y `application.yml` de HEAD usan `8080`; el árbol local del usuario
+  puede sobrescribirlo a `8081` (cambio no commiteado).
 - No hay panel de host, QR ni enlace de campaña.
 - `SecurityConfig` permite CORS solo en `localhost`; para mismo origen no importa.
 - `WebSocketConfig` permite `*`; conviene restringirlo en producción.

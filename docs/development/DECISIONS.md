@@ -317,3 +317,12 @@ elegir por heurística determinista y añadir el participante al combate activo.
 **Consecuencia:** el DM puede poblar el mapa y el combate sin migraciones ni cambios de frontend.
 Quedan como deuda la generación de escenas (U-07B), la línea de visión en la colocación, el vínculo
 con `enemy_templates`/XP de campaña y el nombre duplicado de criaturas del mismo tipo.
+
+## ADR-024 — Canalizar divinidad diferido a nivel 2/dominios
+**Contexto:** el prototipo crea personajes de nivel 1 y no persiste dominio; Canalizar divinidad es
+un rasgo de nivel 2 cuyo efecto depende del dominio.
+**Alternativas:** inventar una excepción a nivel 1; añadir nivel 2 + un dominio ahora; diferirlo.
+**Decisión (2026-11-08, opción A):** diferir Canalizar divinidad y cerrar R-11 para el alcance de
+nivel 1; se añade **R-19** para retomarlo cuando exista subida de nivel/dominio.
+**Consecuencia:** no se introduce una regla ficticia; la deuda queda explícita y testeable cuando
+se aborde el nivel 2.

@@ -1,5 +1,21 @@
 # PROGRESS
 
+## 2026-11-08 — Reconciliación documental (auditoría)
+
+**Objetivo:** corregir la deriva documental detectada tras las oleadas, sin tocar código de producción.
+
+**Acciones**
+- Restaurados D-16/D-17/D-20 en `TODO.md`; D-42 es la clave de changelog de munición y se añadió D-43.
+- Conteos finales: **333 tests backend**, **80 tests frontend**; corregidos los históricos imposibles
+  (294→309 en estilos de combate; 21/75→22/80 en accesibilidad).
+- `ARCHITECTURE_SELF_HOSTED.md` refleja 8080 en HEAD y anota que el árbol local usa 8081.
+- **B-03 = A**: Canalizar divinidad se difiere a nivel 2/dominios; R-11 se cierra para nivel 1 y se
+  añade **R-19** para el rasgo futuro.
+- **U-07 = A**: se mantiene U-07A (invocación de enemigos del bestiario) como hecho y U-07B
+  (generación completa de escenas) como pendiente.
+
+**Verificación:** solo documentación; `git diff --check` limpio.
+
 ## 2026-11-08 — U-07A: el DM invoca enemigos del bestiario en la escena actual
 
 **Objetivo:** dar efecto mecánico a la acción ya declarada `SPAWN_ENEMY` sin implementar todavía la
@@ -115,7 +131,7 @@ inventar el subsistema de dominio/nivel que exige Canalizar divinidad.
   registrado), `FightingStyleIntegrationTest` (evento de Gran arma, no aplica a una mano,
   Protección con desventaja/evento/reacción, segunda vez sin reacción, fuera de 5 pies, sin estilo,
   inconsciente y protector muerto) y `CharacterBuilderTest` (acepta ambos estilos).
-- Backend completo: **294 tests** en verde (`mvn test`).
+- Backend completo: **309 tests** en verde (`mvn test`).
 - Frontend: **63 tests** en verde (`pnpm test --maxWorkers=1 --no-file-parallelism
   --testTimeout=30000`) y `pnpm build` en verde.
 - Decisión y aproximaciones en `DECISIONS.md` (ADR-019) y `TECH_DEBT.md` (R-11/R-11b).
@@ -199,7 +215,7 @@ ficha y primitivas compartidas) sin cambiar la dirección visual ni el VTT.
 
 **Verificación**
 - `pnpm build` en verde.
-- `pnpm test --maxWorkers=1 --no-file-parallelism --testTimeout=30000`: 21 archivos, 75 tests.
+- `pnpm test --maxWorkers=1 --no-file-parallelism --testTimeout=30000`: 22 archivos, 80 tests.
 - `pnpm lint`: sin errores; se mantienen los avisos preexistentes (claves JSX en Admin, imports sin
   usar en archivos fuera de alcance, etc.).
 
@@ -587,8 +603,8 @@ todavía.
 - Backend: 202 tests en verde; frontend: 27 tests y build en verde.
 - Pendiente inmediato de reglas: componentes/áreas/upcasting de conjuros (R-10) o rasgos restantes
   de R-11.
-- Cambios locales sin commitear: `AGENTS.md`, `application.yml`, `vite.config.ts` (configuración de
-  puerto 8081 del usuario).
+- Cambios locales sin commitear: `AGENTS.md` (contrato de trabajo) y la configuración local de
+  puerto 8081 en `application.yml`/`vite.config.ts`; HEAD sigue en 8080.
 
 **Siguiente paso**
 - Retomar R-10/R-11; la arquitectura self-hosted queda esperando decisión de producto.
