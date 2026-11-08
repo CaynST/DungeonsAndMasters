@@ -2,6 +2,14 @@
 
 ## 2026-11-08
 
+- **D-38** `feat(rest)` — R-14: **descanso corto y largo** con dados de golpe. `PlayerAction`
+  acepta `SHORT_REST`/`LONG_REST`; `RestRules` deriva el dado por clase/nivel y calcula curación y
+  recuperación. El descanso corto gasta un dado y cura `dado + CON` (tope PG), recarga Segundo
+  aliento y no restaura espacios; el largo restaura PG, espacios, rasgos, concentración,
+  inspiración y banderas de un solo uso, y recupera al menos la mitad de los dados (mínimo 1).
+  Ambos se rechazan en combate o con el personaje moribundo/incapacitado. Menú **Descanso** en
+  `ActionBar` con dados restantes y avisos, deshabilitado en combate. Sin migración.
+
 - **D-37** `feat(ui)` — Segunda pasada visual de **Home, Lobby, Crónica y estados vacíos/carga**:
   `EmptyState` y `Skeleton` compartidos, etiquetas de estado/fase de campaña centralizadas,
   cabecera destacada y tarjetas de héroe con mejor jerarquía, resumen de preparación y selección de

@@ -20,7 +20,7 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | R-11 | Rasgos de clase (Estilo de combate, Segundo aliento, Ataque furtivo, Furia, Inspiración, Canalizar divinidad, etc.) | P1 | in_progress |
 | R-12 | Trasfondos PHB faltantes: Charlatán, Artista, Artesano gremial, Ermitaño, Forastero, Marinero | P2 | done |
 | R-13 | Competencias de armadura/arma/herramienta e idiomas | P2 | done |
-| R-14 | Descanso corto/largo y dados de golpe | P2 | pending |
+| R-14 | Descanso corto/largo y dados de golpe | P2 | done |
 | R-15 | Peso/equipamiento y herramientas: peso por objeto, carga total, capacidad FUE×15 y aviso de sobrecarga en ficha/tienda (sin efecto en velocidad) | P3 | done |
 | R-16 | Ventaja/desventaja expuesta en la UI (el motor ya la soporta) | P2 | done |
 | R-17 | d100 en la mesa de dados | P3 | done |
@@ -81,3 +81,4 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-35 | Peso de inventario, capacidad de carga, aviso de sobrecarga y herramientas/munición iniciales | done |
 | D-36 | Acciones R-02/R-03: Ayudar, Ocultarse, Preparado, Buscar, Usar objeto, interacción y reacciones | done |
 | D-37 | Segunda pasada visual: Home, Lobby, Crónica, estados vacíos y de carga | done |
+| D-38 | Descanso corto/largo, dados de golpe y menú de descanso (R-14) | done |
