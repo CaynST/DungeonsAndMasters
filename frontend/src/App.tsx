@@ -23,50 +23,55 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <div className="app-backdrop min-h-screen">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/"
-              element={
-                <RequireAuth>
-                  <Home />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/characters/new"
-              element={
-                <RequireAuth>
-                  <CharacterCreation />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <RequireAuth>
-                  <Admin />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/campaign/:id/lobby"
-              element={
-                <RequireAuth>
-                  <Lobby />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/campaign/:id/play"
-              element={
-                <RequireAuth>
-                  <Game />
-                </RequireAuth>
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <a href="#main-content" className="skip-link">
+            Saltar al contenido
+          </a>
+          <main id="main-content" tabIndex={-1}>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/"
+                element={
+                  <RequireAuth>
+                    <Home />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/characters/new"
+                element={
+                  <RequireAuth>
+                    <CharacterCreation />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <RequireAuth>
+                    <Admin />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/campaign/:id/lobby"
+                element={
+                  <RequireAuth>
+                    <Lobby />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/campaign/:id/play"
+                element={
+                  <RequireAuth>
+                    <Game />
+                  </RequireAuth>
+                }
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
         </div>
       </BrowserRouter>
     </QueryClientProvider>
