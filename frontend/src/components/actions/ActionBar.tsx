@@ -324,7 +324,7 @@ export function ActionBar({
                 </span>
               </Button>
               {spellOpen && (
-                <div className="absolute bottom-full right-0 z-30 mb-2 w-80 rounded-lg border border-[#3a2a1a] bg-[#1a130d] p-2 shadow-lg">
+                <div className="absolute bottom-full left-0 z-30 mb-2 w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-[#3a2a1a] bg-[#1a130d] p-2 shadow-lg lg:left-auto lg:right-0">
                   <div className="mb-2 flex items-center justify-between px-1 text-[10px] uppercase tracking-wider text-muted">
                     <span>Conjuros</span>
                     <span>

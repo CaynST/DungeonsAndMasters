@@ -132,7 +132,8 @@ export function Board({
   onCellClick,
   onEntityClick,
 }: BoardProps) {
-  const padding = 1;
+  // No empty ring around the map: the board should use every available pixel.
+  const padding = 0;
   const cell = map.tileSize || 48;
   const width = (map.width + padding * 2) * cell;
   const height = (map.height + padding * 2) * cell;
