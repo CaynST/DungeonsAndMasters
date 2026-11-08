@@ -2,6 +2,15 @@
 
 ## 2026-11-08
 
+- **R-18** `feat(rules)` — **Consumo de munición** en ataques de arma a distancia de jugadores.
+  `AmmunitionRules` mapea de forma explícita arcos → `Flechas` y ballestas → `Virotes` (incluidos
+  nombres en inglés); armas arrojadizas, cuerpo a cuerpo y conjuros no consumen. `GameService`
+  descuenta una unidad de la ficha persistida antes de gastar la acción, y rechaza el ataque con un
+  error en español si no queda munición. La última unidad elimina la línea del inventario; el
+  `GameState.party` refleja el cambio al refrescar. Sin recuperación de munición y sin cambios en
+  reglas ajenas; la penalización de carga por movimiento queda como R-18b. Verificación: **320
+  tests** backend en verde, incluidos 5 unitarios de mapeo y 6 de integración.
+
 - **D-41** `fix(a11y)` — Revisión WCAG 2.2 AA de Login, Home, Lobby, Crónica, Admin, tienda,
   ficha y primitivas: foco visible global, skip link y `<main>`, `prefers-reduced-motion` (CSS y
   Fireflies), pestañas ARIA en Admin, diálogo modal de tienda con foco atrapado/Escape/restauración,

@@ -1,5 +1,41 @@
 # PROGRESS
 
+## 2026-11-08 — Consumo de munición en ataques a distancia (R-18)
+
+**Objetivo:** consumir una unidad de munición de la ficha persistida en ataques de **arma** a
+distancia de jugadores, sin tocar conjuros, enemigos ni otras reglas de combate.
+
+**Acciones**
+- `AmmunitionRules` (motor puro) mapea explícitamente arcos → `Flechas` y ballestas → `Virotes`
+  (nombres españoles e ingleses, insensible a mayúsculas/acentos). Jabalinas, dagas arrojadizas,
+  ataques cuerpo a cuerpo y nombres de conjuros como *Fuego feérico* o *Llama sagrada* no consumen.
+- `GameService.attack` valida y descuenta la munición **después** de comprobar objetivo, turno,
+  acción, rango y cobertura, y **antes** de marcar `actionUsed` y resolver el ataque. Sin munición
+  devuelve un error en español y no gasta la acción ni modifica el objetivo.
+- La mutación usa `CharacterRepository` + `CharacterMapper`, conserva `ownerId`/`createdAt` y
+  elimina la línea de inventario al llegar a cero. `GameState.party` relee la ficha, por lo que la
+  ficha y la barra de acción reflejan la cantidad tras invalidar el estado.
+- Solo se aplica a tokens `PLAYER` con `refId`; los turnos automáticos de enemigos/aliados IA llaman
+  directamente a `CombatService` y los conjuros usan `weaponAttack=false`. No se modela recuperación
+  de munición ni consumo de armas arrojadizas; documentado en `TECH_DEBT.md`.
+
+**Verificación (TDD)**
+- **Rojo** capturado con `AmmunitionIntegrationTest`: fallaron los 3 casos de consumo/rechazo
+  (20→20, última flecha 1→1 y ataque sin munición aceptado); los 3 casos de no-consumo pasaron desde
+  el inicio. Commit `test(rules): reproduce missing ammunition consumption on ranged attacks`.
+- **Verde**: 5 tests unitarios de `AmmunitionRules` y 6 de integración cubren consumo, última
+  flecha + rechazo posterior, rechazo sin gastar acción, cuerpo a cuerpo, conjuro y ataque enemigo.
+- Backend completo: **320 tests** en verde (`mvn test`). No se tocó frontend, por lo que no se
+  ejecutaron tests/build de frontend.
+
+**Commits**
+- `ef72388` `test(rules): reproduce missing ammunition consumption on ranged attacks`
+- `ffdc2a0` `feat(rules): consume ammunition on ranged weapon attacks`
+
+**Siguiente paso**
+- R-18b: penalización de carga en el movimiento, si producto la prioriza. R-11 sigue pendiente de la
+  decisión de dominio/nivel 2 para Canalizar divinidad (B-03).
+
 ## 2026-11-08 — Estilos Gran arma y Protección (R-11 parcial)
 
 **Objetivo:** completar los dos estilos de combate que faltaban (Gran arma y Protección) sin
