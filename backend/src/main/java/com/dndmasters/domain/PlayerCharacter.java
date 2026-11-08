@@ -15,6 +15,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class PlayerCharacter {
 
+    /** SRD carrying capacity: 15 pounds per point of Strength. */
+    public static final int POUNDS_PER_STRENGTH = 15;
+
     private Long id;
     private Long ownerId;
     private String name;
@@ -40,6 +43,41 @@ public class PlayerCharacter {
     /** Total wealth expressed in gold pieces (1 gp = 10 sp = 100 cp). */
     public double totalGold() {
         return gold + silver / 10.0 + copper / 100.0;
+    }
+
+    /** Total weight in pounds carried by the current inventory. */
+    public double totalCarriedWeight() {
+        if (inventory == null) {
+            return 0;
+        }
+        return inventory.stream()
+                .filter(item -> item != null)
+                .mapToDouble(InventoryItem::totalWeight)
+                .sum();
+    }
+
+    /** SRD carrying capacity in pounds (Strength × 15). */
+    public int carryingCapacity() {
+        return Math.max(0, stats == null ? 0 : stats.strength()) * POUNDS_PER_STRENGTH;
+    }
+
+    /**
+     * Display-only flag for R-15: true when the carried weight exceeds capacity.
+     * Movement and speed are intentionally unchanged until encumbrance rules are
+     * integrated into the turn economy.
+     */
+    public boolean isEncumbered() {
+        return totalCarriedWeight() > carryingCapacity();
+    }
+
+    // Jackson serializes these getters so the sheet and shop can display the values
+    // without duplicating the rule on the client.
+    public double getCarriedWeight() {
+        return totalCarriedWeight();
+    }
+
+    public int getCarryingCapacity() {
+        return carryingCapacity();
     }
 
     public boolean alive() {

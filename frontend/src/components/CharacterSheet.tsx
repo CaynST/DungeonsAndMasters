@@ -3,7 +3,7 @@ import type { PlayerCharacter } from "@/types/game";
 import { AbilityScore } from "@/components/ui/AbilityScore";
 import { HealthBar } from "@/components/ui/HealthBar";
 import { Badge } from "@/components/ui/Badge";
-import { abilityModifier, formatModifier } from "@/lib/utils";
+import { abilityModifier, formatModifier, formatWeight } from "@/lib/utils";
 
 export function CharacterSheet({
   character,
@@ -28,6 +28,12 @@ export function CharacterSheet({
   const toolProficiencies = stringList(character.creationData?.toolProficiencies);
   const hasProficiencies =
     languages.length + armorProficiencies.length + weaponProficiencies.length + toolProficiencies.length > 0;
+  // The backend is authoritative; the fallback keeps legacy payloads usable.
+  const carriedWeight =
+    character.carriedWeight ??
+    character.inventory.reduce((total, item) => total + (item.weight ?? 0) * item.quantity, 0);
+  const carryingCapacity = character.carryingCapacity ?? character.stats.strength * 15;
+  const encumbered = character.encumbered ?? carriedWeight > carryingCapacity;
 
   return (
     <div className="panel p-4">
@@ -52,17 +58,32 @@ export function CharacterSheet({
 
       <HealthBar value={character.hp} max={character.maxHp} />
 
-      <div className="my-3 flex items-center justify-around rounded-lg border border-parchment/10 bg-black/25 py-2 text-center">
+      <div className="my-3 grid grid-cols-3 items-center rounded-lg border border-parchment/10 bg-black/25 py-2 text-center">
         <div>
           <p className="text-[10px] uppercase tracking-widest text-muted">CA</p>
           <p className="title-display text-lg text-ink">🛡 {character.ac}</p>
         </div>
-        <div className="h-8 w-px bg-parchment/10" />
-        <div>
+        <div className="border-x border-parchment/10">
           <p className="text-[10px] uppercase tracking-widest text-muted">Velocidad</p>
           <p className="title-display text-lg text-ink">{character.speed}</p>
         </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-muted">Carga</p>
+          <p className="title-display text-sm text-ink">
+            {formatWeight(carriedWeight)} / {carryingCapacity} lb
+          </p>
+        </div>
       </div>
+
+      {encumbered && (
+        <p
+          role="status"
+          className="mb-3 rounded-md border border-[#B0364B]/40 bg-[#B0364B]/10 px-3 py-1.5 text-[11px] text-[#e7a3ad]"
+        >
+          Sobrecargado: {formatWeight(carriedWeight)} lb supera tu capacidad de {carryingCapacity} lb. La velocidad no
+          cambia todavía.
+        </p>
+      )}
 
       <div className="grid grid-cols-6 gap-1.5">
         {stats.map(([label, value]) => (
@@ -122,6 +143,9 @@ export function CharacterSheet({
                   >
                     {item.name}
                     {item.quantity > 1 && <span className="text-[10px] opacity-70">x{item.quantity}</span>}
+                    {typeof item.weight === "number" && item.weight > 0 && (
+                      <span className="text-[10px] opacity-70">{formatWeight(item.weight * item.quantity)} lb</span>
+                    )}
                     {consumable && onUseItem && (
                       <button
                         onClick={() => onUseItem(item.name)}

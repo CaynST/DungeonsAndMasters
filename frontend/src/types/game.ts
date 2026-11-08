@@ -46,6 +46,8 @@ export interface InventoryItem {
   description?: string;
   icon?: string;
   quantity: number;
+  /** Unit weight in pounds; legacy payloads omit it and are treated as zero. */
+  weight?: number;
 }
 
 export interface PlayerCharacter {
@@ -70,6 +72,12 @@ export interface PlayerCharacter {
   gold?: number;
   silver?: number;
   copper?: number;
+  /** Total carried weight in pounds, computed by the backend. */
+  carriedWeight?: number;
+  /** SRD carrying capacity in pounds (Strength × 15). */
+  carryingCapacity?: number;
+  /** Display-only warning flag; speed is not modified yet. */
+  encumbered?: boolean;
 }
 
 export type EntityKind = "PLAYER" | "ENEMY" | "NPC" | "ITEM";
@@ -355,6 +363,8 @@ export interface ShopItem {
   price: number;
   icon: string;
   description: string;
+  /** Unit weight in pounds. */
+  weight: number;
 }
 
 export interface ShopView {
@@ -362,6 +372,9 @@ export interface ShopView {
   gold: number;
   silver: number;
   copper: number;
+  carriedWeight: number;
+  carryingCapacity: number;
+  encumbered: boolean;
   items: ShopItem[];
   inventory: InventoryItem[];
 }

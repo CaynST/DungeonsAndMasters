@@ -39,6 +39,9 @@ public class ShopService {
         out.put("gold", character.getGold());
         out.put("silver", character.getSilver());
         out.put("copper", character.getCopper());
+        out.put("carriedWeight", character.totalCarriedWeight());
+        out.put("carryingCapacity", character.carryingCapacity());
+        out.put("encumbered", character.isEncumbered());
         out.put("items", ItemCatalog.all());
         out.put("inventory", character.getInventory());
         return out;
@@ -76,7 +79,8 @@ public class ShopService {
 
         inventory.remove(found);
         if (available - sold > 0) {
-            inventory.add(new InventoryItem(found.name(), found.description(), found.icon(), available - sold));
+            inventory.add(new InventoryItem(found.name(), found.description(), found.icon(), available - sold,
+                    found.weight()));
         }
         character.setInventory(inventory);
         addCopper(character, earned * 100L);
@@ -92,10 +96,11 @@ public class ShopService {
                 .filter(i -> i.name().equalsIgnoreCase(item.name())).findFirst().orElse(null);
         if (existing != null) {
             inventory.remove(existing);
+            double weight = existing.weight() > 0 ? existing.weight() : item.weight();
             inventory.add(new InventoryItem(existing.name(), existing.description(), existing.icon(),
-                    existing.quantity() + qty));
+                    existing.quantity() + qty, weight));
         } else {
-            inventory.add(new InventoryItem(item.name(), item.description(), item.icon(), qty));
+            inventory.add(new InventoryItem(item.name(), item.description(), item.icon(), qty, item.weight()));
         }
         character.setInventory(inventory);
     }

@@ -25,10 +25,12 @@ public final class PredefinedCharacters {
                 Attack.melee("Longsword", 5, "1d8+3"),
                 Attack.ranged("Jabalina", 4, "1d6+2", 8)));
         c.setInventory(List.of(
-                InventoryItem.of("Escudo", "+2 a la CA frente a ataques cuerpo a cuerpo."),
-                InventoryItem.of("Poción de Curación", "Recupera 2d4+2 HP."),
-                InventoryItem.of("Raciones", "Provisión de viaje."),
-                InventoryItem.of("Antorcha", "Ilumina 6 casillas.")));
+                InventoryItem.of("Espada larga", "Hoja marcial de una mano.", "sword", 1, 3),
+                InventoryItem.of("Escudo", "+2 a la CA frente a ataques cuerpo a cuerpo.", "shield", 1, 6),
+                InventoryItem.of("Jabalinas", "Armas arrojadizas de reserva.", "crosshair", 3, 2),
+                InventoryItem.of("Poción de Curación", "Recupera 2d4+2 HP.", "flask", 1, 0.5),
+                InventoryItem.of("Raciones", "Provisión de viaje.", "flask", 1, 2),
+                InventoryItem.of("Antorcha", "Ilumina 6 casillas.", "flame", 1, 1)));
         return c;
     }
 
@@ -39,9 +41,10 @@ public final class PredefinedCharacters {
                 Attack.ranged("Fuego feérico", 5, "1d10", 16),
                 Attack.melee("Bastón", 1, "1d6")));
         c.setInventory(List.of(
-                InventoryItem.of("Grimorio", "Hechizos de nivel 1: proyectil mágico, escudo."),
-                InventoryItem.of("Componentes", "Bolsa de componentes arcanos."),
-                InventoryItem.of("Poción de Curación", "Recupera 2d4+2 HP.")));
+                InventoryItem.of("Grimorio", "Hechizos de nivel 1: proyectil mágico, escudo.", "sparkles", 1, 3),
+                InventoryItem.of("Componentes", "Bolsa de componentes arcanos.", "package", 1, 2),
+                InventoryItem.of("Bastón", "Apoyo y arma sencilla.", "club", 1, 4),
+                InventoryItem.of("Poción de Curación", "Recupera 2d4+2 HP.", "flask", 1, 0.5)));
         return c;
     }
 
@@ -52,9 +55,12 @@ public final class PredefinedCharacters {
                 Attack.melee("Espada corta", 5, "1d6+3"),
                 Attack.ranged("Arco corto", 5, "1d6+3", 16)));
         c.setInventory(List.of(
-                InventoryItem.of("Herramientas de ladrón", "Abre cerraduras."),
-                InventoryItem.of("Daga oculta", "Ligera y silenciosa."),
-                InventoryItem.of("Cuerda", "15 metros de cuerda de seda.")));
+                InventoryItem.of("Herramientas de ladrón", "Abre cerraduras.", "key", 1, 1),
+                InventoryItem.of("Daga oculta", "Ligera y silenciosa.", "dagger", 1, 1),
+                InventoryItem.of("Espada corta", "Hoja ligera para combate cercano.", "sword", 1, 2),
+                InventoryItem.of("Arco corto", "Arma a distancia.", "crosshair", 1, 2),
+                InventoryItem.of("Flechas", "Munición para el arco corto.", "crosshair", 20, 0.05),
+                InventoryItem.of("Cuerda", "15 metros de cuerda de seda.", "key", 1, 5)));
         return c;
     }
 
@@ -65,9 +71,10 @@ public final class PredefinedCharacters {
                 Attack.melee("Martillo de guerra", 4, "1d8+2"),
                 Attack.ranged("Llama sagrada", 4, "1d8", 12)));
         c.setInventory(List.of(
-                InventoryItem.of("Símbolo sagrado", "Canaliza el poder de tu deidad."),
-                InventoryItem.of("Escudo", "+2 a la CA."),
-                InventoryItem.of("Poción de Curación", "Recupera 2d4+2 HP.")));
+                InventoryItem.of("Martillo de guerra", "Arma contundente de una mano.", "club", 1, 2),
+                InventoryItem.of("Símbolo sagrado", "Canaliza el poder de tu deidad.", "sparkles", 1, 1),
+                InventoryItem.of("Escudo", "+2 a la CA.", "shield", 1, 6),
+                InventoryItem.of("Poción de Curación", "Recupera 2d4+2 HP.", "flask", 1, 0.5)));
         return c;
     }
 

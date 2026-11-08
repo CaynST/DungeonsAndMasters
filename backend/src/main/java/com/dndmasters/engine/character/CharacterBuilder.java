@@ -29,30 +29,30 @@ public class CharacterBuilder {
     private static final int PROFICIENCY_BONUS = 2; // level 1
 
     private static final Map<String, ArmorProfile> ARMOR = Map.ofEntries(
-            Map.entry("ninguna", new ArmorProfile("Ninguna", 10, true)),
-            Map.entry("none", new ArmorProfile("Ninguna", 10, true)),
-            Map.entry("cuero", new ArmorProfile("Armadura de cuero", 11, true)),
-            Map.entry("leather", new ArmorProfile("Armadura de cuero", 11, true)),
-            Map.entry("cuero-tachonado", new ArmorProfile("Cuero tachonado", 12, true)),
-            Map.entry("camisote", new ArmorProfile("Camisote de mallas", 13, true)),
-            Map.entry("cadena", new ArmorProfile("Cota de mallas", 16, false)),
-            Map.entry("chain", new ArmorProfile("Cota de mallas", 16, false)),
-            Map.entry("placas", new ArmorProfile("Armadura de placas", 18, false)));
+            Map.entry("ninguna", new ArmorProfile("Ninguna", 10, true, 0)),
+            Map.entry("none", new ArmorProfile("Ninguna", 10, true, 0)),
+            Map.entry("cuero", new ArmorProfile("Armadura de cuero", 11, true, 10)),
+            Map.entry("leather", new ArmorProfile("Armadura de cuero", 11, true, 10)),
+            Map.entry("cuero-tachonado", new ArmorProfile("Cuero tachonado", 12, true, 13)),
+            Map.entry("camisote", new ArmorProfile("Camisote de mallas", 13, true, 20)),
+            Map.entry("cadena", new ArmorProfile("Cota de mallas", 16, false, 55)),
+            Map.entry("chain", new ArmorProfile("Cota de mallas", 16, false, 55)),
+            Map.entry("placas", new ArmorProfile("Armadura de placas", 18, false, 65)));
 
     private static final Map<String, WeaponProfile> WEAPONS = Map.ofEntries(
-            Map.entry("longsword", new WeaponProfile("Longsword", "1d8", Ability.STRENGTH, false, 1, false)),
-            Map.entry("shortsword", new WeaponProfile("Espada corta", "1d6", Ability.DEXTERITY, false, 1, false)),
-            Map.entry("greataxe", new WeaponProfile("Hacha grande", "1d12", Ability.STRENGTH, false, 1, true)),
-            Map.entry("handaxe", new WeaponProfile("Hacha de mano", "1d6", Ability.STRENGTH, false, 1, false)),
-            Map.entry("warhammer", new WeaponProfile("Martillo de guerra", "1d8", Ability.STRENGTH, false, 1, false)),
-            Map.entry("mace", new WeaponProfile("Maza", "1d6", Ability.STRENGTH, false, 1, false)),
-            Map.entry("quarterstaff", new WeaponProfile("Bastón", "1d6", Ability.STRENGTH, false, 1, false)),
-            Map.entry("dagger", new WeaponProfile("Daga", "1d4", Ability.DEXTERITY, true, 4, false)),
-            Map.entry("rapier", new WeaponProfile("Estoque", "1d8", Ability.DEXTERITY, false, 1, false)),
-            Map.entry("scimitar", new WeaponProfile("Cimitarra", "1d6", Ability.DEXTERITY, false, 1, false)),
-            Map.entry("shortbow", new WeaponProfile("Arco corto", "1d6", Ability.DEXTERITY, true, 16, false)),
-            Map.entry("longbow", new WeaponProfile("Arco largo", "1d8", Ability.DEXTERITY, true, 24, false)),
-            Map.entry("javelin", new WeaponProfile("Jabalina", "1d6", Ability.STRENGTH, true, 8, false)));
+            Map.entry("longsword", new WeaponProfile("Longsword", "1d8", Ability.STRENGTH, false, 1, false, 3)),
+            Map.entry("shortsword", new WeaponProfile("Espada corta", "1d6", Ability.DEXTERITY, false, 1, false, 2)),
+            Map.entry("greataxe", new WeaponProfile("Hacha grande", "1d12", Ability.STRENGTH, false, 1, true, 7)),
+            Map.entry("handaxe", new WeaponProfile("Hacha de mano", "1d6", Ability.STRENGTH, false, 1, false, 2)),
+            Map.entry("warhammer", new WeaponProfile("Martillo de guerra", "1d8", Ability.STRENGTH, false, 1, false, 2)),
+            Map.entry("mace", new WeaponProfile("Maza", "1d6", Ability.STRENGTH, false, 1, false, 4)),
+            Map.entry("quarterstaff", new WeaponProfile("Bastón", "1d6", Ability.STRENGTH, false, 1, false, 4)),
+            Map.entry("dagger", new WeaponProfile("Daga", "1d4", Ability.DEXTERITY, true, 4, false, 1)),
+            Map.entry("rapier", new WeaponProfile("Estoque", "1d8", Ability.DEXTERITY, false, 1, false, 2)),
+            Map.entry("scimitar", new WeaponProfile("Cimitarra", "1d6", Ability.DEXTERITY, false, 1, false, 3)),
+            Map.entry("shortbow", new WeaponProfile("Arco corto", "1d6", Ability.DEXTERITY, true, 16, false, 2)),
+            Map.entry("longbow", new WeaponProfile("Arco largo", "1d8", Ability.DEXTERITY, true, 24, false, 2)),
+            Map.entry("javelin", new WeaponProfile("Jabalina", "1d6", Ability.STRENGTH, true, 8, false, 2)));
 
     private final RuleSetRegistry registry;
 
@@ -226,25 +226,38 @@ public class CharacterBuilder {
                                                   WeaponProfile weapon) {
         List<InventoryItem> items = new ArrayList<>();
         if (!"Ninguna".equals(armor.name())) {
-            items.add(InventoryItem.of(armor.name(), "Protección: CA base " + armor.base()));
+            items.add(new InventoryItem(armor.name(), "Protección: CA base " + armor.base(), "shield", 1,
+                    armor.weight()));
         }
-        items.add(InventoryItem.of(weapon.name(), "Arma de " + characterClass.name()));
-        items.add(InventoryItem.of("Poción de Curación", "Recupera 2d4+2 HP."));
-        items.add(InventoryItem.of("Mochila de aventurero", "Raciones, antorcha y yesca."));
+        items.add(new InventoryItem(weapon.name(), "Arma de " + characterClass.name(), "sword", 1,
+                weapon.weight()));
+        items.add(new InventoryItem("Poción de Curación", "Recupera 2d4+2 HP.", "flask", 1, 0.5));
+        items.add(new InventoryItem("Mochila de aventurero", "Raciones, antorcha y yesca.", "package", 1, 10));
         switch (characterClass.id()) {
             case "wizard", "sorcerer", "warlock" ->
-                    items.add(InventoryItem.of("Foco arcano", "Foco para componentes materiales."));
+                    items.add(InventoryItem.of("Foco arcano", "Foco para componentes materiales.", 1));
             case "cleric", "paladin" ->
-                    items.add(InventoryItem.of("Símbolo sagrado", "Foco para componentes materiales."));
+                    items.add(InventoryItem.of("Símbolo sagrado", "Foco para componentes materiales.", 1));
             case "druid", "ranger" ->
-                    items.add(InventoryItem.of("Foco druídico", "Foco para componentes materiales."));
+                    items.add(InventoryItem.of("Foco druídico", "Foco para componentes materiales.", 1));
             case "bard" ->
-                    items.add(InventoryItem.of("Instrumento musical", "Foco para componentes materiales."));
+                    items.add(InventoryItem.of("Instrumento musical", "Foco para componentes materiales.", 2));
             default -> {
                 // Non-casters do not need a spellcasting focus.
             }
         }
+        if ("rogue".equals(characterClass.id())) {
+            items.add(InventoryItem.of("Herramientas de ladrón", "Abre cerraduras y desactiva trampas.", 1));
+        }
+        if (usesArrows(weapon)) {
+            items.add(InventoryItem.of("Flechas", "Munición para arcos.", "crosshair", 20, 0.05));
+        }
         return items;
+    }
+
+    /** Bows use arrows; thrown weapons (javelin, dagger) do not consume ammunition. */
+    private boolean usesArrows(WeaponProfile weapon) {
+        return "Arco corto".equals(weapon.name()) || "Arco largo".equals(weapon.name());
     }
 
     private int startingGold(String classId) {
@@ -315,13 +328,13 @@ public class CharacterBuilder {
         return value == null ? "" : value.trim().toLowerCase(Locale.ROOT).replace(" ", "-").replace("_", "-");
     }
 
-    private record ArmorProfile(String name, int base, boolean dexterity) {
+    private record ArmorProfile(String name, int base, boolean dexterity, double weight) {
         boolean flat() {
             return !dexterity;
         }
     }
 
     private record WeaponProfile(String name, String damage, Ability ability, boolean ranged, int range,
-                                 boolean twoHanded) {
+                                 boolean twoHanded, double weight) {
     }
 }

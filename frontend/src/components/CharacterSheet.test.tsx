@@ -61,4 +61,45 @@ describe("CharacterSheet", () => {
     render(<CharacterSheet character={kael} />);
     expect(screen.queryByText("Idiomas y competencias")).not.toBeInTheDocument();
   });
+
+  it("shows carried weight and carrying capacity", () => {
+    render(
+      <CharacterSheet
+        character={{ ...kael, carriedWeight: 22.5, carryingCapacity: 210, encumbered: false }}
+      />,
+    );
+
+    expect(screen.getByText("Carga")).toBeInTheDocument();
+    expect(screen.getByText("22.5 / 210 lb")).toBeInTheDocument();
+    expect(screen.queryByText(/Sobrecargado/)).not.toBeInTheDocument();
+  });
+
+  it("warns about encumbrance without changing speed", () => {
+    render(
+      <CharacterSheet
+        character={{ ...kael, carriedWeight: 220, carryingCapacity: 210, encumbered: true }}
+      />,
+    );
+
+    expect(screen.getByText(/Sobrecargado/)).toBeInTheDocument();
+    expect(screen.getByText(/220 lb supera tu capacidad de 210 lb/)).toBeInTheDocument();
+    expect(screen.getByText("6")).toBeInTheDocument(); // speed stays at 6
+  });
+
+  it("falls back to inventory weights when the server omits totals", () => {
+    const loaded: PlayerCharacter = {
+      ...kael,
+      stats: { ...kael.stats, strength: 10 },
+      inventory: [
+        { name: "Espada larga", quantity: 1, weight: 3 },
+        { name: "Flechas", quantity: 20, weight: 0.05 },
+      ],
+    };
+
+    render(<CharacterSheet character={loaded} />);
+
+    expect(screen.getByText("4 / 150 lb")).toBeInTheDocument();
+    expect(screen.getByText("3 lb")).toBeInTheDocument();
+    expect(screen.getByText("1 lb")).toBeInTheDocument();
+  });
 });
