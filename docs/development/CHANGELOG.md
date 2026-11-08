@@ -1,5 +1,16 @@
 # CHANGELOG (desarrollo)
 
+## 2026-11-08
+
+- **D-25** `feat(map)` — Terreno difícil: `GameMap.difficultTerrain` se persiste en
+  `maps.difficult_terrain_json` (migración V11) y `MovementValidator` cobra **2** al entrar en
+  esas casillas, también en diagonal (el motor cobra 1 por paso). No se sembró contenido nuevo
+  para no alterar mapas existentes ni introducir penalizaciones invisibles en la UI.
+
+- **D-26** `feat(combat)` — Sorpresa: `SurpriseRules` gestiona la bandera `surprised` en
+  `entity.data`. `CombatService` la consume al abrir el combate o al avanzar el turno, registra
+  `SURPRISED` y salta el primer turno de la criatura; la bandera se limpia exactamente una vez.
+
 ## 2026-11-05
 
 - **D-24** `feat(rules)` — Inspiración bárdica: acción adicional para dar un **d6** a otro aliado

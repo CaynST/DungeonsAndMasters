@@ -121,3 +121,14 @@ su próxima tirada de ataque, prueba o salvación. La inspiración es una acció
 no consume acción del objetivo y dura 10 rondas (adaptación del prototipo).
 **Consecuencia:** se conserva la agencia sin interrumpir cada tirada con un diálogo; no se puede
 decidir después de ver el d20. La duración real de 10 minutos queda aproximada.
+
+## ADR-014 — Sorpresa como bandera consumible por el flujo de turnos
+**Contexto:** el PHB hace que una criatura sorprendida pierda su primer turno, pero el prototipo
+no tiene una fase de detección ni un contrato del DM para declarar sorpresa.
+**Alternativas:** añadir una columna a `combat_participants`; o guardar la bandera en `entity.data`
+y consumirla desde `CombatService`.
+**Decisión:** `SurpriseRules` gestiona `surprised` en `entity.data`; `CombatService` la consume al
+abrir el combate y en cada avance de turno, registra `SURPRISED` y limpia la bandera una sola vez.
+No se inventa una UX ni una acción del DM para activarla.
+**Consecuencia:** la regla es determinista, persistente y testeable sin migración. Cómo se determina
+la sorpresa en la mesa (acción del DM, detección automática o guion) queda como decisión de producto.

@@ -1,5 +1,43 @@
 # PROGRESS
 
+## 2026-11-08 — Terreno difícil (R-08) y sorpresa (R-09)
+
+**Objetivo:** cerrar las dos brechas P2 del motor sin tocar el frontend ni inventar UX.
+
+**Acciones**
+- `GameMap` incorpora `difficultTerrain` con `isDifficultTerrain(cell)`; `MapEntity`/`MapMapper`
+  lo persisten como JSON y la migración **V11** añade `maps.difficult_terrain_json`.
+- `MovementValidator` cobra **2** al entrar en una casilla difícil, también en diagonal, porque
+  este motor ya cobra 1 por cualquier paso. El coste se acumula en `MoveResult` y, por tanto,
+  en `movementUsed` y en el límite por turno.
+- `SurpriseRules` gestiona la bandera `surprised` de `entity.data`. `CombatService` la consume al
+  abrir el combate y en cada avance de turno, registra `SURPRISED` y salta el primer turno.
+- No se sembró terreno difícil en mapas existentes: el tablero aún no lo dibuja y añadirlo
+  introduciría penalizaciones invisibles. La puerta queda abierta para sembrarlo cuando la UI lo
+  muestre.
+- La activación de la sorpresa (quién la declara) no se inventa: queda como decisión de producto
+  documentada en `TECH_DEBT.md`; el motor ya aplica la bandera.
+
+**Verificación (TDD)**
+- Red inicial: tests de `MovementValidator`, `MapMapper`, persistencia y `SurpriseRules` fallaron
+  por APIs ausentes; un fallo de setup del test de sorpresa se corrigió antes de continuar.
+- `MovementValidatorTest`: coste 3 en ruta normal+difícil, coste 2 en diagonal difícil y rechazo
+  cuando el coste supera la velocidad.
+- `MapMapperTest` (ida y vuelta JSON), `MapPersistenceTest` (columna V11 en SQLite) y
+  `SurpriseRulesTest` (bandera consumible).
+- `SurpriseIntegrationTest`: un participante sorprendido pierde su turno y se limpia la bandera;
+  si todo el combate empieza sorprendido, se salta la ronda 1.
+- Suite backend completa: **235 tests** en verde.
+
+**Commits**
+- `feat(map): support difficult terrain with double movement cost`
+- `feat(combat): skip the first turn of surprised creatures`
+- `docs(development): record difficult terrain and surprise progress`
+
+**Siguiente paso**
+- Decidir cómo se activa la sorpresa (acción del DM o detección) y, si se desea, renderizar el
+  terreno difícil en el tablero antes de sembrarlo en contenido.
+
 ## 2026-11-05 — Inspiración bárdica (R-11)
 
 **Objetivo:** añadir el rasgo de Bardo de nivel 1 con acción adicional y uso en tiradas.

@@ -14,8 +14,8 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | R-05 | Cobertura (media +2 / tres cuartos +5 / total) | P1 | done |
 | R-06 | Rango de ataque (normal/largo, desventaja) y alcance cuerpo a cuerpo | P0 | done |
 | R-07 | Movimiento diagonal: no atravesar esquinas de muros | P0 | done |
-| R-08 | Terreno difícil (coste doble) | P2 | pending |
-| R-09 | Sorpresa | P2 | pending |
+| R-08 | Terreno difícil (coste doble) | P2 | done |
+| R-09 | Sorpresa | P2 | done |
 | R-10 | Conjuros: trucos, espacios, concentración, componentes | P1 | done |
 | R-11 | Rasgos de clase (Estilo de combate, Segundo aliento, Ataque furtivo, Furia, Inspiración, Canalizar divinidad, etc.) | P1 | in_progress |
 | R-12 | Trasfondos PHB faltantes: Charlatán, Artista, Artesano gremial, Ermitaño, Forastero, Marinero | P2 | pending |
@@ -67,3 +67,5 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-22 | Componentes materiales de conjuros: foco/bolsa, metadata V/S/M y UI | done |
 | D-23 | Estilo de combate: Defensa, Arquería y Duelo (+ selección en creación) | done |
 | D-24 | Inspiración bárdica: d6, usos por CAR, acción adicional y uso en tiradas | done |
+| D-25 | Terreno difícil: celdas persistidas y coste doble de movimiento | done |
+| D-26 | Sorpresa: la criatura marcada pierde su primer turno de combate | done |
