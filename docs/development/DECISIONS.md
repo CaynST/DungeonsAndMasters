@@ -121,3 +121,14 @@ su próxima tirada de ataque, prueba o salvación. La inspiración es una acció
 no consume acción del objetivo y dura 10 rondas (adaptación del prototipo).
 **Consecuencia:** se conserva la agencia sin interrumpir cada tirada con un diálogo; no se puede
 decidir después de ver el d20. La duración real de 10 minutos queda aproximada.
+
+## ADR-014 — Listado paginado junto al contrato legacy de campañas
+**Contexto:** la Home descargaba y renderizaba todas las campañas; con datos de prueba acumulados
+la lista crecía sin límite. Borrar campañas no es aceptable porque son datos de usuario.
+**Alternativas:** cambiar `GET /api/campaigns` para devolver siempre un sobre paginado (rompe a
+los consumidores actuales); o añadir un endpoint dedicado manteniendo el array existente.
+**Decisión:** `GET /api/campaigns/page?page=&size=&status=` devuelve un `CampaignPage` con
+`content`, metadatos de paginación y filtro opcional por estado; `GET /api/campaigns` conserva el
+array y los parámetros de paginación se validan (página ≥ 0, tamaño 1-100, estado conocido).
+**Consecuencia:** la Home pagina y filtra en el servidor sin borrar datos y los clientes antiguos
+siguen funcionando. El coste es un endpoint adicional y dos rutas que deben mantenerse alineadas.

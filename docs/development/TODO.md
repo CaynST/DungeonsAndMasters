@@ -30,11 +30,11 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | ID | Tarea | Prioridad | Estado |
 |----|-------|-----------|--------|
 | U-01 | Tablero a pantalla completa (hoy queda con márgenes) | P2 | pending |
-| U-02 | Retratos ilustrados (hoy son iniciales) | P2 | pending |
+| U-02 | Retratos/consonancia visual: componente `Avatar` reutilizable con retrato local y fallback de iniciales | P2 | done |
 | U-03 | Segunda pasada visual: Home, Lobby, Crónica y estados vacíos | P2 | pending |
 | U-04 | Revisión de accesibilidad (contraste AA, foco, aria en iconos) | P2 | pending |
 | U-05 | Responsive del juego (sidebar fija, barra horizontal) | P2 | pending |
-| U-06 | Limpiar campañas de prueba de la Home / paginación | P3 | pending |
+| U-06 | Paginación y filtro de estado en Home (sin borrar campañas) | P3 | done |
 | U-07 | Generación dinámica de escenas por el DM a mitad de aventura | P2 | pending |
 | U-08 | Modo host autoalojado: servir frontend desde Spring, SPA fallback, enlace/QR y enlace de campaña | P2 | pending |
 | U-09 | Pantalla "Unirse a servidor" y URL configurable de API/WebSocket | P2 | pending |
@@ -67,3 +67,5 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-22 | Componentes materiales de conjuros: foco/bolsa, metadata V/S/M y UI | done |
 | D-23 | Estilo de combate: Defensa, Arquería y Duelo (+ selección en creación) | done |
 | D-24 | Inspiración bárdica: d6, usos por CAR, acción adicional y uso en tiradas | done |
+| D-25 | U-02: `Avatar` reutilizable con retrato y fallback de iniciales en Home, Lobby, tarjetas e iniciativa | done |
+| D-26 | U-06: listado paginado/filtrable de campañas y controles en Home sin borrar datos | done |

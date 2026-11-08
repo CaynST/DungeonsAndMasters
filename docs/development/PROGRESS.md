@@ -1,5 +1,45 @@
 # PROGRESS
 
+## 2026-11-08 — Retratos consistentes y paginación de campañas (U-02, U-06)
+
+**Objetivo:** unificar los avatares de personaje/PNJ y evitar que la Home renderice todas las
+campañas sin límite, sin borrar datos de usuario.
+
+**U-02 — Retratos**
+- Auditoría: el tablero ya usaba `portrait`; Home y Lobby duplicaban imagen + fallback de iniciales;
+  el Lobby ignoraba `dmAvatar`; la iniciativa no mostraba retrato. `CharacterSheet` (otro
+  workstream), `CinematicIntro` y el fallback textual de `DmPanel` quedan fuera de alcance y se
+  registran en `TECH_DEBT.md`.
+- Nuevo `components/ui/Avatar`: retrato local/subido + fallback de iniciales determinista, color
+  por personaje y recuperación al cambiar `src` o fallar la imagen. Sin assets externos.
+- Usado en Home (héroes), Lobby (DM, miembros y elección de héroe), `CampaignCard` (avatar del DM) e
+  `InitiativeTracker` (entidades del tablero).
+
+**U-06 — Paginación y filtro**
+- `GET /api/campaigns/page?page=&size=&status=` devuelve `CampaignPage` (`content`, `page`, `size`,
+  `totalElements`, `totalPages`, `first`, `last`). `GET /api/campaigns` conserva el array legacy.
+- `CampaignService.listPage` valida página (≥0), tamaño (1-100) y estado (`LOBBY`, `ACTIVE`,
+  `FINISHED` o `ALL`), ordena por id descendente y no borra ninguna campaña.
+- Home pide 6 campañas por página, ofrece filtros Todas/En curso/En lobby/Completadas y navegación
+  Anterior/Siguiente; el bloque destacado se oculta al aplicar un filtro.
+
+**Verificación (TDD)**
+- Red: `CampaignPaginationApiTest` falló con 500 antes de registrar `/page`; `Avatar.test.tsx`
+  falló por el componente inexistente.
+- Backend completo: **229 tests** en verde (`mvn -q test`).
+- Frontend: **34 tests** en verde (`vitest run --maxWorkers=1`) y `pnpm build` en verde.
+- `pnpm lint` sin errores (solo warnings preexistentes).
+
+**Commits**
+- `1787377` `feat(campaigns): paginate and filter campaign listing` (backend).
+- `ff6c258` `feat(campaigns): paginate and filter campaigns on Home` (frontend).
+- `5747eab` `feat(ui): unify character and NPC avatars with local fallback`.
+- Documentación de U-02/U-06 en este mismo cambio de `docs/development`.
+
+**Siguiente paso**
+- Reutilizar `Avatar` en `CharacterSheet`, `CinematicIntro` y `DmPanel` cuando se retomen esas
+  pantallas; valorar una búsqueda por nombre además del filtro de estado.
+
 ## 2026-11-05 — Inspiración bárdica (R-11)
 
 **Objetivo:** añadir el rasgo de Bardo de nivel 1 con acción adicional y uso en tiradas.

@@ -12,6 +12,7 @@ Deuda consciente del prototipo, ordenada por impacto en la fidelidad con el PHB.
 | R-11 | Hechos Segundo aliento, Furia, Ataque furtivo, Estilo de combate e Inspiración bárdica; faltan Canalizar divinidad, Gran arma/Protección, etc. | Medio | P1 | Rasgos restantes por clase/nivel |
 | R-12 | 7 de 13 trasfondos PHB | Bajo | P2 | Añadir los 6 restantes al RuleSet |
 | R-14 | Sin descansos ni dados de golpe | Medio | P2 | Descanso corto/largo en el servicio |
+| U-02 | `Avatar` unificado en Home, Lobby, tarjetas e iniciativa; `CharacterSheet` (otro workstream), `CinematicIntro` y el fallback de `DmPanel` aún dibujan sus propias iniciales | Bajo | P2 | Reutilizar `components/ui/Avatar` cuando se retomen esas pantallas |
 
 Arquitectura: el motor sigue siendo la autoridad; estas deudas se implementan en
 `engine/` y se exponen por acciones, sin tocar el contrato del DM.

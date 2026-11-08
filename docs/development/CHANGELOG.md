@@ -1,5 +1,19 @@
 # CHANGELOG (desarrollo)
 
+## 2026-11-08
+
+- **D-25** `feat(ui)` — Retratos consistentes: nuevo `Avatar` reutilizable que muestra el retrato
+  local/subido y cae a iniciales dibujadas por código cuando falta o falla la imagen. Se usa en
+  Home, Lobby (incluido el avatar del DM), tarjetas de campaña e iniciativa; antes la iniciativa no
+  mostraba retratos y el Lobby ignoraba `dmAvatar`. Componente: `components/ui/Avatar`.
+
+- **D-26** `feat(campaigns)` — Listado paginado y filtrable sin borrar datos:
+  `GET /api/campaigns/page?page=&size=&status=` devuelve un sobre con `content`, `page`, `size`,
+  `totalElements`, `totalPages`, `first` y `last`; el endpoint legacy `GET /api/campaigns` sigue
+  devolviendo el array. Home pide 6 campañas por página y ofrece filtros Todas/En curso/En lobby/
+  Completadas con navegación anterior/siguiente. Componentes: `CampaignController`,
+  `CampaignService`, `CampaignRepository`, `pages/Home`, `lib/api`, `types/game`.
+
 ## 2026-11-05
 
 - **D-24** `feat(rules)` — Inspiración bárdica: acción adicional para dar un **d6** a otro aliado
