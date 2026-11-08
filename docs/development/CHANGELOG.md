@@ -2,6 +2,12 @@
 
 ## 2026-11-08
 
+- **D-35** `feat(equipment)` — Peso de inventario (libras por unidad), carga total y capacidad
+  `FUE × 15` en `PlayerCharacter`; JSON antiguo sin `weight` se lee como `0`. `CharacterSheet`
+  muestra **Carga X / Y lb** y un aviso de **Sobrecargado** solo informativo; `ShopModal` muestra
+  pesos y carga. `ItemCatalog` recibe pesos; pícaros reciben herramientas de ladrón y los arcos
+  empiezan con 20 flechas. Sin migración y sin consumo de munición todavía (R-18).
+
 - **D-34** `feat(campaigns)` — Listado paginado/filtrable: `GET /api/campaigns/page` devuelve
   `CampaignPage` con página, tamaño, estado y metadatos; el endpoint legacy conserva el array. La
   Home pagina de 6 en 6 con filtros Todas/En curso/En lobby/Completadas. Sin borrar campañas.

@@ -165,6 +165,49 @@ class CharacterBuilderTest {
                 .containsExactly("Set de juego (a elección)", "Vehículos (terrestres)");
     }
 
+    @Test
+    void rogueStartingInventoryIncludesThievesTools() {
+        CharacterBuildRequest request = new CharacterBuildRequest(
+                "Aria", Edition.DND_5E_2014, "half-elf", "rogue", "criminal",
+                scores(10, 15, 12, 13, 10, 10), List.of("stealth", "perception"), "cuero", "shortsword");
+
+        PlayerCharacter character = builder.build(request);
+
+        assertThat(character.getInventory()).anySatisfy(item -> {
+            assertThat(item.name()).isEqualTo("Herramientas de ladrón");
+            assertThat(item.quantity()).isEqualTo(1);
+            assertThat(item.weight()).isPositive();
+        });
+    }
+
+    @Test
+    void bowUsersStartWithArrowsAndCarryWeight() {
+        CharacterBuildRequest request = new CharacterBuildRequest(
+                "Rowan", Edition.DND_5E_2014, "human", "ranger", "soldier",
+                scores(12, 15, 14, 10, 10, 8), List.of("perception", "survival"), "cuero", "longbow");
+
+        PlayerCharacter character = builder.build(request);
+
+        assertThat(character.getInventory()).anySatisfy(item -> {
+            assertThat(item.name()).isEqualTo("Flechas");
+            assertThat(item.quantity()).isEqualTo(20);
+            assertThat(item.weight()).isEqualTo(0.05);
+        });
+        assertThat(character.totalCarriedWeight()).isPositive();
+        assertThat(character.carryingCapacity()).isEqualTo(character.getStats().strength() * 15);
+    }
+
+    @Test
+    void meleeCharactersDoNotReceiveAmmunition() {
+        CharacterBuildRequest request = new CharacterBuildRequest(
+                "Kael", Edition.DND_5E_2014, "human", "fighter", "soldier",
+                scores(15, 12, 14, 10, 10, 8), List.of("athletics", "perception"), "cadena", "longsword");
+
+        PlayerCharacter character = builder.build(request);
+
+        assertThat(character.getInventory()).noneMatch(item -> item.name().equals("Flechas"));
+    }
+
     @SuppressWarnings("unchecked")
     private List<String> values(PlayerCharacter character, String key) {
         return (List<String>) character.getCreationData().get(key);

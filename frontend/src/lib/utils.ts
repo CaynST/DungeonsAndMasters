@@ -13,6 +13,11 @@ export function formatModifier(value: number): string {
   return value >= 0 ? `+${value}` : `${value}`;
 }
 
+/** Formats pounds with at most two decimals and no trailing zeros (22.5, 1, 0.05). */
+export function formatWeight(value: number): string {
+  return `${Math.round(value * 100) / 100}`;
+}
+
 export function hpPercent(hp: number, maxHp: number): number {
   if (maxHp <= 0) return 0;
   return Math.max(0, Math.min(100, (hp / maxHp) * 100));

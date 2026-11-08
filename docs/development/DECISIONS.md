@@ -157,3 +157,18 @@ los consumidores actuales); o añadir un endpoint dedicado manteniendo el array 
 array y los parámetros de paginación se validan (página ≥ 0, tamaño 1-100, estado conocido).
 **Consecuencia:** la Home pagina y filtra en el servidor sin borrar datos y los clientes antiguos
 siguen funcionando. El coste es un endpoint adicional y dos rutas que deben mantenerse alineadas.
+
+## ADR-017 — Peso por unidad en el JSON de inventario, con carga solo informativa
+**Contexto:** R-15 pide peso, capacidad y un aviso de sobrecarga sin romper personajes ya guardados
+ni cambiar el combate. El inventario se persiste como `inventory_json`, sin columnas por objeto.
+**Alternativas:** una tabla de inventario normalizada con migración; o un campo de peso en el JSON
+existente. La primera es más rica, pero desproporcionada para el estado actual y arriesga datos.
+**Decisión:** `InventoryItem.weight` es el peso de **una unidad** en libras y se multiplica por
+`quantity`; el JSON ausente se lee como `0` y se conserva el constructor de cuatro argumentos.
+`PlayerCharacter` deriva carga total y capacidad (`FUE × 15`) y las expone como campos calculados,
+sin depender de `engine`. La sobrecarga se muestra en ficha y tienda, pero no modifica la velocidad.
+El catálogo propaga el peso a las compras y los inventarios iniciales usan `quantity` para munición
+(20 flechas) y herramientas.
+**Consecuencia:** no hay migración ni cambios en el contrato de combate; los personajes antiguos
+siguen cargando con peso `0` hasta que se edite su inventario. El consumo de munición y la
+penalización de movimiento quedan explícitamente en R-18/TECH_DEBT.

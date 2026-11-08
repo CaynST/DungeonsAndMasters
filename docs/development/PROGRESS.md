@@ -1,5 +1,46 @@
 # PROGRESS
 
+## 2026-11-08 — Peso, capacidad y munición/herramientas (R-15)
+
+**Objetivo:** modelar el peso del inventario y mostrarlo sin alterar las reglas de combate ni la
+velocidad; dejar preparada la munición y las herramientas sin implementar su consumo.
+
+**Acciones**
+- `InventoryItem` incorpora `weight` (libras por unidad) y `totalWeight()`; el constructor de cuatro
+  argumentos y `of(...)` conservan la compatibilidad. El JSON antiguo sin `weight` se lee como `0`
+  gracias al valor por defecto de Jackson para primitivos.
+- `PlayerCharacter` deriva carga total, capacidad `FUE × 15` y sobrecarga
+  (`totalCarriedWeight()`, `carryingCapacity()`, `isEncumbered()`), y serializa `carriedWeight`,
+  `carryingCapacity` y `encumbered` para la UI. La aritmética vive en el dominio, junto a
+  `totalGold()`, sin crear una dependencia de `domain` hacia `engine`.
+- `CharacterSheet` muestra **Carga X / Y lb**, avisa **Sobrecargado** cuando se supera la capacidad
+  y muestra el peso de cada línea de inventario. La velocidad sigue siendo la del personaje: la
+  sobrecarga es solo informativa.
+- `ShopModal` muestra el peso unitario del catálogo, el peso de cada línea del inventario y la carga
+  total/capacidad de la ficha. `ShopService` propaga el peso del catálogo a las compras.
+- `ItemCatalog` asigna pesos SRD simplificados para que la tienda muestre peso y carga.
+- Inventario inicial: el pícaro recibe **Herramientas de ladrón**; los usuarios de arco reciben
+  **Flechas ×20**; los focos existentes conservan su función y ahora tienen peso. Los héroes
+  predefinidos reciben pesos y equipo coherente (Aria: arco corto y flechas; Kael: jabalinas).
+- Sin migración: el peso vive en `inventory_json`.
+
+**Verificación (TDD)**
+- Rojo: `InventoryItemTest`, `PlayerCharacterTest`, `CharacterBuilderTest`,
+  `PredefinedCharactersTest` y `ShopApiTest` fallaron por API ausente antes de implementar.
+- Backend completo: **266 tests** en verde (`mvn test`).
+- Frontend: **48 tests** en verde (`pnpm test -- --maxWorkers=1 --no-file-parallelism
+  --testTimeout=30000`) y `pnpm build` en verde.
+- Nuevos tests frontend: `formatWeight`, carga/aviso en `CharacterSheet` y pesos/carga en
+  `ShopModal`.
+
+**Commits**
+- `feat(equipment): add item weight, carrying capacity and encumbrance display`
+- `docs(development): record equipment weight work`
+
+**Siguiente paso**
+- R-18: consumir munición al atacar y conectar la sobrecarga con la economía de movimiento cuando
+  el producto lo decida. La carga actual no modifica la velocidad a propósito.
+
 ## 2026-11-08 — Terreno difícil (R-08) y sorpresa (R-09)
 
 **Objetivo:** cerrar las dos brechas P2 del motor sin tocar el frontend ni inventar UX.

@@ -76,12 +76,16 @@ class ShopApiTest {
                         .content(objectMapper.writeValueAsString(Map.of("characterId", characterId))))
                 .andExpect(status().isOk());
 
-        // Shop shows the catalogue and the character's wealth.
+        // Shop shows the catalogue, the character's wealth and carried weight.
         mockMvc.perform(get("/api/campaigns/" + campaignId + "/shop")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.gold").value(120))
-                .andExpect(jsonPath("$.items").isArray());
+                .andExpect(jsonPath("$.items").isArray())
+                .andExpect(jsonPath("$.items[0].weight").isNumber())
+                .andExpect(jsonPath("$.carriedWeight").isNumber())
+                .andExpect(jsonPath("$.carryingCapacity").value(240))
+                .andExpect(jsonPath("$.encumbered").value(false));
 
         // Buy a 50 gp potion → gold drops to 70.
         mockMvc.perform(post("/api/campaigns/" + campaignId + "/shop/buy")

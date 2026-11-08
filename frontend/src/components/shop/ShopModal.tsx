@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
-import { cn } from "@/lib/utils";
+import { cn, formatWeight } from "@/lib/utils";
 import type { ShopItem } from "@/types/game";
 
 const KIND_LABELS: Record<string, string> = {
@@ -64,6 +64,15 @@ export function ShopModal({ campaignId, onClose }: { campaignId: number; onClose
                 </span>
               )}
             </p>
+            <p className="text-xs text-muted">
+              Carga:{" "}
+              <span className="font-semibold text-ink">
+                {shop.data
+                  ? `${formatWeight(shop.data.carriedWeight)} / ${shop.data.carryingCapacity} lb`
+                  : "—"}
+              </span>
+              {shop.data?.encumbered && <span className="ml-2 text-[#d0566a]">Sobrecargado</span>}
+            </p>
           </div>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -92,6 +101,9 @@ export function ShopModal({ campaignId, onClose }: { campaignId: number; onClose
                         <div className="min-w-0">
                           <p className="text-sm text-ink">{item.name}</p>
                           <p className="truncate text-xs text-muted">{item.description}</p>
+                          {item.weight > 0 && (
+                            <p className="text-[11px] text-muted/70">{formatWeight(item.weight)} lb</p>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <span className={cn("text-sm font-semibold", affordable ? "text-[#e0b84a]" : "text-[#d0566a]")}>
@@ -130,6 +142,11 @@ export function ShopModal({ campaignId, onClose }: { campaignId: number; onClose
                   <span className="truncate text-sm text-ink">
                     {item.name}
                     {item.quantity > 1 && <span className="ml-1 text-xs text-muted">x{item.quantity}</span>}
+                    {typeof item.weight === "number" && item.weight > 0 && (
+                      <span className="ml-1 text-xs text-muted">
+                        {formatWeight(item.weight * item.quantity)} lb
+                      </span>
+                    )}
                   </span>
                   <div className="flex items-center gap-1">
                     {equippable.has(item.name) && (

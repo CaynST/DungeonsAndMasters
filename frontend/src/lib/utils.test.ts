@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { abilityModifier, formatModifier, hpPercent } from "@/lib/utils";
+import { abilityModifier, formatModifier, formatWeight, hpPercent } from "@/lib/utils";
 
 describe("utils", () => {
   it("computes ability modifiers", () => {
@@ -20,5 +20,13 @@ describe("utils", () => {
     expect(hpPercent(-5, 20)).toBe(0);
     expect(hpPercent(40, 20)).toBe(100);
     expect(hpPercent(1, 0)).toBe(0);
+  });
+
+  it("formats weights without trailing decimals", () => {
+    expect(formatWeight(0)).toBe("0");
+    expect(formatWeight(3)).toBe("3");
+    expect(formatWeight(22.5)).toBe("22.5");
+    expect(formatWeight(0.05)).toBe("0.05");
+    expect(formatWeight(10.456)).toBe("10.46");
   });
 });
