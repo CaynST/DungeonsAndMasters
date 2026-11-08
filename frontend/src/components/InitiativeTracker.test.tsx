@@ -17,6 +17,7 @@ const entities: GameEntity[] = [
     ac: 16,
     speed: 6,
     alive: true,
+    portrait: "/images/heroes/kael.png",
     data: {},
   },
   {
@@ -60,5 +61,11 @@ describe("InitiativeTracker", () => {
   it("highlights the current participant", () => {
     render(<InitiativeTracker combat={combat} entities={entities} />);
     expect(screen.getByText(/Turno de/)).toBeInTheDocument();
+  });
+
+  it("shows the entity portrait with an initials fallback", () => {
+    const { container } = render(<InitiativeTracker combat={combat} entities={entities} />);
+    expect(container.querySelector('img[src="/images/heroes/kael.png"]')).not.toBeNull();
+    expect(screen.getByText("G")).toBeInTheDocument();
   });
 });

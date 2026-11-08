@@ -6,6 +6,7 @@ import { api, clearSession, getStoredUser } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { AbilityScore } from "@/components/ui/AbilityScore";
+import { Avatar } from "@/components/ui/Avatar";
 import { HealthBar } from "@/components/ui/HealthBar";
 import { CampaignCard } from "@/components/campaign/CampaignCard";
 import { abilityModifier, cn } from "@/lib/utils";
@@ -315,21 +316,12 @@ function HeroCard({
         }}
       >
         <div className="flex h-full items-center justify-center">
-          {character.portrait ? (
-            <img
-              src={character.portrait}
-              alt={character.name}
-              className="h-20 w-20 rounded-full border-2 object-cover"
-              style={{ borderColor: character.color ?? "#C9A227" }}
-            />
-          ) : (
-            <span
-              className="title-display flex h-16 w-16 items-center justify-center rounded-full border text-2xl font-bold"
-              style={{ borderColor: character.color, color: character.color }}
-            >
-              {character.name.charAt(0)}
-            </span>
-          )}
+          <Avatar
+            name={character.name}
+            src={character.portrait}
+            color={character.color}
+            size="xl"
+          />
         </div>
       </div>
       <div className="space-y-3 p-4">

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Users, MapPinned } from "lucide-react";
 import type { Campaign } from "@/types/game";
 import { Badge } from "@/components/ui/Badge";
+import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -30,6 +31,14 @@ export function CampaignCard({ campaign, className }: Props) {
         <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent" />
         <div className="absolute left-3 top-3">
           <Badge tone={statusTone}>{statusLabel}</Badge>
+        </div>
+        <div className="absolute right-3 top-3" title={campaign.dmName}>
+          <Avatar
+            name={campaign.dmName}
+            src={campaign.dmAvatar}
+            size="xs"
+            className="shadow-panel"
+          />
         </div>
         <h3 className="title-display absolute bottom-3 left-4 right-4 text-xl font-bold text-parchment text-glow-gold">
           {campaign.name}
