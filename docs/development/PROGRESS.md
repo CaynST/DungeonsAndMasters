@@ -1,5 +1,54 @@
 # PROGRESS
 
+## 2026-11-08 — Acciones de combate (R-02/R-03)
+
+**Objetivo:** cerrar R-02/R-03 con acciones reales, verificables y sin inventar un motor de
+reacciones completo.
+
+**Acciones**
+- Nuevas acciones `HELP`, `HIDE`, `READY`, `SEARCH`, `USE_OBJECT` e `INTERACT` en `PlayerAction`,
+  despachadas por `GameService`.
+- **Ayudar**: aliado vivo a 1 casilla; `helpAdvantage` + `helpedBy` en el aliado. `CombatService`
+  consume la bandera en el siguiente ataque y solo aplica ventaja si el objetivo está a 5 pies del
+  ayudante.
+- **Ocultarse**: falla con un enemigo vivo adyacente; marca `hidden` y da ventaja al siguiente
+  ataque. **Buscar**: Percepción/Investigación con `CheckResolver`, consume la acción y registra
+  `SEARCH`. **Usar objeto**: objetos no-poción del inventario con efecto descriptivo acotado;
+  las pociones siguen por `USE_ITEM`.
+- **Preparado**: consume la acción y marca `readied`. Si un enemigo entra en el alcance, el jugador
+  ataca con su reacción; la bandera expira al inicio de su siguiente turno.
+- **R-02**: `INTERACT` gratuita una vez por turno, sin coste de acción, y `opportunityAttacks`
+  simétrico para que los enemigos provoquen ataques de oportunidad de los jugadores con su reacción.
+- `TurnEconomy.reset` reinicia `objectInteractionUsed` y `readied`; `CombatService` limpia
+  `helpAdvantage`, `helpedBy` y `hidden` al comenzar un combate.
+- UI: menú compacto **Acciones** en `ActionBar` (Ayudar, Ocultarse, Prepararse, Buscar ×2, Usar
+  objeto e Interactuar), con indicadores de bandera usada y ancho acotado para móvil.
+
+**Verificación (TDD)**
+- Red inicial: `CombatActionsIntegrationTest` no compilaba por constantes y `readiedAttacks`
+  ausentes.
+- Verde: **11 tests** de `CombatActionsIntegrationTest` (Ayudar con y sin objetivo cerca, Ocultarse,
+  Buscar válido/inválido, Usar objeto/poción/desconocido, Preparado y su disparo/expiración,
+  Interactuar y ataques de oportunidad simétricos/Retirada) y **3** de `TurnEconomyTest`.
+- `CombatActionsIntegrationTest` también cubre que un ataque preparado consume la reacción y que
+  un enemigo Retirado no provoca ataques de oportunidad.
+- `ActionBar.test.tsx`: **5 tests** del menú, Help sin aliado, lista de objetos sin pociones y
+  estados de un solo uso.
+- Backend completo: **261 tests** en verde. Frontend: **47 tests** en verde con
+  `pnpm test --maxWorkers=1 --no-file-parallelism --testTimeout=30000` y `pnpm build` en verde.
+- Nota de comando: la forma literal `pnpm test -- --maxWorkers=1 ... --testTimeout=30000` no
+  aplica el timeout (vitest recibe los flags tras `--` y usa 5 s); con esa forma fallan por timeout
+  tests preexistentes (`Home`, `InitiativeTracker`). Sin el `--` los 47 pasan.
+
+**Commits**
+- `feat(combat): add R-02/R-03 actions and symmetric reactions`
+- `feat(ui): add compact combat actions menu`
+- `docs(development): record R-02/R-03 combat actions`
+
+**Siguiente paso**
+- Reacciones elegibles para conjuros/rasgos, tirada de Sigilo al ocultarse y disparadores genéricos
+  para Preparado (ver `TECH_DEBT.md`).
+
 ## 2026-11-08 — Terreno difícil (R-08) y sorpresa (R-09)
 
 **Objetivo:** cerrar las dos brechas P2 del motor sin tocar el frontend ni inventar UX.

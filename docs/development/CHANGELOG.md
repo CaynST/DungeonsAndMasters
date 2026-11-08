@@ -2,6 +2,13 @@
 
 ## 2026-11-08
 
+- **D-35** `feat(combat)` — R-02/R-03: acciones **Ayudar**, **Ocultarse**, **Preparado**,
+  **Buscar** y **Usar objeto**; interacción gratuita `INTERACT` una vez por turno; ataques de
+  oportunidad del jugador simétricos a los enemigos; `TurnEconomy` reinicia interacción y
+  `readied`. `CombatService` consume las banderas de un solo uso y los ataques preparados al entrar
+  un enemigo en alcance. UI compacta "Acciones" en `ActionBar` con estado de cada bandera y sin
+  romper el layout móvil. Aproximaciones documentadas en `DECISIONS.md` (ADR-017) y `TECH_DEBT.md`.
+
 - **D-34** `feat(campaigns)` — Listado paginado/filtrable: `GET /api/campaigns/page` devuelve
   `CampaignPage` con página, tamaño, estado y metadatos; el endpoint legacy conserva el array. La
   Home pagina de 6 en 6 con filtros Todas/En curso/En lobby/Completadas. Sin borrar campañas.

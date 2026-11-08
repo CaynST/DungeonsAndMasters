@@ -157,3 +157,34 @@ los consumidores actuales); o añadir un endpoint dedicado manteniendo el array 
 array y los parámetros de paginación se validan (página ≥ 0, tamaño 1-100, estado conocido).
 **Consecuencia:** la Home pagina y filtra en el servidor sin borrar datos y los clientes antiguos
 siguen funcionando. El coste es un endpoint adicional y dos rutas que deben mantenerse alineadas.
+
+## ADR-017 — Acciones R-02/R-03: banderas de un solo uso y Preparado mínimo
+**Contexto:** faltaban Ayudar, Ocultarse, Preparado, Buscar, Usar objeto y la interacción gratuita;
+también faltaba el ataque de oportunidad del jugador. Un modelo completo de disparadores de
+reacción (elegir disparador y respuesta, ventanas de reacción, expiración exacta) sería un
+subsistema nuevo y ambiguo para el alcance del prototipo.
+**Alternativas:** (a) implementar un motor de disparadores genérico; (b) dejar Preparado como
+bandera sin efecto; (c) aproximación acotada y documentada.
+**Decisión:** (b+) aproximación acotada:
+- **Ayudar**: consume la acción, exige un aliado vivo a 1 casilla y guarda `helpAdvantage` +
+  `helpedBy` en el aliado. `CombatService` consume la bandera en el siguiente ataque y solo aplica
+  ventaja si el objetivo está a 1 casilla del ayudante.
+- **Ocultarse**: consume la acción; falla si hay un enemigo vivo adyacente. Marca `hidden` y da
+  ventaja al siguiente ataque (sin tirada de Sigilo).
+- **Preparado**: consume la acción y marca `readied`. Si un enemigo entra en el alcance de un
+  jugador preparado, este hace un ataque cuerpo a cuerpo con su reacción, consumiendo `readied` y
+  `reactionUsed`. La bandera expira al inicio del siguiente turno del jugador vía
+  `TurnEconomy.reset`.
+- **Buscar**: consume la acción, resuelve Percepción o Investigación con `CheckResolver` y registra
+  el evento `SEARCH`.
+- **Usar objeto**: consume la acción y usa un objeto no-poción del inventario del personaje con un
+  efecto descriptivo acotado (antorcha, cuerda, raciones, herramientas, símbolo sagrado). Las
+  pociones siguen por `USE_ITEM` para no duplicar la curación.
+- **Interactuar**: nueva acción `INTERACT`, gratuita una vez por turno (`objectInteractionUsed`),
+  sin consumir la acción; registra el evento y se reinicia en `TurnEconomy.reset`.
+- **Ataque de oportunidad del jugador**: `opportunityAttacks` es simétrico; un enemigo que sale del
+  alcance de un jugador provoca un ataque cuerpo a cuerpo con la reacción del jugador.
+**Consecuencia:** las acciones son testeables y utilizables desde la UI sin inventar un motor de
+reacciones. Quedan documentadas en `TECH_DEBT.md` las aproximaciones: Ocultarse sin Sigilo,
+Preparado limitado a "atacar al entrar en alcance", la ventaja de Ayudar sin expiración temporal
+exacta y efectos de objeto descriptivos.
