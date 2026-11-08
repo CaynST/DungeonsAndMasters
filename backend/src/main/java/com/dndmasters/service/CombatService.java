@@ -15,6 +15,7 @@ import com.dndmasters.engine.combat.ConditionRules;
 import com.dndmasters.engine.combat.ConditionSet;
 import com.dndmasters.engine.combat.Conditions;
 import com.dndmasters.engine.combat.DeathSaveRules;
+import com.dndmasters.engine.combat.SurpriseRules;
 import com.dndmasters.engine.combat.TurnEconomy;
 import com.dndmasters.engine.combat.TurnManager;
 import com.dndmasters.engine.dice.DiceEngine;
@@ -110,6 +111,8 @@ public class CombatService {
                 "¡Comienza el combate! Orden de iniciativa: " + String.join(", ",
                         state.getParticipants().stream().map(p -> p.getName() + " (" + p.getInitiative() + ")").toList()),
                 Map.of("order", order));
+        // A surprised creature loses its first turn, even if combat opens on that turn.
+        skipSurprisedAtStart(campaignId, state);
         events.record(campaignId, sceneId, "TURN_CHANGED", state.currentParticipant().getName(),
                 "Turno de " + state.currentParticipant().getName() + " (ronda " + state.getRound() + ").",
                 Map.of("entityId", state.currentParticipant().getEntityId(), "round", state.getRound()));
@@ -166,7 +169,7 @@ public class CombatService {
     /** Advances the turn pointer and records the change. */
     @Transactional
     public CombatParticipant advanceTurn(Long campaignId, CombatState state) {
-        CombatParticipant next = turns.advance(state);
+        CombatParticipant next = advanceSkippingSurprise(campaignId, state);
         if (next != null) {
             persist(state);
             campaigns.startTurn(campaignId, next.getEntityId());
@@ -175,6 +178,43 @@ public class CombatService {
                     Map.of("entityId", next.getEntityId(), "round", state.getRound()));
         }
         return next;
+    }
+
+    /** Advances past any surprised participants, consuming their flag exactly once. */
+    private CombatParticipant advanceSkippingSurprise(Long campaignId, CombatState state) {
+        CombatParticipant next = turns.advance(state);
+        int guard = 0;
+        while (next != null && guard++ <= state.getParticipants().size()
+                && consumeSurprise(campaignId, state, next)) {
+            next = turns.advance(state);
+        }
+        return next;
+    }
+
+    /** Skips surprised creatures that would act when combat opens. */
+    private void skipSurprisedAtStart(Long campaignId, CombatState state) {
+        int guard = 0;
+        while (guard++ <= state.getParticipants().size()
+                && consumeSurprise(campaignId, state, state.currentParticipant())) {
+            turns.advance(state);
+        }
+        persist(state);
+    }
+
+    /** Clears the entity's surprise flag, records the lost turn and reports the skip. */
+    private boolean consumeSurprise(Long campaignId, CombatState state, CombatParticipant participant) {
+        if (participant == null) {
+            return false;
+        }
+        GameEntity entity = campaigns.entity(participant.getEntityId()).orElse(null);
+        if (entity == null || !SurpriseRules.consumeSurprised(entity)) {
+            return false;
+        }
+        campaigns.saveEntity(entity);
+        events.record(campaignId, state.getSceneId(), "SURPRISED", entity.getName(),
+                entity.getName() + " está sorprendido y pierde su turno.",
+                Map.of("entityId", entity.getId()));
+        return true;
     }
 
     /**
@@ -193,9 +233,8 @@ public class CombatService {
             GameEntity actor = campaigns.entity(current.getEntityId()).orElse(null);
             if (actor == null || !actor.isAlive()) {
                 turns.markDead(state, current.getEntityId());
-                turns.advance(state);
+                CombatParticipant next = advanceSkippingSurprise(campaignId, state);
                 persist(state);
-                CombatParticipant next = state.currentParticipant();
                 if (next != null) {
                     campaigns.startTurn(campaignId, next.getEntityId());
                 }
@@ -209,7 +248,7 @@ public class CombatService {
                 finish(campaignId, state);
                 break;
             }
-            CombatParticipant next = turns.advance(state);
+            CombatParticipant next = advanceSkippingSurprise(campaignId, state);
             persist(state);
             if (next != null) {
                 campaigns.startTurn(campaignId, next.getEntityId());
