@@ -48,6 +48,9 @@ public class MapEntity {
     @Column(name = "decor_json", nullable = false)
     private String decorJson = "[]";
 
+    @Column(name = "difficult_terrain_json", nullable = false)
+    private String difficultTerrainJson = "[]";
+
     @Column(nullable = false)
     private String theme = "crypt";
 }

@@ -42,7 +42,9 @@ public class MovementValidator {
             if (!step.equals(current) && blocked.contains(step)) {
                 return MoveResult.rejected("Cell " + step + " is occupied");
             }
-            cost++;
+            // Difficult terrain doubles the cost of the cell. All steps (including diagonals)
+            // cost one by default in this engine, so a diagonal also costs two here.
+            cost += map.isDifficultTerrain(step) ? 2 : 1;
             current = step;
         }
         if (cost > entity.getSpeed()) {

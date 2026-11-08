@@ -23,6 +23,7 @@ public class MapMapper {
         m.setDoors(Json.readList(e.getDoorsJson(), Door.class));
         m.setObstacles(Json.readList(e.getObstaclesJson(), Cell.class));
         m.setDecor(Json.readList(e.getDecorJson(), Decor.class));
+        m.setDifficultTerrain(Json.readList(e.getDifficultTerrainJson(), Cell.class));
         return m;
     }
 
@@ -39,6 +40,7 @@ public class MapMapper {
         e.setDoorsJson(Json.write(m.getDoors()));
         e.setObstaclesJson(Json.write(m.getObstacles()));
         e.setDecorJson(Json.write(m.getDecor()));
+        e.setDifficultTerrainJson(Json.write(m.getDifficultTerrain()));
         return e;
     }
 }

@@ -105,4 +105,46 @@ class MovementValidatorTest {
         MoveResult result = validator.validateTo(map, entity, new Cell(4, 4), Set.of());
         assertThat(result.ok()).isTrue();
     }
+
+    @Test
+    void chargesTwoForEnteringDifficultTerrain() {
+        clearMapFeatures();
+        map.setDifficultTerrain(List.of(new Cell(1, 1)));
+
+        MoveResult result = validator.validate(map, entity,
+                List.of(new Cell(1, 0), new Cell(1, 1)), Set.of());
+
+        assertThat(result.ok()).isTrue();
+        // One normal step plus a difficult-terrain step that costs double.
+        assertThat(result.cost()).isEqualTo(3);
+    }
+
+    @Test
+    void chargesTwoForEnteringDifficultTerrainDiagonally() {
+        clearMapFeatures();
+        map.setDifficultTerrain(List.of(new Cell(1, 1)));
+
+        MoveResult result = validator.validateTo(map, entity, new Cell(1, 1), Set.of());
+
+        assertThat(result.ok()).isTrue();
+        // Diagonals pay the same cell cost in this engine, doubled by the terrain.
+        assertThat(result.cost()).isEqualTo(2);
+    }
+
+    @Test
+    void rejectsMoveIntoDifficultTerrainWhenItExceedsSpeed() {
+        clearMapFeatures();
+        entity.setSpeed(1);
+        map.setDifficultTerrain(List.of(new Cell(1, 0)));
+
+        MoveResult result = validator.validateTo(map, entity, new Cell(1, 0), Set.of());
+
+        assertThat(result.ok()).isFalse();
+        assertThat(result.reason()).contains("Not enough movement");
+    }
+
+    private void clearMapFeatures() {
+        map.setWalls(List.of());
+        map.setObstacles(List.of());
+    }
 }

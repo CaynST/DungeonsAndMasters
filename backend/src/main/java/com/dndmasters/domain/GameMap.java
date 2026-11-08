@@ -23,6 +23,8 @@ public class GameMap {
     private List<Door> doors = new ArrayList<>();
     private List<Cell> obstacles = new ArrayList<>();
     private List<Decor> decor = new ArrayList<>();
+    /** Cells that cost twice the normal movement to enter (PHB difficult terrain). */
+    private List<Cell> difficultTerrain = new ArrayList<>();
 
     public boolean inBounds(Cell c) {
         return c.x() >= 0 && c.y() >= 0 && c.x() < width && c.y() < height;
@@ -34,6 +36,11 @@ public class GameMap {
 
     public boolean isObstacle(Cell c) {
         return obstacles.contains(c);
+    }
+
+    /** True when entering the cell costs double movement. */
+    public boolean isDifficultTerrain(Cell c) {
+        return difficultTerrain.contains(c);
     }
 
     public Door doorAt(Cell c) {
