@@ -51,6 +51,7 @@ describe("Chronicle states", () => {
     renderChronicle();
 
     expect(await screen.findByText("La crónica está en blanco")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Crónica de la aventura" })).toBeInTheDocument();
     expect(screen.getByText("0 entradas")).toBeInTheDocument();
   });
 

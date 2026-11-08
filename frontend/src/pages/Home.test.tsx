@@ -6,9 +6,10 @@ import { MemoryRouter } from "react-router-dom";
 import { Home } from "@/pages/Home";
 import type { Campaign, CampaignPage, CampaignStatus } from "@/types/game";
 
-const { campaignsPageMock, charactersMock } = vi.hoisted(() => ({
+const { campaignsPageMock, charactersMock, createCampaignMock } = vi.hoisted(() => ({
   campaignsPageMock: vi.fn(),
   charactersMock: vi.fn(),
+  createCampaignMock: vi.fn(),
 }));
 
 vi.mock("@/lib/api", async (importOriginal) => {
@@ -20,6 +21,7 @@ vi.mock("@/lib/api", async (importOriginal) => {
       ...actual.api,
       campaignsPage: campaignsPageMock,
       characters: charactersMock,
+      createCampaign: createCampaignMock,
     },
   };
 });
@@ -77,6 +79,7 @@ describe("Home campaign browsing", () => {
   beforeEach(() => {
     campaignsPageMock.mockReset();
     charactersMock.mockReset();
+    createCampaignMock.mockReset();
     charactersMock.mockResolvedValue([]);
   });
 
@@ -101,6 +104,21 @@ describe("Home campaign browsing", () => {
     expect(await screen.findByText("Campaña en curso")).toBeInTheDocument();
     await waitFor(() =>
       expect(campaignsPageMock).toHaveBeenCalledWith({ page: 0, size: 6, status: "ACTIVE" }),
+    );
+  });
+
+  it("creates a campaign from the keyboard inside the create form", async () => {
+    campaignsPageMock.mockResolvedValue(page([campaign(1, "Campaña en lobby", "LOBBY")]));
+    createCampaignMock.mockResolvedValue(campaign(9, "Nueva Mesa", "LOBBY"));
+
+    renderHome();
+
+    await screen.findAllByText("Campaña en lobby");
+    await userEvent.click(screen.getByRole("button", { name: "Crear campaña" }));
+    await userEvent.type(screen.getByLabelText("Nombre de la campaña"), "Nueva Mesa{Enter}");
+
+    await waitFor(() =>
+      expect(createCampaignMock).toHaveBeenCalledWith("Nueva Mesa", "dnd-5e-2014"),
     );
   });
 

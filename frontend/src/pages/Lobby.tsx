@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -289,7 +289,7 @@ export function Lobby() {
                       Comenzar aventura
                     </Button>
                     {start.isError && (
-                      <p className="text-xs text-crimson-soft">
+                      <p role="alert" className="text-xs text-crimson-soft">
                         No se pudo comenzar la aventura. Inténtalo de nuevo.
                       </p>
                     )}
@@ -318,7 +318,7 @@ export function Lobby() {
                       Unirme a la partida
                     </Button>
                     {join.isError && (
-                      <p className="text-xs text-crimson-soft">
+                      <p role="alert" className="text-xs text-crimson-soft">
                         No se pudo unir el héroe a la campaña. Inténtalo de nuevo.
                       </p>
                     )}
@@ -428,6 +428,9 @@ function LobbySkeleton() {
 }
 
 function Fireflies() {
+  const reduceMotion = useReducedMotion();
+  if (reduceMotion) return null;
+
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
       {Array.from({ length: 14 }).map((_, index) => (

@@ -45,7 +45,7 @@ export function CharacterSheet({
           {character.name.charAt(0)}
         </span>
         <div className="min-w-0">
-          <h3 className="title-display truncate text-lg font-semibold text-parchment">{character.name}</h3>
+          <h2 className="title-display truncate text-lg font-semibold text-parchment">{character.name}</h2>
           <p className="text-[11px] uppercase tracking-wider text-muted">
             {character.race} · {character.cls}
             {typeof character.creationData?.subclass === "string" && ` · ${character.creationData.subclass}`}
@@ -61,7 +61,9 @@ export function CharacterSheet({
       <div className="my-3 grid grid-cols-3 items-center rounded-lg border border-parchment/10 bg-black/25 py-2 text-center">
         <div>
           <p className="text-[10px] uppercase tracking-widest text-muted">CA</p>
-          <p className="title-display text-lg text-ink">🛡 {character.ac}</p>
+          <p className="title-display text-lg text-ink">
+            <span aria-hidden="true">🛡</span> {character.ac}
+          </p>
         </div>
         <div className="border-x border-parchment/10">
           <p className="text-[10px] uppercase tracking-widest text-muted">Velocidad</p>
@@ -95,7 +97,7 @@ export function CharacterSheet({
         <>
           <div className="mt-4">
             <p className="mb-2 flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted">
-              <Swords className="h-3.5 w-3.5 text-crimson-soft" /> Ataques
+              <Swords className="h-3.5 w-3.5 text-crimson-soft" aria-hidden="true" /> Ataques
             </p>
             <ul className="space-y-1">
               {character.attacks.map((attack) => (
@@ -116,7 +118,7 @@ export function CharacterSheet({
           {hasProficiencies && (
             <div className="mt-4">
               <p className="mb-2 flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted">
-                <BookOpen className="h-3.5 w-3.5 text-arcane-soft" /> Idiomas y competencias
+                <BookOpen className="h-3.5 w-3.5 text-arcane-soft" aria-hidden="true" /> Idiomas y competencias
               </p>
               <div className="space-y-1.5">
                 <ProficiencyGroup label="Idiomas" items={languages} />
@@ -129,7 +131,7 @@ export function CharacterSheet({
 
           <div className="mt-4">
             <p className="mb-2 flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted">
-              <Package className="h-3.5 w-3.5 text-gold" /> Inventario
+              <Package className="h-3.5 w-3.5 text-gold" aria-hidden="true" /> Inventario
             </p>
             <div className="flex flex-wrap gap-1.5">
               {character.inventory.length === 0 && <span className="text-xs text-muted">Vacío</span>}
@@ -148,8 +150,10 @@ export function CharacterSheet({
                     )}
                     {consumable && onUseItem && (
                       <button
+                        type="button"
+                        aria-label={`Usar ${item.name}`}
                         onClick={() => onUseItem(item.name)}
-                        className="rounded border border-[#3e9c6e]/40 px-1.5 py-0.5 text-[10px] text-[#6fd3a0] transition hover:bg-[#3e9c6e]/15"
+                        className="inline-flex min-h-6 min-w-6 items-center justify-center rounded border border-[#3e9c6e]/40 px-2 py-1 text-[10px] text-[#6fd3a0] transition hover:bg-[#3e9c6e]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-soft/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1e160f]"
                       >
                         Usar
                       </button>
