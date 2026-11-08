@@ -2,6 +2,9 @@ import type { DiceRoll } from "@/types/game";
 
 export type DiceOutcome = "crit" | "fail" | "max" | "normal";
 
+/** Dice offered by the quick-roll menu, in the order the tray displays them. */
+export const DICE_SIDES = [4, 6, 8, 10, 12, 20, 100] as const;
+
 /** Extracts the number of sides from the first die in an expression like "2d6+3". */
 export function primarySides(expression: string | undefined): number {
   const match = /(\d*)d(\d+)/i.exec(expression ?? "");
@@ -16,7 +19,8 @@ export function outcomeOf(roll: DiceRoll | null | undefined): DiceOutcome {
   const rolls = roll?.rolls ?? [];
   if (roll?.natural20) return "crit";
   if (roll?.natural1) return "fail";
-  const allMax = rolls.length > 0 && rolls.every((value) => value === 20);
+  const sides = primarySides(roll?.expression);
+  const allMax = rolls.length > 0 && rolls.every((value) => value === sides);
   return allMax ? "max" : "normal";
 }
 
