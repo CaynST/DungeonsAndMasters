@@ -72,7 +72,13 @@ class CharacterCreationApiTest {
                 .andExpect(jsonPath("$.stats.constitution").value(16))
                 // fighter d10 + CON(+3) = 13
                 .andExpect(jsonPath("$.maxHp").value(13))
-                .andExpect(jsonPath("$.ac").value(16));
+                .andExpect(jsonPath("$.ac").value(16))
+                // R-13: derived languages and proficiencies are persisted with the character
+                .andExpect(jsonPath("$.creationData.languages[0]").value("Común"))
+                .andExpect(jsonPath("$.creationData.languages[1]").value("Enano"))
+                .andExpect(jsonPath("$.creationData.armorProficiencies[0]").value("Todas las armaduras"))
+                .andExpect(jsonPath("$.creationData.weaponProficiencies[0]").value("Armas simples"))
+                .andExpect(jsonPath("$.creationData.toolProficiencies[0]").value("Set de juego (a elección)"));
     }
 
     @Test
