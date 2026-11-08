@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -6,7 +6,10 @@ import { MemoryRouter } from "react-router-dom";
 import { Home } from "@/pages/Home";
 import type { Campaign, CampaignPage, CampaignStatus } from "@/types/game";
 
-const { campaignsPageMock } = vi.hoisted(() => ({ campaignsPageMock: vi.fn() }));
+const { campaignsPageMock, charactersMock } = vi.hoisted(() => ({
+  campaignsPageMock: vi.fn(),
+  charactersMock: vi.fn(),
+}));
 
 vi.mock("@/lib/api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api")>();
@@ -16,7 +19,7 @@ vi.mock("@/lib/api", async (importOriginal) => {
     api: {
       ...actual.api,
       campaignsPage: campaignsPageMock,
-      characters: vi.fn().mockResolvedValue([]),
+      characters: charactersMock,
     },
   };
 });
@@ -47,6 +50,18 @@ function page(content: Campaign[], pageNumber = 0): CampaignPage {
   };
 }
 
+function emptyPage(): CampaignPage {
+  return {
+    content: [],
+    page: 0,
+    size: 6,
+    totalElements: 0,
+    totalPages: 0,
+    first: true,
+    last: true,
+  };
+}
+
 function renderHome() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -59,6 +74,12 @@ function renderHome() {
 }
 
 describe("Home campaign browsing", () => {
+  beforeEach(() => {
+    campaignsPageMock.mockReset();
+    charactersMock.mockReset();
+    charactersMock.mockResolvedValue([]);
+  });
+
   it("requests the first page and filters by status", async () => {
     campaignsPageMock.mockImplementation(({ status }: { status?: string }) =>
       Promise.resolve(
@@ -104,5 +125,30 @@ describe("Home campaign browsing", () => {
     await waitFor(() =>
       expect(campaignsPageMock).toHaveBeenCalledWith({ page: 1, size: 6, status: undefined }),
     );
+  });
+
+  it("guides the user when there are no campaigns or heroes yet", async () => {
+    campaignsPageMock.mockResolvedValue(emptyPage());
+
+    renderHome();
+
+    expect(await screen.findByText("La mesa está vacía")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Crear la primera campaña/ })).toBeInTheDocument();
+    expect(await screen.findByText("Aún no has forjado ningún héroe")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Crear mi primer héroe/ })).toBeInTheDocument();
+  });
+
+  it("offers a way back when a status filter has no results", async () => {
+    campaignsPageMock.mockResolvedValue(emptyPage());
+
+    renderHome();
+
+    expect(await screen.findByText("La mesa está vacía")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "En curso" }));
+
+    expect(await screen.findByText("Sin campañas en este estado")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /Ver todas/ }));
+
+    expect(await screen.findByText("La mesa está vacía")).toBeInTheDocument();
   });
 });
