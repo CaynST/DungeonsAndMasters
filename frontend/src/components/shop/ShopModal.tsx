@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
@@ -16,6 +17,54 @@ const KIND_LABELS: Record<string, string> = {
 export function ShopModal({ campaignId, onClose }: { campaignId: number; onClose: () => void }) {
   const queryClient = useQueryClient();
   const shop = useQuery({ queryKey: ["shop", campaignId], queryFn: () => api.shop(campaignId) });
+  const dialogRef = useRef<HTMLDivElement>(null);
+  // Keep the latest callback without re-running the focus-trap effect on every parent render.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const dialog = dialogRef.current;
+    dialog?.focus();
+
+    const focusableSelector =
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const focusables = () =>
+      Array.from(dialog?.querySelectorAll<HTMLElement>(focusableSelector) ?? []);
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key !== "Tab" || !dialog) return;
+
+      const items = focusables();
+      if (items.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previouslyFocused?.focus?.();
+    };
+  }, []);
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["shop", campaignId] });
@@ -47,12 +96,19 @@ export function ShopModal({ campaignId, onClose }: { campaignId: number; onClose
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
       <div
-        className="panel-raised flex max-h-[85vh] w-[min(94vw,820px)] flex-col overflow-hidden"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="shop-title"
+        tabIndex={-1}
+        className="panel-raised flex max-h-[85vh] w-[min(94vw,820px)] flex-col overflow-hidden focus:outline-none"
         onClick={(event) => event.stopPropagation()}
       >
         <header className="flex items-center justify-between border-b border-[#2b2118] px-5 py-3">
           <div>
-            <h2 className="title-display text-lg font-semibold text-ink">Mercader</h2>
+            <h2 id="shop-title" className="title-display text-lg font-semibold text-ink">
+              Mercader
+            </h2>
             <p className="text-xs text-muted">
               Oro disponible:{" "}
               <span className="font-semibold text-[#e0b84a]">
@@ -71,11 +127,11 @@ export function ShopModal({ campaignId, onClose }: { campaignId: number; onClose
                   ? `${formatWeight(shop.data.carriedWeight)} / ${shop.data.carryingCapacity} lb`
                   : "—"}
               </span>
-              {shop.data?.encumbered && <span className="ml-2 text-[#d0566a]">Sobrecargado</span>}
+              {shop.data?.encumbered && <span className="ml-2 text-crimson-soft">Sobrecargado</span>}
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
+          <Button variant="ghost" size="sm" type="button" aria-label="Cerrar la tienda" onClick={onClose}>
+            <X className="h-4 w-4" aria-hidden="true" />
           </Button>
         </header>
 
@@ -83,7 +139,7 @@ export function ShopModal({ campaignId, onClose }: { campaignId: number; onClose
           {/* Catalogue */}
           <div className="min-h-0 overflow-y-auto p-4">
             {shop.isLoading && (
-              <p className="flex items-center gap-2 text-sm text-muted">
+              <p role="status" className="flex items-center gap-2 text-sm text-muted">
                 <Spinner /> Abriendo el mercado...
               </p>
             )}
@@ -106,8 +162,9 @@ export function ShopModal({ campaignId, onClose }: { campaignId: number; onClose
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className={cn("text-sm font-semibold", affordable ? "text-[#e0b84a]" : "text-[#d0566a]")}>
+                          <span className={cn("text-sm font-semibold", affordable ? "text-[#e0b84a]" : "text-crimson-soft")}>
                             {item.price} po
+                            {!affordable && <span className="sr-only"> (no asequible)</span>}
                           </span>
                           <Button
                             size="sm"
@@ -174,7 +231,7 @@ export function ShopModal({ campaignId, onClose }: { campaignId: number; onClose
               ))}
             </div>
             {(buy.isError || sell.isError) && (
-              <p className="mt-3 text-xs text-[#d0566a]">
+              <p role="alert" className="mt-3 text-xs text-crimson-soft">
                 {((buy.error || sell.error) as Error)?.message}
               </p>
             )}

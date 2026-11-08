@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ShopModal } from "@/components/shop/ShopModal";
 import { api } from "@/lib/api";
@@ -36,11 +37,11 @@ const shopView: ShopView = {
   inventory: [{ name: "Escudo", description: "+2 CA", icon: "shield", quantity: 1, weight: 6 }],
 };
 
-function renderShop() {
+function renderShop(onClose: () => void = () => {}) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
-      <ShopModal campaignId={1} onClose={() => {}} />
+      <ShopModal campaignId={1} onClose={onClose} />
     </QueryClientProvider>,
   );
 }
@@ -58,6 +59,26 @@ describe("ShopModal", () => {
     expect(screen.getByText("6 lb")).toBeInTheDocument();
     expect(screen.getByText("9 / 150 lb")).toBeInTheDocument();
     expect(screen.queryByText(/Sobrecargado/)).not.toBeInTheDocument();
+  });
+
+  it("is a labelled modal that takes focus and closes with Escape", async () => {
+    const onClose = vi.fn();
+    renderShop(onClose);
+
+    const dialog = await screen.findByRole("dialog", { name: "Mercader" });
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(dialog).toHaveFocus();
+
+    await userEvent.keyboard("{Escape}");
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("offers a named close control", async () => {
+    const onClose = vi.fn();
+    renderShop(onClose);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Cerrar la tienda" }));
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("warns when the character is over capacity", async () => {
