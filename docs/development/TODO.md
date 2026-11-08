@@ -21,9 +21,10 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | R-12 | Trasfondos PHB faltantes: Charlatán, Artista, Artesano gremial, Ermitaño, Forastero, Marinero | P2 | done |
 | R-13 | Competencias de armadura/arma/herramienta e idiomas | P2 | done |
 | R-14 | Descanso corto/largo y dados de golpe | P2 | pending |
-| R-15 | Peso/equipamiento, munición, herramientas | P3 | pending |
+| R-15 | Peso/equipamiento y herramientas: peso por objeto, carga total, capacidad FUE×15 y aviso de sobrecarga en ficha/tienda (sin efecto en velocidad) | P3 | done |
 | R-16 | Ventaja/desventaja expuesta en la UI (el motor ya la soporta) | P2 | done |
 | R-17 | d100 en la mesa de dados | P3 | done |
+| R-18 | Consumo de munición en combate (flechas/virotes) y penalización de carga en el movimiento | P3 | pending |
 
 ## Producto / UX
 
@@ -77,3 +78,4 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-32 | Idiomas y competencias de armadura/arma/herramienta derivados y visibles en la ficha | done |
 | D-33 | `Avatar` reutilizable con retrato local y fallback de iniciales (Home, Lobby, tarjetas e iniciativa) | done |
 | D-34 | Listado paginado/filtrable de campañas y controles en Home sin borrar datos | done |
+| D-35 | Peso de inventario, capacidad de carga, aviso de sobrecarga y herramientas/munición iniciales | done |

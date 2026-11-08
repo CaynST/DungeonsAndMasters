@@ -14,6 +14,7 @@ Deuda consciente del prototipo, ordenada por impacto en la fidelidad con el PHB.
 | R-11 | Hechos Segundo aliento, Furia, Ataque furtivo, Estilo de combate e Inspiración bárdica; faltan Canalizar divinidad, Gran arma/Protección, etc. | Medio | P1 | Rasgos restantes por clase/nivel |
 | R-13 | Idiomas y competencias se muestran pero no se aplican mecánicamente; los personajes anteriores al cambio no tienen los campos en `creationData` | Bajo | P2 | Pruebas de herramienta/idioma y backfill al leer |
 | R-14 | Sin descansos ni dados de golpe | Medio | P2 | Descanso corto/largo en el servicio |
+| R-15 | El peso y la capacidad se muestran, pero la sobrecarga no modifica velocidad ni tiradas; el JSON antiguo sin peso carga como 0 y la munición no se consume | Bajo | P3 | R-18: consumo de munición y penalización de movimiento |
 | U-02 | `Avatar` unificado en Home, Lobby, tarjetas e iniciativa; `CharacterSheet` (otro workstream), `CinematicIntro` y el fallback de `DmPanel` aún dibujan sus propias iniciales | Bajo | P2 | Reutilizar `components/ui/Avatar` cuando se retomen esas pantallas |
 
 Arquitectura: el motor sigue siendo la autoridad; estas deudas se implementan en
