@@ -1,5 +1,19 @@
 # CHANGELOG (desarrollo)
 
+## 2026-11-08
+
+- **D-25** `feat(ui)` — El tablero usa toda el área disponible: se elimina el anillo vacío de una
+  casilla alrededor del mapa y se reducen márgenes/gaps del layout. En móvil/tablet el tablero y la
+  sidebar tienen alturas propias dentro de una columna desplazable, mientras la barra de acciones
+  queda siempre visible; cabecera truncada y menús de conjuros/dados acotados para evitar overflow
+  horizontal.
+
+- **D-26** `feat(ui)` — El registro del DM muestra una insignia **Ventaja** o **Desventaja** en los
+  eventos de ataque, leyendo `advantage` del `dataJson` con tolerancia a payloads corruptos.
+
+- **D-27** `feat(ui)` — **d100** añadido al menú de dados y a la mesa 3D como dado percentil
+  (caras 00–90). El resultado máximo de cualquier dado se clasifica como **MÁXIMO**.
+
 ## 2026-11-05
 
 - **D-24** `feat(rules)` — Inspiración bárdica: acción adicional para dar un **d6** a otro aliado

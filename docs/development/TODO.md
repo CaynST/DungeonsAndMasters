@@ -22,18 +22,18 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | R-13 | Competencias de armadura/arma/herramienta e idiomas | P2 | pending |
 | R-14 | Descanso corto/largo y dados de golpe | P2 | pending |
 | R-15 | Peso/equipamiento, munición, herramientas | P3 | pending |
-| R-16 | Ventaja/desventaja expuesta en la UI (el motor ya la soporta) | P2 | pending |
-| R-17 | d100 en la mesa de dados | P3 | pending |
+| R-16 | Ventaja/desventaja expuesta en la UI (el motor ya la soporta) | P2 | done |
+| R-17 | d100 en la mesa de dados | P3 | done |
 
 ## Producto / UX
 
 | ID | Tarea | Prioridad | Estado |
 |----|-------|-----------|--------|
-| U-01 | Tablero a pantalla completa (hoy queda con márgenes) | P2 | pending |
+| U-01 | Tablero a pantalla completa (hoy queda con márgenes) | P2 | done |
 | U-02 | Retratos ilustrados (hoy son iniciales) | P2 | pending |
 | U-03 | Segunda pasada visual: Home, Lobby, Crónica y estados vacíos | P2 | pending |
 | U-04 | Revisión de accesibilidad (contraste AA, foco, aria en iconos) | P2 | pending |
-| U-05 | Responsive del juego (sidebar fija, barra horizontal) | P2 | pending |
+| U-05 | Responsive del juego (sidebar fija, barra horizontal) | P2 | done |
 | U-06 | Limpiar campañas de prueba de la Home / paginación | P3 | pending |
 | U-07 | Generación dinámica de escenas por el DM a mitad de aventura | P2 | pending |
 | U-08 | Modo host autoalojado: servir frontend desde Spring, SPA fallback, enlace/QR y enlace de campaña | P2 | pending |
@@ -67,3 +67,6 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-22 | Componentes materiales de conjuros: foco/bolsa, metadata V/S/M y UI | done |
 | D-23 | Estilo de combate: Defensa, Arquería y Duelo (+ selección en creación) | done |
 | D-24 | Inspiración bárdica: d6, usos por CAR, acción adicional y uso en tiradas | done |
+| D-25 | Tablero sin anillo vacío + layout del juego adaptativo (móvil/tablet) | done |
+| D-26 | Ventaja/desventaja visible en el registro de ataques del DM | done |
+| D-27 | d100 en el menú de dados y en la mesa 3D | done |
