@@ -1,15 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, LogOut, Plus, Scroll, Shield, Swords, Trash2, User } from "lucide-react";
+import { Camera, ChevronLeft, ChevronRight, LogOut, Plus, Scroll, Shield, Swords, Trash2, User } from "lucide-react";
 import { api, clearSession, getStoredUser } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { AbilityScore } from "@/components/ui/AbilityScore";
 import { HealthBar } from "@/components/ui/HealthBar";
 import { CampaignCard } from "@/components/campaign/CampaignCard";
-import { abilityModifier } from "@/lib/utils";
-import type { PlayerCharacter } from "@/types/game";
+import { abilityModifier, cn } from "@/lib/utils";
+import type { CampaignStatusFilter, PlayerCharacter } from "@/types/game";
+
+const CAMPAIGN_PAGE_SIZE = 6;
+const CAMPAIGN_FILTERS: { value: CampaignStatusFilter; label: string }[] = [
+  { value: "ALL", label: "Todas" },
+  { value: "ACTIVE", label: "En curso" },
+  { value: "LOBBY", label: "En lobby" },
+  { value: "FINISHED", label: "Completadas" },
+];
 
 export function Home() {
   const navigate = useNavigate();
@@ -18,8 +26,18 @@ export function Home() {
   const [newName, setNewName] = useState("");
   const [newEdition, setNewEdition] = useState("dnd-5e-2014");
   const [showCreate, setShowCreate] = useState(false);
+  const [campaignPage, setCampaignPage] = useState(0);
+  const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("ALL");
 
-  const campaigns = useQuery({ queryKey: ["campaigns"], queryFn: api.campaigns });
+  const campaigns = useQuery({
+    queryKey: ["campaigns", statusFilter, campaignPage],
+    queryFn: () =>
+      api.campaignsPage({
+        page: campaignPage,
+        size: CAMPAIGN_PAGE_SIZE,
+        status: statusFilter === "ALL" ? undefined : statusFilter,
+      }),
+  });
   const characters = useQuery({ queryKey: ["characters"], queryFn: api.characters });
 
   const createCampaign = useMutation({
@@ -70,9 +88,9 @@ export function Home() {
       </header>
 
       {/* Featured campaign: the centrepiece of the table */}
-      {campaigns.data && campaigns.data.length > 0 && (
+      {statusFilter === "ALL" && campaigns.data && campaigns.data.content.length > 0 && (
         (() => {
-          const featured = campaigns.data.find((c) => c.status === "ACTIVE") ?? campaigns.data[0];
+          const featured = campaigns.data.content.find((c) => c.status === "ACTIVE") ?? campaigns.data.content[0];
           return (
             <section className="relative mb-10 overflow-hidden rounded-xl border border-[#4a3520]">
               <img
@@ -102,13 +120,40 @@ export function Home() {
       )}
 
       <section className="mb-10">
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="title-display flex items-center gap-2 text-xl text-parchment">
             <Scroll className="h-5 w-5 text-gold" /> Campañas
           </h2>
           <Button variant="primary" size="sm" onClick={() => setShowCreate((value) => !value)}>
             <Plus className="h-4 w-4" /> Crear campaña
           </Button>
+        </div>
+
+        <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filtrar campañas por estado">
+          {CAMPAIGN_FILTERS.map((filter) => (
+            <button
+              key={filter.value}
+              type="button"
+              aria-pressed={statusFilter === filter.value}
+              onClick={() => {
+                setStatusFilter(filter.value);
+                setCampaignPage(0);
+              }}
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-medium transition",
+                statusFilter === filter.value
+                  ? "border-gold/50 bg-gold/15 text-gold-soft"
+                  : "border-parchment/10 bg-black/20 text-muted hover:border-gold/30 hover:text-ink",
+              )}
+            >
+              {filter.label}
+            </button>
+          ))}
+          {campaigns.data && (
+            <span className="ml-auto text-xs text-muted">
+              {campaigns.data.totalElements} campaña{campaigns.data.totalElements === 1 ? "" : "s"} en total
+            </span>
+          )}
         </div>
 
         {showCreate && (
@@ -139,15 +184,42 @@ export function Home() {
 
         {campaigns.isLoading ? (
           <SkeletonRow />
-        ) : campaigns.data && campaigns.data.length > 0 ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {campaigns.data.map((campaign) => (
-              <CampaignCard key={campaign.id} campaign={campaign} />
-            ))}
-          </div>
+        ) : campaigns.data && campaigns.data.content.length > 0 ? (
+          <>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {campaigns.data.content.map((campaign) => (
+                <CampaignCard key={campaign.id} campaign={campaign} />
+              ))}
+            </div>
+            {campaigns.data.totalPages > 1 && (
+              <div className="mt-5 flex items-center justify-between gap-3">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={campaigns.data.first}
+                  onClick={() => setCampaignPage((page) => Math.max(0, page - 1))}
+                >
+                  <ChevronLeft className="h-4 w-4" /> Anterior
+                </Button>
+                <span className="text-xs text-muted">
+                  Página {campaigns.data.page + 1} de {campaigns.data.totalPages}
+                </span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={campaigns.data.last}
+                  onClick={() => setCampaignPage((page) => page + 1)}
+                >
+                  Siguiente <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="panel p-8 text-center text-sm text-muted">
-            Aún no hay campañas. Crea la primera y desciende a la Cripta de Valdros.
+            {statusFilter === "ALL"
+              ? "Aún no hay campañas. Crea la primera y desciende a la Cripta de Valdros."
+              : "No hay campañas con este estado."}
           </div>
         )}
       </section>

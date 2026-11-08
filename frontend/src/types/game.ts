@@ -155,6 +155,7 @@ export interface CombatState {
 }
 
 export type CampaignStatus = "LOBBY" | "ACTIVE" | "FINISHED";
+export type CampaignStatusFilter = "ALL" | CampaignStatus;
 export type GamePhase = "INTRO" | "EXPLORATION" | "SOCIAL" | "COMBAT" | "BOSS" | "COMPLETE";
 
 export interface CampaignMember {
@@ -186,6 +187,17 @@ export interface Campaign {
   spotlightIndex?: number;
   shopOpen?: boolean;
   members: CampaignMember[];
+}
+
+/** One page of the paginated campaign listing exposed by {@code GET /api/campaigns/page}. */
+export interface CampaignPage {
+  content: Campaign[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
 }
 
 export interface GameEvent {
