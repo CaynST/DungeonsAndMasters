@@ -1,5 +1,17 @@
 # CHANGELOG (desarrollo)
 
+## 2026-11-08
+
+- **D-26** `feat(character)` — Idiomas y competencias de armadura/arma/herramienta: se derivan de
+  especie, clase y trasfondo en `CharacterProficiencies` y se guardan en `creationData`
+  (`languages`, `armorProficiencies`, `weaponProficiencies`, `toolProficiencies`). La ficha del
+  personaje muestra una sección **Idiomas y competencias**. Sin migración de base de datos.
+
+- **D-25** `feat(rules)` — Añadidos los seis trasfondos PHB 2014 que faltaban: **Charlatán**,
+  **Artista**, **Artesano gremial**, **Ermitaño**, **Forastero** y **Marinero**, con sus dos
+  habilidades y descripción en español. No se añaden a 2024 porque el SRD 5.2.1 solo incluye
+  Acólito, Criminal, Sabio y Soldado. Sin bonificadores de característica en 2014.
+
 ## 2026-11-05
 
 - **D-24** `feat(rules)` — Inspiración bárdica: acción adicional para dar un **d6** a otro aliado

@@ -1,5 +1,32 @@
 # PROGRESS
 
+## 2026-11-08 — Trasfondos y competencias (R-12, R-13)
+
+**Objetivo:** completar los trasfondos PHB 2014 y mostrar idiomas y competencias en la ficha.
+
+**Acciones**
+- `RuleSet2014`: añadidos **Charlatán** (`charlatan`), **Artista** (`entertainer`),
+  **Artesano gremial** (`guild-artisan`), **Ermitaño** (`hermit`), **Forastero** (`outlander`) y
+  **Marinero** (`sailor`) con habilidades, descripción y sin bonificadores (2014).
+- `RuleSet2024` se mantiene sin cambios: el SRD 5.2.1 solo incluye Acólito, Criminal, Sabio y
+  Soldado, sin equivalentes de los seis trasfondos nuevos.
+- `CharacterProficiencies` deriva idiomas de especie, competencias de clase y herramientas/idiomas
+  de trasfondo. `CharacterBuilder` guarda `languages`, `armorProficiencies`,
+  `weaponProficiencies` y `toolProficiencies` en `creationData` (sin migración).
+- 2024 usa la regla de origen: Común + dos idiomas a elección, sin idiomas por especie.
+- `CharacterSheet` muestra la sección **Idiomas y competencias** cuando hay datos.
+
+**Verificación (TDD)**
+- Rojo inicial: `RuleSetRegistryTest` falló con `Unknown background: charlatan`.
+- `RuleSetRegistryTest`, `CharacterProficienciesTest`, `CharacterBuilderTest` y
+  `CharacterCreationApiTest` (persistencia de `creationData` vía API).
+- Backend completo: **233 tests** en verde. Frontend: **29 tests** y `pnpm build` en verde.
+  `pnpm lint` solo reporta avisos preexistentes ajenos a estos archivos.
+
+**Siguiente paso**
+- R-02/R-03 (interacción/reacciones y acciones restantes), R-14 (descansos) o aplicar
+  mecánicamente competencias de herramienta/idioma si el producto lo requiere.
+
 ## 2026-11-05 — Inspiración bárdica (R-11)
 
 **Objetivo:** añadir el rasgo de Bardo de nivel 1 con acción adicional y uso en tiradas.

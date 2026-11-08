@@ -10,7 +10,7 @@ Deuda consciente del prototipo, ordenada por impacto en la fidelidad con el PHB.
 | R-05 | Cobertura implementada para ataques; faltan salvaciones de Destreza y cobertura otorgada por criaturas | Bajo | P2 | Añadir salvaciones genéricas y criaturas como cobertura |
 | R-10 | Conjuros con espacios, concentración, área y componentes materiales; los componentes V/S son descriptivos (sin silencio/manos libres) y faltan upcasting y más formas de área | Bajo | P2 | Silencio/manos, upcasting y áreas |
 | R-11 | Hechos Segundo aliento, Furia, Ataque furtivo, Estilo de combate e Inspiración bárdica; faltan Canalizar divinidad, Gran arma/Protección, etc. | Medio | P1 | Rasgos restantes por clase/nivel |
-| R-12 | 7 de 13 trasfondos PHB | Bajo | P2 | Añadir los 6 restantes al RuleSet |
+| R-13 | Idiomas y competencias se muestran pero no se aplican mecánicamente; los personajes anteriores al cambio no tienen los campos en `creationData` | Bajo | P2 | Pruebas de herramienta/idioma y backfill al leer |
 | R-14 | Sin descansos ni dados de golpe | Medio | P2 | Descanso corto/largo en el servicio |
 
 Arquitectura: el motor sigue siendo la autoridad; estas deudas se implementan en

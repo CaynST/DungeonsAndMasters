@@ -18,8 +18,8 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | R-09 | Sorpresa | P2 | pending |
 | R-10 | Conjuros: trucos, espacios, concentración, componentes | P1 | done |
 | R-11 | Rasgos de clase (Estilo de combate, Segundo aliento, Ataque furtivo, Furia, Inspiración, Canalizar divinidad, etc.) | P1 | in_progress |
-| R-12 | Trasfondos PHB faltantes: Charlatán, Artista, Artesano gremial, Ermitaño, Forastero, Marinero | P2 | pending |
-| R-13 | Competencias de armadura/arma/herramienta e idiomas | P2 | pending |
+| R-12 | Trasfondos PHB faltantes: Charlatán, Artista, Artesano gremial, Ermitaño, Forastero, Marinero | P2 | done |
+| R-13 | Competencias de armadura/arma/herramienta e idiomas | P2 | done |
 | R-14 | Descanso corto/largo y dados de golpe | P2 | pending |
 | R-15 | Peso/equipamiento, munición, herramientas | P3 | pending |
 | R-16 | Ventaja/desventaja expuesta en la UI (el motor ya la soporta) | P2 | pending |
@@ -67,3 +67,5 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-22 | Componentes materiales de conjuros: foco/bolsa, metadata V/S/M y UI | done |
 | D-23 | Estilo de combate: Defensa, Arquería y Duelo (+ selección en creación) | done |
 | D-24 | Inspiración bárdica: d6, usos por CAR, acción adicional y uso en tiradas | done |
+| D-25 | Trasfondos PHB 2014 restantes: Charlatán, Artista, Artesano gremial, Ermitaño, Forastero y Marinero | done |
+| D-26 | Idiomas y competencias de armadura/arma/herramienta derivados y visibles en la ficha | done |
