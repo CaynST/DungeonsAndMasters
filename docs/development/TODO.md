@@ -31,7 +31,7 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 |----|-------|-----------|--------|
 | U-01 | Tablero a pantalla completa (hoy queda con márgenes) | P2 | done |
 | U-02 | Retratos/consonancia visual: componente `Avatar` reutilizable con retrato local y fallback de iniciales | P2 | done |
-| U-03 | Segunda pasada visual: Home, Lobby, Crónica y estados vacíos | P2 | pending |
+| U-03 | Segunda pasada visual: Home, Lobby, Crónica y estados vacíos | P2 | done |
 | U-04 | Revisión de accesibilidad (contraste AA, foco, aria en iconos) | P2 | pending |
 | U-05 | Responsive del juego (sidebar fija, barra horizontal) | P2 | done |
 | U-06 | Paginación y filtro de estado en Home (sin borrar campañas) | P3 | done |
@@ -77,3 +77,4 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-32 | Idiomas y competencias de armadura/arma/herramienta derivados y visibles en la ficha | done |
 | D-33 | `Avatar` reutilizable con retrato local y fallback de iniciales (Home, Lobby, tarjetas e iniciativa) | done |
 | D-34 | Listado paginado/filtrable de campañas y controles en Home sin borrar datos | done |
+| D-35 | Segunda pasada visual: Home, Lobby, Crónica, estados vacíos y de carga | done |

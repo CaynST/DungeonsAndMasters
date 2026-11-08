@@ -2,6 +2,12 @@
 
 ## 2026-11-08
 
+- **D-35** `feat(ui)` — Segunda pasada visual de **Home, Lobby, Crónica y estados vacíos/carga**:
+  `EmptyState` y `Skeleton` compartidos, etiquetas de estado/fase de campaña centralizadas,
+  cabecera destacada y tarjetas de héroe con mejor jerarquía, resumen de preparación y selección de
+  héroe accesible en Lobby, y crónica agrupada por día con etiquetas en español y reintento.
+  Verificación visual a 1440 px y 390 px; 50 tests y build en verde.
+
 - **D-34** `feat(campaigns)` — Listado paginado/filtrable: `GET /api/campaigns/page` devuelve
   `CampaignPage` con página, tamaño, estado y metadatos; el endpoint legacy conserva el array. La
   Home pagina de 6 en 6 con filtros Todas/En curso/En lobby/Completadas. Sin borrar campañas.
