@@ -112,3 +112,12 @@ decide los bonos; `CharacterBuilder`/`EquipmentService` aplican Defensa y `Comba
 Arquería/Duelo. `Attack.twoHanded` permite excluir armas a dos manos de Duelo.
 **Consecuencia:** el rasgo es testeable y sobrevive a cambios de equipo. Solo se ofrecen tres estilos;
 Gran arma y Protección quedan como deuda.
+
+## ADR-013 — Inspiración bárdica como dado preparado
+**Contexto:** la inspiración 5e se decide antes o después del d20, pero el motor resuelve tiradas
+automáticamente; no hay un prompt interactivo por tirada.
+**Decisión:** el jugador usa `USE_INSPIRATION` para preparar el d6 y el motor lo suma y consume en
+su próxima tirada de ataque, prueba o salvación. La inspiración es una acción adicional del bardo,
+no consume acción del objetivo y dura 10 rondas (adaptación del prototipo).
+**Consecuencia:** se conserva la agencia sin interrumpir cada tirada con un diálogo; no se puede
+decidir después de ver el d20. La duración real de 10 minutos queda aproximada.

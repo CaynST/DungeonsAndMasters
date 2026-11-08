@@ -1,5 +1,24 @@
 # PROGRESS
 
+## 2026-11-05 — Inspiración bárdica (R-11)
+
+**Objetivo:** añadir el rasgo de Bardo de nivel 1 con acción adicional y uso en tiradas.
+
+**Acciones**
+- `BardicInspirationRules`: d6, 12 casillas, usos = modificador de CAR (mínimo 1), no autoinspiración.
+- `BARDIC_INSPIRATION`: acción adicional, otro aliado vivo, sin inspiración previa, consume uso.
+- `USE_INSPIRATION`: prepara el d6; se consume en la próxima tirada de ataque, prueba o salvación.
+- `CombatService`/`GameService` suman el d6 y lo limpian; la concentración también puede usarlo.
+- Duración 10 rondas; se reinicia al comenzar combate. UI con **Inspirar** e **Inspiración d6**.
+
+**Verificación (TDD)**
+- `BardicInspirationRulesTest` y `BardicInspirationIntegrationTest` (inspirar, usar, consumir,
+  límites, autoinspiración, expiración, no-bardo).
+- Backend completo: **225 tests** en verde. Frontend: **27 tests** y `pnpm build` en verde.
+
+**Siguiente paso**
+- R-11: Canalizar divinidad, Gran arma/Protección u otros rasgos.
+
 ## 2026-11-05 — Estilo de combate (R-11)
 
 **Objetivo:** añadir el primer rasgo de clase pasivo con elección en la creación.

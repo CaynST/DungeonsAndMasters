@@ -66,3 +66,4 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-21 | Conjuros de área: Onda de trueno (cubo, salvación de CON, 2d8) | done |
 | D-22 | Componentes materiales de conjuros: foco/bolsa, metadata V/S/M y UI | done |
 | D-23 | Estilo de combate: Defensa, Arquería y Duelo (+ selección en creación) | done |
+| D-24 | Inspiración bárdica: d6, usos por CAR, acción adicional y uso en tiradas | done |

@@ -2,6 +2,11 @@
 
 ## 2026-11-05
 
+- **D-24** `feat(rules)` — Inspiración bárdica: acción adicional para dar un **d6** a otro aliado
+  a 12 casillas; usos = modificador de CAR (mínimo 1). El aliado puede preparar el dado y sumarlo a
+  su próxima tirada de ataque, prueba o salvación. Dura 10 rondas y se reinicia al comenzar combate.
+  UI con botones **Inspirar** y **Inspiración d6**.
+
 - **D-23** `feat(rules)` — Estilo de combate: **Defensa** (+1 CA con armadura), **Arquería**
   (+2 a ataques a distancia) y **Duelo** (+2 daño con arma a una mano). Selección en creación para
   Guerrero/Paladín; `Attack` distingue armas a dos manos; `EquipmentService` conserva Defensa al
