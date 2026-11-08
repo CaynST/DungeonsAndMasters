@@ -15,7 +15,7 @@
 - No se sembró terreno difícil en mapas existentes: el tablero aún no lo dibuja y añadirlo
   introduciría penalizaciones invisibles. La puerta queda abierta para sembrarlo cuando la UI lo
   muestre.
-- La activación de la sorpresa (quién la declara) no se inventa: queda como decisión de producto
+- La activación de la sorpresa se resolvió con la acción validada del DM `SET_SURPRISED`
   documentada en `TECH_DEBT.md`; el motor ya aplica la bandera.
 
 **Verificación (TDD)**
@@ -35,7 +35,7 @@
 - `docs(development): record difficult terrain and surprise progress`
 
 **Siguiente paso**
-- Decidir cómo se activa la sorpresa (acción del DM o detección) y, si se desea, renderizar el
+- Detección automática/guion de la sorpresa y render del terreno difícil/sorpresa en la UI;
   terreno difícil en el tablero antes de sembrarlo en contenido.
 
 ## 2026-11-05 — Inspiración bárdica (R-11)

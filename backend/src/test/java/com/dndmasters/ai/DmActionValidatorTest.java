@@ -57,4 +57,15 @@ class DmActionValidatorTest {
         assertThat(clean.actions()).hasSize(1);
         assertThat(clean.actions().get(0).condition()).isEqualTo("PRONE");
     }
+
+    @Test
+    void acceptsSetSurprisedOnlyWithATarget() {
+        DmResponse valid = new DmResponse("n", java.util.List.of(DmAction.setSurprised(7L)), false, null);
+        DmResponse missing = new DmResponse("n", java.util.List.of(DmAction.setSurprised(null)), false, null);
+
+        assertThat(validator.sanitize(valid, new DmContext()).actions()).hasSize(1);
+        assertThat(validator.sanitize(valid, new DmContext()).actions().get(0).type())
+                .isEqualTo("SET_SURPRISED");
+        assertThat(validator.sanitize(missing, new DmContext()).actions()).isEmpty();
+    }
 }

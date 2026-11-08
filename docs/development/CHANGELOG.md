@@ -2,6 +2,10 @@
 
 ## 2026-11-08
 
+- **D-27** `feat(dm)` — Disparador de sorpresa: acción estructurada **SET_SURPRISED** validada
+  para un `entityId` de la escena; aplica la bandera que consume `SurpriseRules` y registra
+  `SURPRISE_APPLIED`. El DM puede declarar una emboscada sin inventar una UX de jugador.
+
 - **D-25** `feat(map)` — Terreno difícil: `GameMap.difficultTerrain` se persiste en
   `maps.difficult_terrain_json` (migración V11) y `MovementValidator` cobra **2** al entrar en
   esas casillas, también en diagonal (el motor cobra 1 por paso). No se sembró contenido nuevo

@@ -3,6 +3,7 @@ package com.dndmasters.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.dndmasters.domain.Campaign;
+import com.dndmasters.ai.dm.DmAction;
 import com.dndmasters.domain.CombatParticipant;
 import com.dndmasters.domain.CombatState;
 import com.dndmasters.domain.EntityKind;
@@ -74,6 +75,24 @@ class SurpriseIntegrationTest {
         combatState.getParticipants().forEach(participant ->
                 assertThat(SurpriseRules.isSurprised(
                         campaigns.entity(participant.getEntityId()).orElseThrow())).isFalse());
+    }
+
+    @Test
+    void dmCanMarkATokenAsSurprised() {
+        Long userId = 9403L;
+        Campaign campaign = game.createCampaign(userId, "Surprise DM");
+        game.joinCampaign(campaign.getId(), userId, null);
+        GameState state = campaigns.state(campaign.getId());
+        GameEntity player = state.getEntities().stream()
+                .filter(entity -> entity.getKind() == EntityKind.PLAYER)
+                .findFirst().orElseThrow();
+
+        game.applyDmActions(campaign.getId(), userId,
+                java.util.List.of(DmAction.setSurprised(player.getId())));
+
+        assertThat(SurpriseRules.isSurprised(campaigns.entity(player.getId()).orElseThrow())).isTrue();
+        assertThat(campaigns.state(campaign.getId()).getRecentEvents())
+                .anyMatch(event -> "SURPRISE_APPLIED".equals(event.type()));
     }
 
     private void addEnemy(GameState state) {

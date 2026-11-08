@@ -24,6 +24,7 @@ import com.dndmasters.engine.combat.ConditionRules;
 import com.dndmasters.engine.combat.ConditionSet;
 import com.dndmasters.engine.combat.Conditions;
 import com.dndmasters.engine.combat.DeathSaveRules;
+import com.dndmasters.engine.combat.SurpriseRules;
 import com.dndmasters.engine.dice.DiceEngine;
 import com.dndmasters.engine.dice.DiceRollResult;
 import com.dndmasters.engine.rules.CheckResolver;
@@ -1197,6 +1198,19 @@ public class GameService {
                 case "REMOVE_CONDITION" -> {
                     removeCondition(campaignId, sceneId, action, eventsOut);
                     actionsOut.add("REMOVE_CONDITION:" + action.condition());
+                }
+                case "SET_SURPRISED" -> {
+                    if (action.entityId() != null) {
+                        GameEntity target = campaigns.entity(action.entityId()).orElse(null);
+                        if (target != null && (sceneId == null || sceneId.equals(target.getSceneId()))) {
+                            SurpriseRules.markSurprised(target);
+                            campaigns.saveEntity(target);
+                            eventsOut.add(events.record(campaignId, sceneId, "SURPRISE_APPLIED", target.getName(),
+                                    target.getName() + " queda sorprendido y perderá su primer turno.",
+                                    Map.of("entityId", target.getId())));
+                            actionsOut.add("SET_SURPRISED");
+                        }
+                    }
                 }
                 default -> {
                     // NARRATE / SPAWN_ENEMY are non-mechanical for this prototype.

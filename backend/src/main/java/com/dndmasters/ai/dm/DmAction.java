@@ -45,4 +45,9 @@ public record DmAction(
     public static DmAction removeCondition(Long entityId, String condition) {
         return new DmAction("REMOVE_CONDITION", null, null, entityId, null, null, null, null, condition, null);
     }
+
+    /** Marks a token as surprised so it loses its first combat turn. */
+    public static DmAction setSurprised(Long entityId) {
+        return new DmAction("SET_SURPRISED", null, null, entityId, null, null, null, null, null, null);
+    }
 }

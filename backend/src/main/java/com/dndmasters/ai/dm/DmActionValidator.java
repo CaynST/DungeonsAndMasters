@@ -17,7 +17,7 @@ public class DmActionValidator {
 
     private static final Set<String> KNOWN_TYPES = Set.of(
             "NARRATE", "REQUEST_CHECK", "START_COMBAT", "SPAWN_ENEMY", "SHIFT_SCENE", "GRANT_REWARD",
-            "END_ADVENTURE", "OPEN_SHOP", "APPLY_CONDITION", "REMOVE_CONDITION");
+            "END_ADVENTURE", "OPEN_SHOP", "APPLY_CONDITION", "REMOVE_CONDITION", "SET_SURPRISED");
 
     private static final int MIN_DC = 1;
     private static final int MAX_DC = 30;
@@ -76,6 +76,7 @@ public class DmActionValidator {
                 }
                 yield DmAction.removeCondition(action.entityId(), condition.name());
             }
+            case "SET_SURPRISED" -> action.entityId() == null ? null : action;
             default -> action;
         };
     }

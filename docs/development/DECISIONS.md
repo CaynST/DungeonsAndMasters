@@ -129,6 +129,6 @@ no tiene una fase de detección ni un contrato del DM para declarar sorpresa.
 y consumirla desde `CombatService`.
 **Decisión:** `SurpriseRules` gestiona `surprised` en `entity.data`; `CombatService` la consume al
 abrir el combate y en cada avance de turno, registra `SURPRISED` y limpia la bandera una sola vez.
-No se inventa una UX ni una acción del DM para activarla.
-**Consecuencia:** la regla es determinista, persistente y testeable sin migración. Cómo se determina
-la sorpresa en la mesa (acción del DM, detección automática o guion) queda como decisión de producto.
+El DM la activa con la acción validada `SET_SURPRISED` sobre un `entityId` de la escena.
+**Consecuencia:** la regla es determinista, persistente y testeable sin migración; la detección
+automática o por guion y el render visual quedan como deuda.

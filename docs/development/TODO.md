@@ -69,3 +69,4 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-24 | Inspiración bárdica: d6, usos por CAR, acción adicional y uso en tiradas | done |
 | D-25 | Terreno difícil: celdas persistidas y coste doble de movimiento | done |
 | D-26 | Sorpresa: la criatura marcada pierde su primer turno de combate | done |
+| D-27 | Disparador de sorpresa: acción validada del DM (`SET_SURPRISED`) | done |
