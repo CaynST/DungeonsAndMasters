@@ -32,6 +32,12 @@ public class PlayerAction {
     public static final String CAST_SPELL = "CAST_SPELL";
     public static final String BARDIC_INSPIRATION = "BARDIC_INSPIRATION";
     public static final String USE_INSPIRATION = "USE_INSPIRATION";
+    public static final String HELP = "HELP";
+    public static final String HIDE = "HIDE";
+    public static final String READY = "READY";
+    public static final String SEARCH = "SEARCH";
+    public static final String USE_OBJECT = "USE_OBJECT";
+    public static final String INTERACT = "INTERACT";
 
     private String type;
     private Long actorEntityId;

@@ -97,8 +97,14 @@ public class CombatService {
         }
         CombatState state = combatEngine.start(campaignId, sceneId, combatants);
         persist(state);
-        // Fresh turn economy and class feature uses for everyone at the start of combat.
+        // Fresh turn economy, class feature uses and one-use combat-action flags at combat start.
         state.getParticipants().forEach(p -> {
+            campaigns.entity(p.getEntityId()).ifPresent(entity -> {
+                entity.getData().put("helpAdvantage", false);
+                entity.getData().remove("helpedBy");
+                entity.getData().put("hidden", false);
+                campaigns.saveEntity(entity);
+            });
             campaigns.resetTurnUsage(p.getEntityId());
             campaigns.resetFeatureUses(p.getEntityId());
         });
@@ -287,6 +293,10 @@ public class CombatService {
                 actor.getName() + " actúa.", Map.of("entityId", actor.getId())));
 
         moveToward(campaignId, state, actor, nearest, sceneEntities, recorded);
+        // A readied action or opportunity attack provoked by the move may have killed it.
+        if (!actor.isAlive()) {
+            return recorded;
+        }
 
         List<Attack> attacks = entityMapper.attacksOf(actor);
         int distance = actor.cell().chebyshevTo(nearest.cell());
@@ -328,11 +338,16 @@ public class CombatService {
             moved++;
         }
         if (moved > 0) {
+            Cell previous = actor.cell();
             actor.moveTo(position);
             campaigns.saveEntity(actor);
             recorded.add(events.record(campaignId, state.getSceneId(), "MOVE", actor.getName(),
                     actor.getName() + " se mueve " + moved + " casilla(s).",
                     Map.of("entityId", actor.getId(), "x", position.x(), "y", position.y(), "cost", moved)));
+            // Symmetric reactions: players may strike a fleeing enemy and use a readied action
+            // when an enemy walks into their reach.
+            recorded.addAll(opportunityAttacks(campaignId, state, actor, previous));
+            recorded.addAll(readiedAttacks(campaignId, state, actor, previous));
         }
     }
 
@@ -423,6 +438,19 @@ public class CombatService {
         com.dndmasters.engine.rules.Advantage effective = ConditionRules
                 .attackAdvantage(attackerConditions, targetConditions, melee, dodging);
         effective = combine(effective, advantage);
+        // One-use Help and Hide flags are consumed by the next attack that actually rolls.
+        boolean helped = consumeHelpAdvantage(attacker, target);
+        boolean hidden = Boolean.TRUE.equals(attacker.getData().get("hidden"));
+        if (hidden) {
+            attacker.getData().put("hidden", false);
+            campaigns.saveEntity(attacker);
+        }
+        if (helped) {
+            effective = combine(effective, com.dndmasters.engine.rules.Advantage.ADVANTAGE);
+        }
+        if (hidden) {
+            effective = combine(effective, com.dndmasters.engine.rules.Advantage.ADVANTAGE);
+        }
         int blessBonus = Boolean.TRUE.equals(attacker.getData().get("blessed"))
                 ? dice.roll("1d4").total() : 0;
         int inspirationBonus = consumeInspiration(attacker);
@@ -452,6 +480,8 @@ public class CombatService {
         data.put("critical", attackResult.critical());
         data.put("fumble", attackResult.fumble());
         data.put("advantage", effective.name());
+        data.put("helped", helped);
+        data.put("hidden", hidden);
         data.put("autoCritical", autoCritical);
         data.put("cover", cover.cover().name());
         data.put("coverBonus", cover.acBonus());
@@ -700,14 +730,24 @@ public class CombatService {
     }
 
     /**
-     * Enemies adjacent to the mover's previous cell may use their reaction to make one melee
-     * attack when the mover leaves their reach. Disengage prevents it; one reaction per creature.
+     * Creatures adjacent to the mover's previous cell may use their reaction to make one melee
+     * attack when the mover leaves their reach. The rule is symmetric: enemies provoke player
+     * opportunity attacks just like players provoke enemy ones. Disengage prevents it and each
+     * creature has a single reaction per turn.
      */
     @Transactional
     public List<com.dndmasters.domain.GameEvent> opportunityAttacks(Long campaignId, CombatState state,
                                                                     GameEntity mover, Cell previousCell) {
         List<com.dndmasters.domain.GameEvent> recorded = new ArrayList<>();
-        if (state.getSceneId() == null || mover.getKind() != EntityKind.PLAYER) {
+        if (state.getSceneId() == null) {
+            return recorded;
+        }
+        EntityKind attackerKind = switch (mover.getKind()) {
+            case PLAYER -> EntityKind.ENEMY;
+            case ENEMY -> EntityKind.PLAYER;
+            default -> null;
+        };
+        if (attackerKind == null) {
             return recorded;
         }
         if (TurnEconomy.flag(mover.getData(), "disengaged")) {
@@ -715,7 +755,7 @@ public class CombatService {
         }
         List<GameEntity> sceneEntities = campaigns.entitiesInScene(state.getSceneId());
         List<GameEntity> attackers = sceneEntities.stream()
-                .filter(e -> e.getKind() == EntityKind.ENEMY)
+                .filter(e -> e.getKind() == attackerKind)
                 .filter(GameEntity::isAlive)
                 .filter(e -> e.getId() != mover.getId())
                 .filter(e -> !TurnEconomy.flag(e.getData(), "reactionUsed"))
@@ -741,6 +781,69 @@ public class CombatService {
                     com.dndmasters.engine.rules.Advantage.NONE));
         }
         return recorded;
+    }
+
+    /**
+     * Minimal Ready (R-03): a player who readied a melee attack may use its reaction when an enemy
+     * enters its reach. The stance is consumed by the trigger and expires at the player's next turn.
+     */
+    @Transactional
+    public List<com.dndmasters.domain.GameEvent> readiedAttacks(Long campaignId, CombatState state,
+                                                                GameEntity mover, Cell previousCell) {
+        List<com.dndmasters.domain.GameEvent> recorded = new ArrayList<>();
+        if (state.getSceneId() == null || mover.getKind() != EntityKind.ENEMY) {
+            return recorded;
+        }
+        List<GameEntity> ready = campaigns.entitiesInScene(state.getSceneId()).stream()
+                .filter(e -> e.getKind() == EntityKind.PLAYER)
+                .filter(GameEntity::isAlive)
+                .filter(e -> e.getId() != mover.getId())
+                .filter(e -> TurnEconomy.flag(e.getData(), "readied"))
+                .filter(e -> !TurnEconomy.flag(e.getData(), "reactionUsed"))
+                .filter(e -> !Conditions.of(e).incapacitated())
+                .filter(e -> e.cell().chebyshevTo(previousCell) > 1)
+                .filter(e -> e.cell().chebyshevTo(mover.cell()) <= 1)
+                .toList();
+        for (GameEntity attacker : ready) {
+            if (!mover.isAlive()) {
+                break;
+            }
+            Attack melee = entityMapper.attacksOf(attacker).stream()
+                    .filter(a -> !a.ranged()).findFirst().orElse(null);
+            if (melee == null) {
+                continue;
+            }
+            attacker.getData().put("readied", false);
+            attacker.getData().put("reactionUsed", true);
+            campaigns.saveEntity(attacker);
+            recorded.add(events.record(campaignId, state.getSceneId(), "READIED_ATTACK", attacker.getName(),
+                    attacker.getName() + " usa su acción preparada contra " + mover.getName() + ".",
+                    Map.of("entityId", attacker.getId(), "targetId", mover.getId())));
+            recorded.addAll(attack(campaignId, state, attacker, mover, melee,
+                    com.dndmasters.engine.rules.Advantage.NONE));
+        }
+        return recorded;
+    }
+
+    /**
+     * Consumes a pending Help flag. Advantage applies only when the attack target is within 5 ft
+     * of the helper, as the PHB requires; the flag is spent either way (next attack).
+     */
+    private boolean consumeHelpAdvantage(GameEntity attacker, GameEntity target) {
+        if (!Boolean.TRUE.equals(attacker.getData().get("helpAdvantage"))) {
+            return false;
+        }
+        boolean advantage = false;
+        Object helperId = attacker.getData().get("helpedBy");
+        if (helperId instanceof Number number) {
+            GameEntity helper = campaigns.entity(number.longValue()).orElse(null);
+            advantage = helper != null && helper.isAlive()
+                    && helper.cell().chebyshevTo(target.cell()) <= 1;
+        }
+        attacker.getData().put("helpAdvantage", false);
+        attacker.getData().remove("helpedBy");
+        campaigns.saveEntity(attacker);
+        return advantage;
     }
 
     public boolean isFinished(CombatState state) {
