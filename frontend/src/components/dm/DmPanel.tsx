@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, Dices, ScrollText, Sparkles, User } from "lucide-react";
 import type { GameEvent } from "@/types/game";
+import { attackAdvantage } from "@/lib/combat";
 import { useGameStore, type PendingCheck } from "@/store/useGameStore";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -105,19 +106,23 @@ export function DmPanel({ dmName, dmAvatar, narration, events, providerId, spotl
                   </motion.li>
                 );
               }
-              return event.type === "NARRATION" ? (
-                <motion.li
-                  key={event.id}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="rounded-lg border border-[#3b2a80]/40 bg-[#7C5CFF]/5 p-3"
-                >
-                  <p className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[#a88cff]">
-                    <BookOpen className="h-3 w-3" /> Dungeon Master
-                  </p>
-                  <p className="text-[15px] leading-relaxed text-ink">{event.message}</p>
-                </motion.li>
-              ) : (
+              if (event.type === "NARRATION") {
+                return (
+                  <motion.li
+                    key={event.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-lg border border-[#3b2a80]/40 bg-[#7C5CFF]/5 p-3"
+                  >
+                    <p className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[#a88cff]">
+                      <BookOpen className="h-3 w-3" /> Dungeon Master
+                    </p>
+                    <p className="text-[15px] leading-relaxed text-ink">{event.message}</p>
+                  </motion.li>
+                );
+              }
+              const advantage = attackAdvantage(event.dataJson);
+              return (
                 <motion.li
                   key={event.id}
                   initial={{ opacity: 0, x: -8 }}
@@ -128,9 +133,17 @@ export function DmPanel({ dmName, dmAvatar, narration, events, providerId, spotl
                     className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
                     style={{ backgroundColor: EVENT_TONE[event.type] ?? "#9E9485" }}
                   />
-                  <span className="text-muted">
+                  <span className="min-w-0 text-muted">
                     {event.actor && <span className="text-parchment">{event.actor}: </span>}
                     {event.message}
+                    {advantage && (
+                      <Badge
+                        tone={advantage === "ADVANTAGE" ? "emerald" : "crimson"}
+                        className="ml-1.5 inline-flex translate-y-[-1px] px-1.5 py-0 text-[9px] tracking-normal"
+                      >
+                        {advantage === "ADVANTAGE" ? "Ventaja" : "Desventaja"}
+                      </Badge>
+                    )}
                   </span>
                 </motion.li>
               );
