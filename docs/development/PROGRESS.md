@@ -1,5 +1,50 @@
 # PROGRESS
 
+## 2026-11-08 — U-07A: el DM invoca enemigos del bestiario en la escena actual
+
+**Objetivo:** dar efecto mecánico a la acción ya declarada `SPAWN_ENEMY` sin implementar todavía la
+generación dinámica de escenas/mapas.
+
+**Acciones**
+- `Bestiary.findByName` resuelve nombres sin distinguir mayúsculas/espacios y acepta también el id
+  estable; devuelve `Optional.empty()` en vez de lanzar para nombres desconocidos o vacíos.
+- `SpawnPlacement` (motor puro) elige una casilla libre en los límites del mapa, nunca muro,
+  obstáculo, puerta cerrada ni casilla ocupada. Refuerza primero a los enemigos existentes; si no
+  hay, aparece lo más lejos posible del grupo. Los empates se resuelven con un barrido row-major,
+  por lo que el resultado es determinista. Si no hay casilla, devuelve vacío.
+- `CampaignService.spawnEnemy` persiste un token `ENEMY` vivo con PG/PG máximos, CA, velocidad,
+  color, icono, retrato y `data` (`stats`, `attacks`, `behavior`, `monsterId`, `tier`, `xp`).
+- `CombatService.addParticipant` incorpora al enemigo a un combate activo de la misma escena con
+  iniciativa `d20 + DES`; mantiene la lista ordenada, reindexa `orderIndex` y desplaza el puntero
+  de turno si la inserción ocurre antes del participante actual. Si ya estaba, devuelve su entrada.
+  El recién llegado recibe economía de turno y usos de rasgos frescos.
+- `GameService.applyDm` procesa `SPAWN_ENEMY` (prioridad entre `SHIFT_SCENE` y `START_COMBAT`),
+  registra `ENEMY_SPAWNED` con `entityId`, `sceneId`, `monsterId`, posición e iniciativa si entró en
+  combate, y añade `SPAWN_ENEMY:<nombre>` a `actionsOut`. Los rechazos registran
+  `ENEMY_SPAWN_FAILED` y `SPAWN_ENEMY_FAILED:<UNKNOWN_MONSTER|NO_FREE_CELL|NO_ACTIVE_SCENE>` sin
+  lanzar excepciones.
+- `DmActionValidator` recorta el nombre y descarta acciones con nombre vacío.
+
+**Verificación (TDD)**
+- **Rojo** capturado: los tests nuevos no compilaban por ausencia de `SpawnPlacement`,
+  `Bestiary.findByName`, `DmAction.spawnEnemy` y el seam de acciones; además se añadió el caso de
+  validador de nombre vacío.
+- **Verde** focalizado: 3 tests de `BestiaryTest`, 5 de `SpawnPlacementTest`, 6 de
+  `DmActionValidatorTest` y 4 de `EnemySpawnIntegrationTest` (exploración, combate con turno
+  propio, monstruo desconocido y mapa lleno).
+- Backend completo: **333 tests** en verde (`mvn test`). No se tocó frontend.
+- Una ejecución completa intermedia falló solo en
+  `FightingStyleIntegrationTest#greatWeaponFightingRerolls...` (bucle probabilístico preexistente);
+  el test pasó en aislamiento y la repetición completa quedó en verde.
+
+**Commits**
+- `feat(dm): spawn bestiary enemies into the current scene` (código y tests)
+- `docs(development): record U-07A enemy spawning`
+
+**Siguiente paso**
+- U-07B: generación/cambio de escenas y mapas por el DM. La colocación no comprueba línea de
+  visión ni enlaza el spawn con la plantilla de enemigo de campaña; ver `TECH_DEBT.md`.
+
 ## 2026-11-08 — Consumo de munición en ataques a distancia (R-18)
 
 **Objetivo:** consumir una unidad de munición de la ficha persistida en ataques de **arma** a

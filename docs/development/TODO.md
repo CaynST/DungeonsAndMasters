@@ -37,7 +37,8 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | U-04 | Revisión de accesibilidad (contraste AA, foco, aria en iconos) | P2 | done |
 | U-05 | Responsive del juego (sidebar fija, barra horizontal) | P2 | done |
 | U-06 | Paginación y filtro de estado en Home (sin borrar campañas) | P3 | done |
-| U-07 | Generación dinámica de escenas por el DM a mitad de aventura | P2 | pending |
+| U-07 | Generación dinámica de escenas por el DM a mitad de aventura — **U-07A hecho:** invocación de enemigos del bestiario en la escena actual | P2 | done |
+| U-07B | Resto de U-07: generación/cambio de escenas y mapas nuevos a mitad de aventura | P2 | pending |
 | U-08 | Modo host autoalojado: servir frontend desde Spring, SPA fallback, enlace/QR y enlace de campaña | P2 | pending |
 | U-09 | Pantalla "Unirse a servidor" y URL configurable de API/WebSocket | P2 | pending |
 | U-10 | Acceso remoto por túnel gestionado (Cloudflare/Tailscale) + hardening e invitaciones | P2 | pending |

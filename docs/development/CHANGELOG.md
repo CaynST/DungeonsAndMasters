@@ -2,6 +2,16 @@
 
 ## 2026-11-08
 
+- **U-07A** `feat(dm)` — **Invocación de enemigos del bestiario** en la escena actual. `Bestiary`
+  resuelve nombres sin distinguir mayúsculas; `SpawnPlacement` elige una casilla libre determinista
+  (refuerza enemigos o se aleja del grupo, nunca muro/obstáculo/puerta cerrada/ocupada);
+  `CampaignService` persiste el token `ENEMY` con las estadísticas, ataques, comportamiento y
+  retrato del bestiario. Si hay combate activo en la escena, `CombatService` le asigna iniciativa
+  `d20 + DES`, lo inserta en el orden y preserva el turno en curso. `GameService` registra
+  `ENEMY_SPAWNED` con entidad/escena y rechaza monstruos desconocidos o mapas llenos mediante
+  `ENEMY_SPAWN_FAILED`, sin excepciones. Sin generación de escenas/mapas (U-07B) ni cambios de
+  frontend. Verificación: **333 tests** backend en verde.
+
 - **R-18** `feat(rules)` — **Consumo de munición** en ataques de arma a distancia de jugadores.
   `AmmunitionRules` mapea de forma explícita arcos → `Flechas` y ballestas → `Virotes` (incluidos
   nombres en inglés); armas arrojadizas, cuerpo a cuerpo y conjuros no consumen. `GameService`

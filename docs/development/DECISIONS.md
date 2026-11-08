@@ -284,3 +284,36 @@ nombre de ataque con una tabla explícita y consumir desde `GameService`; (c) co
 conjuros. Quedan como deuda la recuperación de munición, el consumo de armas arrojadizas, los turnos
 automáticos de aliados jugadores y la visualización explícita de munición en la barra de acción.
 La penalización de carga en el movimiento se separa en R-18b.
+
+## ADR-023 — Enemigos del bestiario invocados por el DM en la escena actual
+
+**Contexto:** `SPAWN_ENEMY` ya existía en el contrato del DM, pero se ignoraba. U-07 pedía escenas
+dinámicas y el producto acotó el primer paso a invocar enemigos en el mapa y combate actuales. El
+tablero es persistente, las casillas se comparten con muros/obstáculos/puertas y una criatura
+invocada durante el combate debe poder actuar sin romper el turno en curso.
+
+**Alternativas:** (a) generar un mapa/escena nuevo por enemigo (fuera del alcance U-07A); (b)
+colocar en la primera casilla libre o junto al grupo (predecible pero tácticamente pobre); (c)
+elegir por heurística determinista y añadir el participante al combate activo.
+
+**Decisión:** (c) con estas reglas:
+- `Bestiary.findByName` compara nombre e id sin distinguir mayúsculas y acepta espacios externos.
+  Un nombre desconocido/vacío devuelve vacío; nunca lanza.
+- `SpawnPlacement` recorre el mapa en orden row-major y solo considera casillas libres, dentro de
+  los límites y no bloqueadas. Minimiza la distancia al enemigo vivo más cercano y, en empate o si
+  no hay enemigos, maximiza la distancia al jugador vivo más cercano. La primera casilla con la
+  mejor puntuación gana, lo que hace el resultado repetible.
+- El token se persiste como `ENEMY` con los valores del bestiario en columnas y en `entity.data`
+  (`stats`, `attacks`, `behavior`, `monsterId`, `tier`, `xp`). No se crea una plantilla de campaña
+  ni se enlaza `refId`.
+- En combate activo de la misma escena, `CombatService.addParticipant` tira `d20 + DES`, inserta
+  según iniciativa, reindexa y desplaza `currentTurnIndex` si hace falta para que el actor actual
+  conserve su turno. El nuevo participante recibe economía de turno limpia.
+- `SPAWN_ENEMY` se aplica después de `SHIFT_SCENE` y antes de `START_COMBAT`, de modo que un mismo
+  turno del DM puede invocar y abrir combate incluyendo al recién llegado.
+- Fallos esperados (`UNKNOWN_MONSTER`, `NO_FREE_CELL`, `NO_ACTIVE_SCENE`) producen un evento
+  `ENEMY_SPAWN_FAILED` y un id en `actionsOut`; no hay excepciones no controladas.
+
+**Consecuencia:** el DM puede poblar el mapa y el combate sin migraciones ni cambios de frontend.
+Quedan como deuda la generación de escenas (U-07B), la línea de visión en la colocación, el vínculo
+con `enemy_templates`/XP de campaña y el nombre duplicado de criaturas del mismo tipo.
