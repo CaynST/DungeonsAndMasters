@@ -30,6 +30,8 @@ public class PlayerAction {
     public static final String SECOND_WIND = "SECOND_WIND";
     public static final String RAGE = "RAGE";
     public static final String CAST_SPELL = "CAST_SPELL";
+    public static final String BARDIC_INSPIRATION = "BARDIC_INSPIRATION";
+    public static final String USE_INSPIRATION = "USE_INSPIRATION";
 
     private String type;
     private Long actorEntityId;

@@ -399,6 +399,7 @@ public class CampaignService {
             data.put("level", character.getLevel());
             data.put("spellSlotsUsed", 0);
             data.put("spellFocus", com.dndmasters.engine.spells.SpellComponentRules.hasFocus(character));
+            data.put("bardicInspirationUsed", 0);
             data.put("fightingStyle", character.getCreationData().get("fightingStyle"));
             saveEntity(sceneId, scene.getMapId(), "PLAYER", character.getId(), character.getName(),
                     new Placement("PLAYER", character.getName(), spawn.x(), spawn.y()),
@@ -550,6 +551,20 @@ public class CampaignService {
                     e.getData().put("concentrationRounds", rounds - 1);
                 }
             }
+
+            boolean inspirationExpired = false;
+            if (e.getData().get("inspirationDie") instanceof Number die && die.intValue() > 0) {
+                int rounds = e.getData().get("inspirationRounds") instanceof Number n ? n.intValue() : 0;
+                if (rounds <= 1) {
+                    e.getData().put("inspirationDie", 0);
+                    e.getData().put("inspirationPending", false);
+                    e.getData().put("inspirationRounds", 0);
+                    e.getData().put("inspirationSourceId", null);
+                    inspirationExpired = true;
+                } else {
+                    e.getData().put("inspirationRounds", rounds - 1);
+                }
+            }
             saveEntity(e);
 
             Long sceneId = requireCampaign(campaignId).getActiveSceneId();
@@ -567,6 +582,10 @@ public class CampaignService {
                 events.record(campaignId, sceneId, "CONCENTRATION_ENDED", e.getName(),
                         e.getName() + " pierde la concentración.", Map.of("entityId", e.getId()));
             }
+            if (inspirationExpired) {
+                events.record(campaignId, sceneId, "INSPIRATION_EXPIRED", e.getName(),
+                        e.getName() + " pierde su inspiración bárdica.", Map.of("entityId", e.getId()));
+            }
         });
     }
 
@@ -583,6 +602,11 @@ public class CampaignService {
             e.getData().put("concentrationSpell", null);
             e.getData().put("concentrationName", null);
             e.getData().put("concentrationRounds", 0);
+            e.getData().put("bardicInspirationUsed", 0);
+            e.getData().put("inspirationDie", 0);
+            e.getData().put("inspirationPending", false);
+            e.getData().put("inspirationRounds", 0);
+            e.getData().put("inspirationSourceId", null);
             saveEntity(e);
         });
     }

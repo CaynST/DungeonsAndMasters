@@ -386,11 +386,12 @@ public class CombatService {
         effective = combine(effective, advantage);
         int blessBonus = Boolean.TRUE.equals(attacker.getData().get("blessed"))
                 ? dice.roll("1d4").total() : 0;
+        int inspirationBonus = consumeInspiration(attacker);
         Object styleValue = attacker.getData().get("fightingStyle");
         String fightingStyle = styleValue instanceof String value ? value : "";
         int styleAttackBonus = weaponAttack
                 ? FightingStyleRules.archeryBonus(fightingStyle, attack.ranged()) : 0;
-        int attackBonusBonus = blessBonus + styleAttackBonus;
+        int attackBonusBonus = blessBonus + styleAttackBonus + inspirationBonus;
         Attack rollAttack = attackBonusBonus > 0 ? attack.withAttackBonus(attackBonusBonus) : attack;
         AttackResult resolved = attackResolver.resolve(attackerC, targetC, rollAttack, effective);
         boolean autoCritical = resolved.hit() && ConditionRules.automaticCritical(targetConditions, melee);
@@ -417,6 +418,7 @@ public class CombatService {
         data.put("coverBonus", cover.acBonus());
         data.put("blessBonus", blessBonus);
         data.put("fightingStyleAttackBonus", styleAttackBonus);
+        data.put("inspirationBonus", inspirationBonus);
 
         String coverNote = cover.acBonus() > 0 ? " (cobertura +" + cover.acBonus() + " CA)" : "";
 
@@ -490,11 +492,13 @@ public class CombatService {
             int conMod = Modifier.of(target.getStats().get(Ability.CONSTITUTION));
             int bless = Boolean.TRUE.equals(target.getData().get("blessed"))
                     ? dice.roll("1d4").total() : 0;
-            int saveTotal = dice.roll("1d20").total() + conMod + bless;
+            int inspiration = consumeInspiration(target);
+            int saveTotal = dice.roll("1d20").total() + conMod + bless + inspiration;
             int dc = Math.max(10, damage.total() / 2);
             data.put("concentrationSave", saveTotal);
             data.put("concentrationDc", dc);
             data.put("concentrationBless", bless);
+            data.put("concentrationInspiration", inspiration);
             if (saveTotal < dc) {
                 concentrationBroken = true;
                 campaigns.clearConcentration(campaignId, target.getId());
@@ -622,6 +626,22 @@ public class CombatService {
 
     private int intOf(Object value) {
         return value instanceof Number n ? n.intValue() : 0;
+    }
+
+    /** Rolls and clears a prepared Bardic Inspiration die; returns 0 when none is pending. */
+    private int consumeInspiration(GameEntity entity) {
+        if (!Boolean.TRUE.equals(entity.getData().get("inspirationPending"))) {
+            return 0;
+        }
+        int die = entity.getData().get("inspirationDie") instanceof Number number
+                ? number.intValue() : 0;
+        if (die <= 0) {
+            return 0;
+        }
+        entity.getData().put("inspirationPending", false);
+        entity.getData().put("inspirationDie", 0);
+        campaigns.saveEntity(entity);
+        return dice.roll("1d" + die).total();
     }
 
     /** Advantage and disadvantage cancel when both are present. */

@@ -29,6 +29,7 @@ import com.dndmasters.engine.dice.DiceRollResult;
 import com.dndmasters.engine.rules.CheckResolver;
 import com.dndmasters.engine.rules.CheckResult;
 import com.dndmasters.engine.rules.Advantage;
+import com.dndmasters.engine.rules.BardicInspirationRules;
 import com.dndmasters.engine.rules.ClassFeatures;
 import com.dndmasters.engine.rules.Combatant;
 import com.dndmasters.engine.rules.CoverRules;
@@ -165,6 +166,9 @@ public class GameService {
             case PlayerAction.SECOND_WIND -> classFeature(campaignId, userId, action, PlayerAction.SECOND_WIND);
             case PlayerAction.RAGE -> classFeature(campaignId, userId, action, PlayerAction.RAGE);
             case PlayerAction.CAST_SPELL -> castSpell(campaignId, userId, action);
+            case PlayerAction.BARDIC_INSPIRATION ->
+                    classFeature(campaignId, userId, action, PlayerAction.BARDIC_INSPIRATION);
+            case PlayerAction.USE_INSPIRATION -> useInspiration(campaignId, userId, action);
             default -> ActionResult.error("Tipo de acción desconocido: " + action.getType());
         };
     }
@@ -218,13 +222,16 @@ public class GameService {
         ConditionSet conditions = Conditions.of(actor);
         Advantage advantage = ConditionRules.checkAdvantage(conditions, skill);
         int penalty = ConditionRules.checkPenalty(conditions);
-        CheckResult checkResult = checkResolver.resolve(Combatants.of(actor), skill, dc, advantage, penalty);
+        int inspirationBonus = consumeInspiration(actor);
+        CheckResult checkResult = checkResolver.resolve(Combatants.of(actor), skill, dc, advantage,
+                penalty + inspirationBonus);
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("skill", skill);
         data.put("dc", dc);
         data.put("advantage", advantage.name());
         data.put("penalty", penalty);
+        data.put("inspirationBonus", inspirationBonus);
         // Same shape as a dice roll so the frontend can animate it identically.
         data.put("expression", "1d20");
         data.put("rolls", List.of(checkResult.dieRoll()));
@@ -731,9 +738,11 @@ public class GameService {
         }
         int blessBonus = Boolean.TRUE.equals(target.getData().get("blessed"))
                 ? dice.roll("1d4").total() : 0;
+        int inspirationBonus = consumeInspiration(target);
         SaveResult save = saveResolver.resolve(Combatants.of(target), ability, dc,
-                ConditionRules.saveAdvantage(conditions, ability), blessBonus);
+                ConditionRules.saveAdvantage(conditions, ability), blessBonus + inspirationBonus);
         data.put("blessBonus", blessBonus);
+        data.put("inspirationBonus", inspirationBonus);
         data.put("saveDieRoll", save.dieRoll());
         data.put("saveModifier", save.modifier());
         data.put("saveTotal", save.total());
@@ -741,7 +750,55 @@ public class GameService {
         return save.success();
     }
 
-    /** Class features that consume the bonus action: Second Wind and Rage. */
+    /** Uses a prepared Bardic Inspiration die on the next roll (no action cost). */
+    private ActionResult useInspiration(Long campaignId, Long userId, PlayerAction action) {
+        GameEntity actor = resolveActor(campaignId, userId, action);
+        if (actor == null) {
+            return ActionResult.error("No se encontró el personaje activo");
+        }
+        if (!ownedBy(actor, userId)) {
+            return ActionResult.error("No controlas ese personaje");
+        }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; no puedes usar inspiración.");
+        }
+        CombatState state = campaigns.activeCombat(campaignId);
+        if (state != null && state.isActive() && !state.isCombatantTurn(actor.getId())) {
+            return ActionResult.error("No es tu turno");
+        }
+        int die = actor.getData().get("inspirationDie") instanceof Number number
+                ? number.intValue() : 0;
+        if (die <= 0) {
+            return ActionResult.error("No tienes inspiración bárdica.");
+        }
+        if (Boolean.TRUE.equals(actor.getData().get("inspirationPending"))) {
+            return ActionResult.error("Tu inspiración ya está preparada para la próxima tirada.");
+        }
+        actor.getData().put("inspirationPending", true);
+        campaigns.saveEntity(actor);
+        GameEvent event = events.record(campaignId, activeSceneId(campaignId), "INSPIRATION_READY",
+                actor.getName(), actor.getName() + " prepara su inspiración bárdica (d" + die + ").",
+                Map.of("entityId", actor.getId(), "die", die));
+        return new ActionResult(true, null, null, List.of(event), null, null, null, List.of(), false);
+    }
+
+    /** Rolls and clears a prepared inspiration die; returns 0 when none is pending. */
+    private int consumeInspiration(GameEntity entity) {
+        if (!Boolean.TRUE.equals(entity.getData().get("inspirationPending"))) {
+            return 0;
+        }
+        int die = entity.getData().get("inspirationDie") instanceof Number number
+                ? number.intValue() : 0;
+        if (die <= 0) {
+            return 0;
+        }
+        entity.getData().put("inspirationPending", false);
+        entity.getData().put("inspirationDie", 0);
+        campaigns.saveEntity(entity);
+        return dice.roll("1d" + die).total();
+    }
+
+    /** Class features that consume the bonus action: Second Wind, Rage and Bardic Inspiration. */
     private ActionResult classFeature(Long campaignId, Long userId, PlayerAction action, String type) {
         GameEntity actor = resolveActor(campaignId, userId, action);
         if (actor == null) {
@@ -806,6 +863,32 @@ public class GameService {
                         + " entra en Furia: +2 al daño cuerpo a cuerpo y resistencia al daño físico.";
                 data.put("ragesUsed", actor.getData().get("ragesUsed"));
                 data.put("rounds", RageRules.DURATION_ROUNDS);
+            }
+            case PlayerAction.BARDIC_INSPIRATION -> {
+                if (!ClassFeatures.is(actor, "bard")) {
+                    return ActionResult.error("Solo los bardos pueden usar Inspiración bárdica.");
+                }
+                GameEntity target = action.getTargetEntityId() == null
+                        ? null
+                        : campaigns.entity(action.getTargetEntityId()).orElse(null);
+                int used = actor.getData().get("bardicInspirationUsed") instanceof Number number
+                        ? number.intValue() : 0;
+                if (target == null) {
+                    return ActionResult.error("Selecciona un aliado para inspirarlo.");
+                }
+                if (!BardicInspirationRules.canInspire(actor, target, used)) {
+                    return ActionResult.error("No puedes inspirar a ese objetivo (debe ser otro aliado vivo, "
+                            + "a 12 casillas o menos, sin inspiración y con usos disponibles).");
+                }
+                target.getData().put("inspirationDie", BardicInspirationRules.DIE_SIDES);
+                target.getData().put("inspirationRounds", BardicInspirationRules.ROUNDS);
+                target.getData().put("inspirationPending", false);
+                target.getData().put("inspirationSourceId", actor.getId());
+                actor.getData().put("bardicInspirationUsed", used + 1);
+                campaigns.saveEntity(target);
+                message = actor.getName() + " inspira a " + target.getName() + " (d6).";
+                data.put("targetId", target.getId());
+                data.put("uses", used + 1);
             }
             default -> {
                 return ActionResult.error("Rasgo de clase desconocido");
