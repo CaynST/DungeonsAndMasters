@@ -182,6 +182,10 @@ export function Game() {
       : null;
 
   const selectedEntity = gameState?.entities.find((entity) => entity.id === selectedEntityId);
+  const selectedAllyName =
+    selectedEntity?.kind === "PLAYER" && selectedEntity.id !== myEntity?.id
+      ? selectedEntity.name
+      : undefined;
   const targetableIds = useMemo(() => {
     if (!gameState || mode !== "attack" || !gameState.combat?.active) return new Set<number>();
     return new Set(
@@ -535,6 +539,10 @@ export function Game() {
           bardicInspirationUses={bardicInspirationUses}
           inspirationDie={inspirationDie}
           inspirationPending={inspirationPending}
+          hidden={Boolean(myEntity?.data?.hidden)}
+          readied={Boolean(myEntity?.data?.readied)}
+          objectInteractionUsed={Boolean(myEntity?.data?.objectInteractionUsed)}
+          selectedAllyName={selectedAllyName}
           spells={spells}
           spellSlotsMax={spellSlotsMax}
           spellSlotsUsed={spellSlotsUsed}
@@ -567,6 +575,28 @@ export function Game() {
             })
           }
           onUseInspiration={() => act.mutate({ type: "USE_INSPIRATION", actorEntityId: myEntity?.id })}
+          onHelp={() =>
+            act.mutate({
+              type: "HELP",
+              actorEntityId: myEntity?.id,
+              targetEntityId: selectedEntity?.id,
+            })
+          }
+          onHide={() => act.mutate({ type: "HIDE", actorEntityId: myEntity?.id })}
+          onSearch={(skill) =>
+            act.mutate({ type: "SEARCH", actorEntityId: myEntity?.id, skill, dc: 12 })
+          }
+          onReady={() => act.mutate({ type: "READY", actorEntityId: myEntity?.id })}
+          onUseObject={(item) =>
+            act.mutate({ type: "USE_OBJECT", actorEntityId: myEntity?.id, item })
+          }
+          onInteract={() =>
+            act.mutate({
+              type: "INTERACT",
+              actorEntityId: myEntity?.id,
+              text: "interactúa con un objeto de la escena.",
+            })
+          }
           onCastSpell={(spellId) =>
             act.mutate({
               type: "CAST_SPELL",

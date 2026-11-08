@@ -22,6 +22,9 @@ public final class TurnEconomy {
         data.put("reactionUsed", false);
         data.put("dashUsed", false);
         data.put("sneakAttackUsed", false);
+        // Free object interaction (R-02) and the minimal Ready stance (R-03) last one turn.
+        data.put("objectInteractionUsed", false);
+        data.put("readied", false);
     }
 
     public static int movementAllowance(Map<String, Object> data, int speed) {

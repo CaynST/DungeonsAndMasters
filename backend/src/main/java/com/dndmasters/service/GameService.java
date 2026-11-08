@@ -64,6 +64,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.stereotype.Service;
@@ -175,6 +176,12 @@ public class GameService {
             case PlayerAction.BARDIC_INSPIRATION ->
                     classFeature(campaignId, userId, action, PlayerAction.BARDIC_INSPIRATION);
             case PlayerAction.USE_INSPIRATION -> useInspiration(campaignId, userId, action);
+            case PlayerAction.HELP -> help(campaignId, userId, action);
+            case PlayerAction.HIDE -> hide(campaignId, userId, action);
+            case PlayerAction.READY -> ready(campaignId, userId, action);
+            case PlayerAction.SEARCH -> search(campaignId, userId, action);
+            case PlayerAction.USE_OBJECT -> useObject(campaignId, userId, action);
+            case PlayerAction.INTERACT -> interact(campaignId, userId, action);
             default -> ActionResult.error("Tipo de acción desconocido: " + action.getType());
         };
     }
@@ -959,6 +966,321 @@ public class GameService {
         campaigns.saveEntity(actor);
         GameEvent event = events.record(campaignId, activeSceneId(campaignId), type, actor.getName(), message,
                 Map.of("entityId", actor.getId()));
+        return new ActionResult(true, null, null, List.of(event), null, null, null, List.of(), false);
+    }
+
+    /**
+     * Help (PHB): an ally within 5 ft gains advantage on its next attack against a target that is
+     * also within 5 ft of the helper. The flag is consumed by {@link CombatService} on that attack.
+     */
+    private ActionResult help(Long campaignId, Long userId, PlayerAction action) {
+        GameEntity actor = resolveActor(campaignId, userId, action);
+        if (actor == null) {
+            return ActionResult.error("No se encontró el personaje activo");
+        }
+        if (!ownedBy(actor, userId)) {
+            return ActionResult.error("No controlas ese personaje");
+        }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
+        }
+        if (Conditions.of(actor).incapacitated()) {
+            return ActionResult.error("Estás incapacitado y no puedes ayudar.");
+        }
+        CombatState state = campaigns.activeCombat(campaignId);
+        if (state != null && state.isActive() && !state.isCombatantTurn(actor.getId())) {
+            return ActionResult.error("No es tu turno");
+        }
+        if (Boolean.TRUE.equals(actor.getData().get("actionUsed"))) {
+            return ActionResult.error("Ya has usado tu acción este turno.");
+        }
+        if (action.getTargetEntityId() == null) {
+            return ActionResult.error("Selecciona un aliado al que ayudar.");
+        }
+        GameEntity ally = campaigns.entity(action.getTargetEntityId()).orElse(null);
+        if (ally == null || !ally.isAlive() || ally.getKind() != EntityKind.PLAYER) {
+            return ActionResult.error("El objetivo debe ser un aliado vivo.");
+        }
+        if (ally.getId().equals(actor.getId())) {
+            return ActionResult.error("No puedes ayudarte a ti mismo.");
+        }
+        Long sceneId = activeSceneId(campaignId);
+        if (sceneId != null && !sceneId.equals(ally.getSceneId())) {
+            return ActionResult.error("Ese aliado no está en tu escena.");
+        }
+        int distance = actor.cell().chebyshevTo(ally.cell());
+        if (distance > 1) {
+            return ActionResult.error("El aliado debe estar a 5 pies (1 casilla) o menos.");
+        }
+
+        ally.getData().put("helpAdvantage", true);
+        ally.getData().put("helpedBy", actor.getId());
+        actor.getData().put("actionUsed", true);
+        campaigns.saveEntity(ally);
+        campaigns.saveEntity(actor);
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("entityId", actor.getId());
+        data.put("targetId", ally.getId());
+        GameEvent event = events.record(campaignId, sceneId, PlayerAction.HELP, actor.getName(),
+                actor.getName() + " ayuda a " + ally.getName()
+                        + ": ventaja en su próximo ataque contra un objetivo a 5 pies del ayudante.",
+                data);
+        return new ActionResult(true, null, null, List.of(event), null, null, null, List.of(), false);
+    }
+
+    /**
+     * Hide (PHB approximation): fails while a living enemy is adjacent. On success the character
+     * gains advantage on its next attack (DM adjudication; no stealth roll is modelled yet).
+     */
+    private ActionResult hide(Long campaignId, Long userId, PlayerAction action) {
+        GameEntity actor = resolveActor(campaignId, userId, action);
+        if (actor == null) {
+            return ActionResult.error("No se encontró el personaje activo");
+        }
+        if (!ownedBy(actor, userId)) {
+            return ActionResult.error("No controlas ese personaje");
+        }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
+        }
+        if (Conditions.of(actor).incapacitated()) {
+            return ActionResult.error("Estás incapacitado y no puedes ocultarte.");
+        }
+        CombatState state = campaigns.activeCombat(campaignId);
+        if (state != null && state.isActive() && !state.isCombatantTurn(actor.getId())) {
+            return ActionResult.error("No es tu turno");
+        }
+        if (Boolean.TRUE.equals(actor.getData().get("actionUsed"))) {
+            return ActionResult.error("Ya has usado tu acción este turno.");
+        }
+        Long sceneId = activeSceneId(campaignId);
+        boolean enemyAdjacent = sceneId != null && campaigns.entitiesInScene(sceneId).stream()
+                .filter(entity -> entity.getKind() == EntityKind.ENEMY)
+                .filter(GameEntity::isAlive)
+                .anyMatch(entity -> entity.cell().chebyshevTo(actor.cell()) <= 1);
+        if (enemyAdjacent) {
+            return ActionResult.error("No puedes ocultarte con un enemigo a 5 pies o menos.");
+        }
+
+        actor.getData().put("hidden", true);
+        actor.getData().put("actionUsed", true);
+        campaigns.saveEntity(actor);
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("entityId", actor.getId());
+        GameEvent event = events.record(campaignId, sceneId, PlayerAction.HIDE, actor.getName(),
+                actor.getName() + " se oculta: ventaja en su próximo ataque.", data);
+        return new ActionResult(true, null, null, List.of(event), null, null, null, List.of(), false);
+    }
+
+    /**
+     * Search (PHB): Perception or Investigation check that consumes the action. The check is
+     * recorded like any other check so the frontend can animate the d20 result.
+     */
+    private ActionResult search(Long campaignId, Long userId, PlayerAction action) {
+        GameEntity actor = resolveActor(campaignId, userId, action);
+        if (actor == null) {
+            return ActionResult.error("No se encontró el personaje activo");
+        }
+        if (!ownedBy(actor, userId)) {
+            return ActionResult.error("No controlas ese personaje");
+        }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
+        }
+        if (Conditions.of(actor).incapacitated()) {
+            return ActionResult.error("Estás incapacitado y no puedes buscar.");
+        }
+        CombatState state = campaigns.activeCombat(campaignId);
+        if (state != null && state.isActive() && !state.isCombatantTurn(actor.getId())) {
+            return ActionResult.error("No es tu turno");
+        }
+        if (Boolean.TRUE.equals(actor.getData().get("actionUsed"))) {
+            return ActionResult.error("Ya has usado tu acción este turno.");
+        }
+        String skill = action.getSkill() == null
+                ? "perception" : action.getSkill().toLowerCase(Locale.ROOT).trim();
+        if (!"perception".equals(skill) && !"investigation".equals(skill)) {
+            return ActionResult.error("Buscar usa Percepción o Investigación.");
+        }
+        int dc = action.getDc() == null ? 12 : action.getDc();
+
+        ConditionSet conditions = Conditions.of(actor);
+        Advantage advantage = ConditionRules.checkAdvantage(conditions, skill);
+        int penalty = ConditionRules.checkPenalty(conditions);
+        int inspirationBonus = consumeInspiration(actor);
+        CheckResult checkResult = checkResolver.resolve(Combatants.of(actor), skill, dc, advantage,
+                penalty + inspirationBonus);
+
+        actor.getData().put("actionUsed", true);
+        campaigns.saveEntity(actor);
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("skill", skill);
+        data.put("dc", dc);
+        data.put("advantage", advantage.name());
+        data.put("penalty", penalty);
+        data.put("inspirationBonus", inspirationBonus);
+        data.put("expression", "1d20");
+        data.put("rolls", List.of(checkResult.dieRoll()));
+        data.put("dieRoll", checkResult.dieRoll());
+        data.put("modifier", checkResult.modifier());
+        data.put("total", checkResult.total());
+        data.put("success", checkResult.success());
+        data.put("natural20", checkResult.natural20());
+        data.put("natural1", checkResult.natural1());
+        GameEvent event = events.record(campaignId, activeSceneId(campaignId), PlayerAction.SEARCH,
+                actor.getName(), "Buscar con " + skill + ": " + checkResult.total() + " vs CD " + dc
+                        + (checkResult.success() ? " → éxito" : " → fallo"), data);
+        return new ActionResult(true, null, null, List.of(event), null, data, null, List.of(), false);
+    }
+
+    /**
+     * Use an object (PHB): consumes the action to use a non-potion inventory item. Potions keep
+     * their dedicated USE_ITEM path so healing is not duplicated.
+     */
+    private ActionResult useObject(Long campaignId, Long userId, PlayerAction action) {
+        GameEntity actor = resolveActor(campaignId, userId, action);
+        if (actor == null) {
+            return ActionResult.error("No se encontró el personaje activo");
+        }
+        if (!ownedBy(actor, userId)) {
+            return ActionResult.error("No controlas ese personaje");
+        }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
+        }
+        if (Conditions.of(actor).incapacitated()) {
+            return ActionResult.error("Estás incapacitado y no puedes usar objetos.");
+        }
+        CombatState state = campaigns.activeCombat(campaignId);
+        if (state != null && state.isActive() && !state.isCombatantTurn(actor.getId())) {
+            return ActionResult.error("No es tu turno");
+        }
+        if (Boolean.TRUE.equals(actor.getData().get("actionUsed"))) {
+            return ActionResult.error("Ya has usado tu acción este turno.");
+        }
+        String itemName = action.getItem() == null ? "" : action.getItem().trim();
+        if (itemName.isEmpty()) {
+            return ActionResult.error("Selecciona un objeto del inventario.");
+        }
+        String normalized = itemName.toLowerCase(Locale.ROOT);
+        if (normalized.contains("poción") || normalized.contains("pocion") || normalized.contains("elixir")) {
+            return ActionResult.error("Una poción se usa con su acción de inventario, no con Usar objeto.");
+        }
+        PlayerCharacter character = actor.getRefId() == null ? null
+                : characters.findById(actor.getRefId()).map(characterMapper::toDomain).orElse(null);
+        if (character == null) {
+            return ActionResult.error("No se encontró el inventario del personaje.");
+        }
+        boolean inInventory = character.getInventory().stream()
+                .anyMatch(item -> item.name() != null && item.name().equalsIgnoreCase(itemName));
+        if (!inInventory) {
+            return ActionResult.error("No llevas " + itemName + " en el inventario.");
+        }
+
+        String effect;
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("entityId", actor.getId());
+        data.put("item", itemName);
+        if (normalized.contains("antorcha") || normalized.contains("torch")) {
+            effect = "torch";
+            actor.getData().put("lightSource", "torch");
+        } else if (normalized.contains("cuerda") || normalized.contains("rope")) {
+            effect = "rope";
+        } else if (normalized.contains("raciones") || normalized.contains("ration")) {
+            effect = "rations";
+        } else if (normalized.contains("herramientas") || normalized.contains("tools")) {
+            effect = "tools";
+        } else if (normalized.contains("símbolo") || normalized.contains("simbolo")
+                || normalized.contains("holy")) {
+            effect = "holy_symbol";
+            actor.getData().put("holySymbolRaised", true);
+        } else {
+            effect = "generic";
+        }
+        data.put("effect", effect);
+        actor.getData().put("actionUsed", true);
+        campaigns.saveEntity(actor);
+        GameEvent event = events.record(campaignId, activeSceneId(campaignId), PlayerAction.USE_OBJECT,
+                actor.getName(), actor.getName() + " usa " + itemName + ".", data);
+        return new ActionResult(true, null, null, List.of(event), null, null, null, List.of(), false);
+    }
+
+    /**
+     * Ready (PHB minimal approximation): consumes the action and marks the character ready to
+     * make one melee attack with its reaction when an enemy enters its reach. The stance expires
+     * at the start of the character's next turn.
+     */
+    private ActionResult ready(Long campaignId, Long userId, PlayerAction action) {
+        GameEntity actor = resolveActor(campaignId, userId, action);
+        if (actor == null) {
+            return ActionResult.error("No se encontró el personaje activo");
+        }
+        if (!ownedBy(actor, userId)) {
+            return ActionResult.error("No controlas ese personaje");
+        }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
+        }
+        if (Conditions.of(actor).incapacitated()) {
+            return ActionResult.error("Estás incapacitado y no puedes preparar una acción.");
+        }
+        CombatState state = campaigns.activeCombat(campaignId);
+        if (state != null && state.isActive() && !state.isCombatantTurn(actor.getId())) {
+            return ActionResult.error("No es tu turno");
+        }
+        if (Boolean.TRUE.equals(actor.getData().get("actionUsed"))) {
+            return ActionResult.error("Ya has usado tu acción este turno.");
+        }
+        actor.getData().put("readied", true);
+        actor.getData().put("actionUsed", true);
+        campaigns.saveEntity(actor);
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("entityId", actor.getId());
+        GameEvent event = events.record(campaignId, activeSceneId(campaignId), PlayerAction.READY,
+                actor.getName(), actor.getName()
+                        + " se prepara para atacar con su reacción cuando un enemigo entre en su alcance.",
+                data);
+        return new ActionResult(true, null, null, List.of(event), null, null, null, List.of(), false);
+    }
+
+    /**
+     * Free object interaction (PHB): once per turn, no action cost. The specific object is
+     * descriptive; the mechanical effect is the spent interaction itself.
+     */
+    private ActionResult interact(Long campaignId, Long userId, PlayerAction action) {
+        GameEntity actor = resolveActor(campaignId, userId, action);
+        if (actor == null) {
+            return ActionResult.error("No se encontró el personaje activo");
+        }
+        if (!ownedBy(actor, userId)) {
+            return ActionResult.error("No controlas ese personaje");
+        }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
+        }
+        if (Conditions.of(actor).incapacitated()) {
+            return ActionResult.error("Estás incapacitado y no puedes interactuar con objetos.");
+        }
+        CombatState state = campaigns.activeCombat(campaignId);
+        if (state != null && state.isActive() && !state.isCombatantTurn(actor.getId())) {
+            return ActionResult.error("No es tu turno");
+        }
+        if (Boolean.TRUE.equals(actor.getData().get("objectInteractionUsed"))) {
+            return ActionResult.error("Ya has usado tu interacción gratuita con objetos este turno.");
+        }
+        actor.getData().put("objectInteractionUsed", true);
+        campaigns.saveEntity(actor);
+
+        String text = action.getText() == null || action.getText().isBlank()
+                ? "interactúa con un objeto de la escena." : action.getText().trim();
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("entityId", actor.getId());
+        GameEvent event = events.record(campaignId, activeSceneId(campaignId), PlayerAction.INTERACT,
+                actor.getName(), actor.getName() + " " + text, data);
         return new ActionResult(true, null, null, List.of(event), null, null, null, List.of(), false);
     }
 

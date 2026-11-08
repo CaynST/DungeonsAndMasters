@@ -4,8 +4,8 @@ Deuda consciente del prototipo, ordenada por impacto en la fidelidad con el PHB.
 
 | ID | Deuda | Impacto | Prioridad | Remediación |
 |----|-------|---------|-----------|-------------|
-| R-02 | Acción adicional con Segundo aliento/Furia; faltan interacción gratuita y reacciones elegibles del jugador | Medio | P1 | Interacción de objeto y prompts de reacción |
-| R-03 | Hechas Carrera/Retirada/Esquivar; faltan Ayudar/Ocultarse/Preparado/Buscar/Usar objeto | Medio | P1 | Enum de acciones + efectos por turno |
+| R-02 | Interacción gratuita y ataques de oportunidad del jugador implementados; faltan prompts de reacción elegibles para conjuros/rasgos y una ventana de reacción fuera de las automáticas | Bajo | P2 | UI de reacción y modelo de disparadores |
+| R-03 | Ayudar/Ocultarse/Preparado/Buscar/Usar objeto implementados con aproximaciones: Ocultarse no tira Sigilo, Preparado solo cubre "atacar al entrar en alcance", la ventaja de Ayudar caduca al usarse (no al inicio del turno del ayudante) y los objetos tienen efectos descriptivos acotados | Bajo | P2 | Sigilo, disparadores genéricos y catálogo de efectos de objeto |
 | R-04 | Condiciones implementadas; fuente de miedo/encanto, resistencia petrificada, nivel 6 de agotamiento y salvaciones FUE/DES automáticas quedan aproximados | Medio | P2 | Fuente por condición, resistencias y salvaciones genéricas |
 | R-05 | Cobertura implementada para ataques; faltan salvaciones de Destreza y cobertura otorgada por criaturas | Bajo | P2 | Añadir salvaciones genéricas y criaturas como cobertura |
 | R-08 | Terreno difícil se persiste y cobra doble, pero el tablero aún no lo dibuja y la IA (`moveToward`) cuenta casillas, no coste | Bajo | P2 | Render en frontend y coste en el movimiento automático |

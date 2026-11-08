@@ -3,17 +3,23 @@ import {
   ArrowUpFromLine,
   BookOpen,
   Dices,
+  EyeOff,
   Flame,
   Footprints,
+  Hand,
+  HandHelping,
   HeartPulse,
   Lock,
   MessageSquare,
   MoveRight,
   Music,
+  Package,
+  Search,
   Shield,
   Sparkles,
   Store,
   Swords,
+  Timer,
   Undo2,
   Wind,
 } from "lucide-react";
@@ -48,6 +54,10 @@ interface Props {
   concentrationName?: string | null;
   concentrationRounds?: number;
   selectedTargetName?: string;
+  selectedAllyName?: string;
+  hidden?: boolean;
+  readied?: boolean;
+  objectInteractionUsed?: boolean;
   selectedAttack?: Attack;
   onSelectAttack: (attack: Attack) => void;
   onAttack: () => void;
@@ -66,6 +76,12 @@ interface Props {
   onBardicInspiration: () => void;
   onUseInspiration: () => void;
   onCastSpell: (spellId: string) => void;
+  onHelp: () => void;
+  onHide: () => void;
+  onSearch: (skill: "perception" | "investigation") => void;
+  onReady: () => void;
+  onUseObject: (item: string) => void;
+  onInteract: () => void;
 }
 
 export function ActionBar({
@@ -94,6 +110,10 @@ export function ActionBar({
   concentrationName,
   concentrationRounds,
   selectedTargetName,
+  selectedAllyName,
+  hidden,
+  readied,
+  objectInteractionUsed,
   selectedAttack,
   onSelectAttack,
   onAttack,
@@ -112,6 +132,12 @@ export function ActionBar({
   onBardicInspiration,
   onUseInspiration,
   onCastSpell,
+  onHelp,
+  onHide,
+  onSearch,
+  onReady,
+  onUseObject,
+  onInteract,
 }: Props) {
   // While an action is in flight, a check is unresolved, the hero is downed or incapacitated,
   // everything is locked.
@@ -119,6 +145,15 @@ export function ActionBar({
   const canActNow = canAct && !locked;
   const [diceOpen, setDiceOpen] = useState(false);
   const [spellOpen, setSpellOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  // Potions keep their own USE_ITEM flow; Use object lists every other item.
+  const usableItems = (character?.inventory ?? []).filter(
+    (item) => !/poción|pocion|elixir|vial/i.test(item.name),
+  );
+  const runAction = (callback: () => void) => {
+    setActionsOpen(false);
+    callback();
+  };
 
   return (
     <div className="panel flex flex-col gap-2 p-3">
@@ -222,6 +257,112 @@ export function ActionBar({
           >
             <Undo2 className="h-4 w-4" /> Retirada
           </Button>
+
+          <div className="relative">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={locked}
+              title="Ayudar, ocultarse, buscar, prepararse, usar un objeto o interactuar"
+              aria-expanded={actionsOpen}
+              onClick={() => setActionsOpen((value) => !value)}
+            >
+              <HandHelping className="h-4 w-4" /> Acciones
+            </Button>
+            {actionsOpen && (
+              <div className="absolute bottom-full left-0 z-30 mb-2 max-h-[70dvh] w-[min(23rem,calc(100vw-2rem))] overflow-y-auto rounded-lg border border-[#3a2a1a] bg-[#1a130d] p-2 shadow-lg">
+                <div className="mb-2 flex items-center justify-between px-1 text-[10px] uppercase tracking-wider text-muted">
+                  <span>Acciones de combate</span>
+                  <span>Interacción: 1/turno</span>
+                </div>
+                <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    disabled={!canActNow || Boolean(objectInteractionUsed)}
+                    title="Interacción gratuita con un objeto: no consume tu acción"
+                    onClick={() => runAction(onInteract)}
+                    className={ACTION_ITEM}
+                  >
+                    <Hand className="h-3.5 w-3.5 text-[#e0b84a]" />
+                    {objectInteractionUsed ? "Interacción usada" : "Interactuar"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!canActNow || Boolean(actionUsed) || !selectedAllyName}
+                    title={selectedAllyName
+                      ? `Ayudar a ${selectedAllyName}: ventaja en su próximo ataque`
+                      : "Selecciona un aliado en el tablero para ayudarlo"}
+                    onClick={() => runAction(onHelp)}
+                    className={ACTION_ITEM}
+                  >
+                    <HandHelping className="h-3.5 w-3.5 text-[#6fd3a0]" /> Ayudar
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!canActNow || Boolean(actionUsed) || Boolean(hidden)}
+                    title="Ocultarse: solo si no hay enemigos a 5 pies; ventaja en tu próximo ataque"
+                    onClick={() => runAction(onHide)}
+                    className={ACTION_ITEM}
+                  >
+                    <EyeOff className="h-3.5 w-3.5 text-[#9b7cff]" />
+                    {hidden ? "Oculto" : "Ocultarse"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!canActNow || Boolean(actionUsed) || Boolean(readied)}
+                    title="Prepararse: ataca con tu reacción cuando un enemigo entre en tu alcance"
+                    onClick={() => runAction(onReady)}
+                    className={ACTION_ITEM}
+                  >
+                    <Timer className="h-3.5 w-3.5 text-[#e0b84a]" />
+                    {readied ? "Preparado" : "Prepararse"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!canActNow || Boolean(actionUsed)}
+                    title="Buscar con Percepción (CD 12)"
+                    onClick={() => runAction(() => onSearch("perception"))}
+                    className={ACTION_ITEM}
+                  >
+                    <Search className="h-3.5 w-3.5 text-[#c9a6ff]" /> Buscar (Percepción)
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!canActNow || Boolean(actionUsed)}
+                    title="Buscar con Investigación (CD 12)"
+                    onClick={() => runAction(() => onSearch("investigation"))}
+                    className={ACTION_ITEM}
+                  >
+                    <Search className="h-3.5 w-3.5 text-[#c9a6ff]" /> Buscar (Investigación)
+                  </button>
+                </div>
+                <div className="mt-2 border-t border-parchment/10 pt-2">
+                  <p className="mb-1 px-1 text-[10px] uppercase tracking-wider text-muted">Usar objeto</p>
+                  {usableItems.length === 0 ? (
+                    <p className="px-1 text-[11px] text-muted">Sin objetos utilizables.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1">
+                      {usableItems.map((item) => (
+                        <button
+                          key={item.name}
+                          type="button"
+                          disabled={!canActNow || Boolean(actionUsed)}
+                          title={item.description}
+                          onClick={() => runAction(() => onUseObject(item.name))}
+                          className="inline-flex items-center gap-1 rounded-md border border-parchment/10 bg-surface/60 px-2 py-1 text-[11px] text-muted transition hover:border-gold/40 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          <Package className="h-3 w-3 text-gold" />
+                          {item.name}
+                          {item.quantity > 1 && <span className="opacity-70">x{item.quantity}</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           {prone && (
             <Button
               variant="secondary"
@@ -404,6 +545,9 @@ export function ActionBar({
     </div>
   );
 }
+
+const ACTION_ITEM =
+  "inline-flex items-center gap-1.5 rounded-md border border-parchment/10 bg-surface/60 px-2 py-1.5 text-left text-xs text-ink transition hover:border-gold/40 disabled:cursor-not-allowed disabled:opacity-40";
 
 const ABILITY_LABELS: Record<string, string> = {
   STRENGTH: "FUE",

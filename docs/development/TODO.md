@@ -8,8 +8,8 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | ID | Tarea | Prioridad | Estado |
 |----|-------|-----------|--------|
 | R-01 | Tiradas de salvación contra muerte (3 éxitos/fallos, 1 = 2 fallos, 20 = 1 PG, estabilizar, daño masivo) | P1 | done |
-| R-02 | Economía de acciones completa: acción adicional, reacción, ataque de oportunidad, interacción gratuita | P1 | in_progress |
-| R-03 | Acciones de combate: Carrera, Retirada, Esquivar, Ayudar, Ocultarse, Preparado, Buscar, Usar objeto | P1 | in_progress |
+| R-02 | Economía de acciones completa: acción adicional, reacción, ataque de oportunidad, interacción gratuita | P1 | done |
+| R-03 | Acciones de combate: Carrera, Retirada, Esquivar, Ayudar, Ocultarse, Preparado, Buscar, Usar objeto | P1 | done |
 | R-04 | Condiciones del Apéndice A (cegado, derribado, apresado, asustado, etc.) | P1 | done |
 | R-05 | Cobertura (media +2 / tres cuartos +5 / total) | P1 | done |
 | R-06 | Rango de ataque (normal/largo, desventaja) y alcance cuerpo a cuerpo | P0 | done |
