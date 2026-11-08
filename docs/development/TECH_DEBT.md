@@ -16,6 +16,7 @@ Deuda consciente del prototipo, ordenada por impacto en la fidelidad con el PHB.
 | R-14 | Sin descansos ni dados de golpe | Medio | P2 | Descanso corto/largo en el servicio |
 | R-15 | El peso y la capacidad se muestran, pero la sobrecarga no modifica velocidad ni tiradas; el JSON antiguo sin peso carga como 0 y la munición no se consume | Bajo | P3 | R-18: consumo de munición y penalización de movimiento |
 | U-02 | `Avatar` unificado en Home, Lobby, tarjetas e iniciativa; `CharacterSheet` (otro workstream), `CinematicIntro` y el fallback de `DmPanel` aún dibujan sus propias iniciales | Bajo | P2 | Reutilizar `components/ui/Avatar` cuando se retomen esas pantallas |
+| U-04 | Cobertura AA de las pantallas no-VTT: quedan sin revisar el VTT (`Game`, `Board`, `ActionBar`) y `CharacterCreation` (otros workstreams); no hay auditoría automática axe/Lighthouse en CI ni prueba con lector de pantalla real; las descripciones de inventario siguen dependiendo de `title` | Medio | P2 | Añadir `axe`/Lighthouse al pipeline, probar con NVDA/VoiceOver y exponer las descripciones con texto visible o `aria-describedby` |
 
 Arquitectura: el motor sigue siendo la autoridad; estas deudas se implementan en
 `engine/` y se exponen por acciones, sin tocar el contrato del DM.

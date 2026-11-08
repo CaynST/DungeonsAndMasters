@@ -2,6 +2,15 @@
 
 ## 2026-11-08
 
+- **U-04/D-38** `fix(a11y)` — Revisión WCAG 2.2 AA de Login, Home, Lobby, Crónica, Admin, tienda,
+  ficha y primitivas: foco visible global, skip link y `<main>`, `prefers-reduced-motion` (CSS y
+  Fireflies), pestañas ARIA en Admin, diálogo modal de tienda con foco atrapado/Escape/restauración,
+  errores anunciados, `aria-invalid`/`aria-describedby`, `caption`/`scope` en tablas, barra de vida
+  como `progressbar`, contraste AA en textos atenuados y estados no asequibles, nombres accesibles
+  en iconos y objetivo táctil de 24 px en "Usar". Sin cambios en el VTT ni en creación de
+  personajes. Verificación: 75 tests, build y lint (solo avisos preexistentes) en verde; contraste
+  comprobado por cálculo, sin axe/Lighthouse ni lector de pantalla real.
+
 - **D-37** `feat(ui)` — Segunda pasada visual de **Home, Lobby, Crónica y estados vacíos/carga**:
   `EmptyState` y `Skeleton` compartidos, etiquetas de estado/fase de campaña centralizadas,
   cabecera destacada y tarjetas de héroe con mejor jerarquía, resumen de preparación y selección de

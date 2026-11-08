@@ -33,7 +33,7 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | U-01 | Tablero a pantalla completa (hoy queda con márgenes) | P2 | done |
 | U-02 | Retratos/consonancia visual: componente `Avatar` reutilizable con retrato local y fallback de iniciales | P2 | done |
 | U-03 | Segunda pasada visual: Home, Lobby, Crónica y estados vacíos | P2 | done |
-| U-04 | Revisión de accesibilidad (contraste AA, foco, aria en iconos) | P2 | pending |
+| U-04 | Revisión de accesibilidad (contraste AA, foco, aria en iconos) | P2 | done |
 | U-05 | Responsive del juego (sidebar fija, barra horizontal) | P2 | done |
 | U-06 | Paginación y filtro de estado en Home (sin borrar campañas) | P3 | done |
 | U-07 | Generación dinámica de escenas por el DM a mitad de aventura | P2 | pending |
@@ -81,3 +81,4 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-35 | Peso de inventario, capacidad de carga, aviso de sobrecarga y herramientas/munición iniciales | done |
 | D-36 | Acciones R-02/R-03: Ayudar, Ocultarse, Preparado, Buscar, Usar objeto, interacción y reacciones | done |
 | D-37 | Segunda pasada visual: Home, Lobby, Crónica, estados vacíos y de carga | done |
+| D-38 | Accesibilidad AA en pantallas no-VTT: foco, teclado, contraste, aria, reduced-motion | done |

@@ -1,5 +1,51 @@
 # PROGRESS
 
+## 2026-11-08 — Revisión de accesibilidad WCAG 2.2 AA (U-04)
+
+**Objetivo:** auditar y corregir las pantallas no-VTT (Login, Home, Lobby, Crónica, Admin, tienda,
+ficha y primitivas compartidas) sin cambiar la dirección visual ni el VTT.
+
+**Fase:** completada.
+
+**Acciones**
+- Foco: anillo global `:focus-visible` de latón, anillo explícito en `Button` y en controles
+  ad-hoc; enlace "Saltar al contenido" y landmark `<main>` en `App`.
+- Movimiento: regla global `prefers-reduced-motion` y `Fireflies` del Lobby desactivadas con
+  `useReducedMotion`; el scroll de "Crear campaña" respeta la preferencia.
+- Semántica: `role="group"` para el selector Entrar/Crear cuenta, pestañas ARIA en Admin
+  (roving tabindex + flechas/Home/End), diálogo modal de tienda con `aria-modal`, foco atrapado,
+  Escape y restauración de foco, y tablas con `caption` y `scope="col"`.
+- Formularios: errores con `role="alert"`, `aria-invalid`/`aria-describedby` en contraseña,
+  etiquetas asociadas verificadas y formulario de creación de campaña con envío por Enter.
+- Contraste: `text-muted/70` y `text-gold/70` sustituidos por tokens AA; precio no asequible y
+  sobrecarga usan `crimson-soft`; placeholders del Login con contraste suficiente.
+- Iconos: controles solo-icono con nombre accesible (cerrar tienda, retrato, borrar); iconos
+  decorativos ocultos a tecnologías de asistencia.
+- Color-only: barra de vida expuesta como `progressbar` con `aria-valuetext`; "no asequible" y
+  estados listos/esperando llevan texto además de color.
+- Tamaño táctil: botón "Usar" del inventario a 24×24 mínimo; el resto de controles ya superaba
+  24 px.
+
+**Verificación**
+- `pnpm build` en verde.
+- `pnpm test --maxWorkers=1 --no-file-parallelism --testTimeout=30000`: 21 archivos, 75 tests.
+- `pnpm lint`: sin errores; se mantienen los avisos preexistentes (claves JSX en Admin, imports sin
+  usar en archivos fuera de alcance, etc.).
+
+**Commits**
+- `feat(a11y): add global focus, skip link and reduced-motion baseline`
+- `fix(a11y): give shared buttons focus rings and expose HP as a progressbar`
+- `fix(a11y): announce login errors and label the access mode switch`
+- `fix(a11y): make the shop a labelled dialog with focus trap and Escape`
+- `fix(a11y): give admin sections real tabs and captioned tables`
+- `fix(a11y): raise contrast, heading order and motion handling on non-game screens`
+- `test(a11y): cover skip link and main landmark`
+
+**Limitaciones / siguiente paso**
+- El VTT (`Game`, `Board`, `ActionBar`) y `CharacterCreation` quedan para sus workstreams.
+- No se ejecutó auditoría automática axe/Lighthouse ni prueba con lector de pantalla real; el
+  contraste se verificó por cálculo (pares y ratios en el informe de la tarea).
+
 ## 2026-11-08 — Peso, capacidad y munición/herramientas (R-15)
 
 **Objetivo:** modelar el peso del inventario y mostrarlo sin alterar las reglas de combate ni la

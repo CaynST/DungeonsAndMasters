@@ -203,3 +203,19 @@ bandera sin efecto; (c) aproximación acotada y documentada.
 reacciones. Quedan documentadas en `TECH_DEBT.md` las aproximaciones: Ocultarse sin Sigilo,
 Preparado limitado a "atacar al entrar en alcance", la ventaja de Ayudar sin expiración temporal
 exacta y efectos de objeto descriptivos.
+
+## ADR-019 — Accesibilidad AA con foco global y patrones nativos
+**Contexto:** la UI tenía foco inconsistente, controles solo-icono sin nombre, un modal de tienda
+sin semántica de diálogo, pestañas de Admin sin roles y varios textos atenuados por debajo de 4.5:1.
+Se pedía corregirlo sin rediseñar la dirección "mesa de taberna" ni tocar el VTT.
+**Alternativas:** (a) sustituir controles por una librería de componentes accesibles; (b) revisar
+pantalla a pantalla con estilos ad-hoc; (c) establecer una base compartida y aplicar patrones
+nativos/ARIA en los puntos concretos.
+**Decisión:** (c). Un anillo `:focus-visible` de latón y una regla `prefers-reduced-motion` en
+`index.css`, un `<main>` con skip link en `App`, foco explícito en `Button`, `role="progressbar"`
+en la barra de vida y patrones ARIA estándar donde el HTML nativo no basta (pestañas de Admin y
+diálogo modal de tienda con foco atrapado, Escape y restauración). Los colores se ajustan a tokens
+existentes (`crimson-soft`, `gold-soft`, `muted`) en lugar de introducir una paleta nueva.
+**Consecuencia:** la base queda reutilizable y testeable sin añadir dependencias. Los avisos de
+lint preexistentes y la cobertura de VTT/creación de personajes quedan fuera del alcance y
+documentados en `TECH_DEBT.md`.
