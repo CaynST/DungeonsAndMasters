@@ -4,11 +4,13 @@ import com.dndmasters.ai.DungeonMasterService;
 import com.dndmasters.ai.dm.DmAction;
 import com.dndmasters.ai.dm.DmContext;
 import com.dndmasters.ai.dm.DmResponse;
+import com.dndmasters.content.Bestiary;
 import com.dndmasters.domain.Attack;
 import com.dndmasters.domain.Ability;
 import com.dndmasters.domain.Campaign;
 import com.dndmasters.domain.CampaignPage;
 import com.dndmasters.domain.CampaignStatus;
+import com.dndmasters.domain.CombatParticipant;
 import com.dndmasters.domain.CombatState;
 import com.dndmasters.domain.EntityKind;
 import com.dndmasters.domain.GameEntity;
@@ -1614,6 +1616,7 @@ public class GameService {
                         actionsOut.add("START_COMBAT_FAILED");
                     }
                 }
+                case "SPAWN_ENEMY" -> spawnEnemy(campaignId, sceneId, action.enemyName(), eventsOut, actionsOut);
                 case "REQUEST_CHECK" -> {
                     checkRequest = new CheckRequest(action.skill(), action.dc(), null,
                             "Prueba de " + action.skill() + " (CD " + action.dc() + ")");
@@ -1664,7 +1667,7 @@ public class GameService {
                     }
                 }
                 default -> {
-                    // NARRATE / SPAWN_ENEMY are non-mechanical for this prototype.
+                    // NARRATE and unknown types need no mechanical state change.
                 }
             }
         }
@@ -1676,6 +1679,68 @@ public class GameService {
     List<GameEvent> applyDmActions(Long campaignId, Long userId, List<DmAction> actions) {
         DmResponse response = new DmResponse("", actions == null ? List.of() : actions, false, null);
         return applyDm(campaignId, userId, response).events();
+    }
+
+    /** Test/internal seam: exposes the action ids produced while applying structured DM actions. */
+    @Transactional
+    List<String> applyDmActionNames(Long campaignId, Long userId, List<DmAction> actions) {
+        DmResponse response = new DmResponse("", actions == null ? List.of() : actions, false, null);
+        return applyDm(campaignId, userId, response).actions();
+    }
+
+    /**
+     * Spawns a bestiary monster into the current scene. Unknown names and full maps are rejected
+     * with a persisted event and a failure action id; they never escape as exceptions. When a
+     * combat is running in this scene the creature joins it with its own initiative.
+     */
+    private void spawnEnemy(Long campaignId, Long sceneId, String enemyName,
+                            List<GameEvent> eventsOut, List<String> actionsOut) {
+        var monster = Bestiary.findByName(enemyName);
+        if (monster.isEmpty()) {
+            rejectSpawn(campaignId, sceneId, enemyName, "UNKNOWN_MONSTER",
+                    "No se pudo invocar a \"" + (enemyName == null ? "" : enemyName)
+                            + "\": esa criatura no existe en el bestiario.", eventsOut, actionsOut);
+            return;
+        }
+        if (sceneId == null) {
+            rejectSpawn(campaignId, sceneId, enemyName, "NO_ACTIVE_SCENE",
+                    "No se pudo invocar a " + monster.get().name() + ": no hay una escena activa.",
+                    eventsOut, actionsOut);
+            return;
+        }
+        GameEntity enemy = campaigns.spawnEnemy(sceneId, monster.get()).orElse(null);
+        if (enemy == null) {
+            rejectSpawn(campaignId, sceneId, enemyName, "NO_FREE_CELL",
+                    "No se pudo invocar a " + monster.get().name()
+                            + ": no queda ninguna casilla libre en el mapa.", eventsOut, actionsOut);
+            return;
+        }
+
+        CombatState combatState = campaigns.activeCombat(campaignId);
+        CombatParticipant participant = combat.addParticipant(campaignId, combatState, enemy);
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("entityId", enemy.getId());
+        data.put("sceneId", sceneId);
+        data.put("monsterId", monster.get().id());
+        data.put("name", enemy.getName());
+        data.put("x", enemy.getX());
+        data.put("y", enemy.getY());
+        data.put("joinedCombat", participant != null);
+        if (participant != null) {
+            data.put("combatId", combatState.getId());
+            data.put("initiative", participant.getInitiative());
+        }
+        eventsOut.add(events.record(campaignId, sceneId, "ENEMY_SPAWNED", enemy.getName(),
+                enemy.getName() + " irrumpe en la escena.", data));
+        actionsOut.add("SPAWN_ENEMY:" + enemy.getName());
+    }
+
+    private void rejectSpawn(Long campaignId, Long sceneId, String enemyName, String reason, String message,
+                             List<GameEvent> eventsOut, List<String> actionsOut) {
+        eventsOut.add(events.record(campaignId, sceneId, "ENEMY_SPAWN_FAILED", "Dungeon Master", message,
+                Map.of("enemyName", enemyName == null ? "" : enemyName, "reason", reason)));
+        actionsOut.add("SPAWN_ENEMY_FAILED:" + reason);
     }
 
     private void applyCondition(Long campaignId, Long sceneId, DmAction action, List<GameEvent> eventsOut) {
@@ -1748,8 +1813,10 @@ public class GameService {
     private int actionPriority(String type) {
         return switch (type) {
             case "SHIFT_SCENE" -> 0;
-            case "START_COMBAT" -> 1;
-            default -> 2;
+            // Spawn before opening combat so a newly summoned creature joins the initiative order.
+            case "SPAWN_ENEMY" -> 1;
+            case "START_COMBAT" -> 2;
+            default -> 3;
         };
     }
 

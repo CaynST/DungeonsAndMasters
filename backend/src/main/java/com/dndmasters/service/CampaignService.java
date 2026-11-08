@@ -5,12 +5,14 @@ import com.dndmasters.content.AdventureDefinition.EnemyDefinition;
 import com.dndmasters.content.AdventureDefinition.NpcDefinition;
 import com.dndmasters.content.AdventureDefinition.Placement;
 import com.dndmasters.content.AdventureDefinition.SceneDefinition;
+import com.dndmasters.content.Bestiary;
 import com.dndmasters.content.ValdrosAdventure;
 import com.dndmasters.domain.Campaign;
 import com.dndmasters.domain.CampaignPage;
 import com.dndmasters.domain.CampaignStatus;
 import com.dndmasters.domain.Cell;
 import com.dndmasters.domain.CombatState;
+import com.dndmasters.domain.EntityKind;
 import com.dndmasters.domain.GameEntity;
 import com.dndmasters.domain.GameMap;
 import com.dndmasters.domain.GamePhase;
@@ -46,6 +48,7 @@ import com.dndmasters.persistence.repository.MapEntityRepository;
 import com.dndmasters.persistence.repository.NpcTemplateRepository;
 import com.dndmasters.persistence.repository.SceneRepository;
 import com.dndmasters.persistence.repository.UserRepository;
+import com.dndmasters.engine.board.SpawnPlacement;
 import com.dndmasters.rules.Edition;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -457,6 +460,60 @@ public class CampaignService {
                     character.getColor(), character.getIcon(), character.getPortrait(), data);
             index++;
         }
+    }
+
+    /**
+     * Creates a persisted {@code ENEMY} token for a bestiary monster in the requested scene.
+     * Returns empty when the scene or map is unavailable, or when no walkable cell is free;
+     * callers translate that into a clean DM-action rejection instead of an exception.
+     */
+    @Transactional
+    public Optional<GameEntity> spawnEnemy(Long sceneId, Bestiary.Monster monster) {
+        if (monster == null || sceneId == null) {
+            return Optional.empty();
+        }
+        SceneEntity scene = scenes.findById(sceneId).orElse(null);
+        if (scene == null || scene.getMapId() == null) {
+            return Optional.empty();
+        }
+        GameMap map = mapForScene(sceneId);
+        if (map == null) {
+            return Optional.empty();
+        }
+        Optional<Cell> chosen = SpawnPlacement.choose(map, entitiesInScene(sceneId));
+        if (chosen.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Cell spawn = chosen.get();
+        GameEntity enemy = new GameEntity();
+        enemy.setSceneId(sceneId);
+        enemy.setMapId(scene.getMapId());
+        enemy.setKind(EntityKind.ENEMY);
+        enemy.setName(monster.name());
+        enemy.moveTo(spawn);
+        enemy.setHp(monster.hp());
+        enemy.setMaxHp(monster.hp());
+        enemy.setAc(monster.ac());
+        enemy.setSpeed(monster.speed());
+        enemy.setColor(monster.color());
+        enemy.setIcon(monster.icon());
+        enemy.setPortrait(monster.portrait());
+        enemy.setAlive(true);
+        enemy.setStats(monster.stats());
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("stats", monster.stats());
+        data.put("attacks", monster.attacks());
+        data.put("behavior", monster.behavior());
+        data.put("monsterId", monster.id());
+        data.put("tier", monster.tier().name());
+        data.put("xp", monster.xp());
+        enemy.setData(data);
+
+        BoardEntity saved = boardEntities.save(entityMapper.toEntity(enemy));
+        enemy.setId(saved.getId());
+        return Optional.of(enemy);
     }
 
     private String hitDieFor(PlayerCharacter character) {

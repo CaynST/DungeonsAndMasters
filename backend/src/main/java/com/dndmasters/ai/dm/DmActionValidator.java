@@ -57,7 +57,9 @@ public class DmActionValidator {
                 yield DmAction.shiftScene(action.sceneOrder());
             }
             case "START_COMBAT" -> context.isCombatActive() ? null : DmAction.startCombat();
-            case "SPAWN_ENEMY" -> action.enemyName() == null ? null : action;
+            case "SPAWN_ENEMY" -> action.enemyName() == null || action.enemyName().isBlank()
+                    ? null
+                    : DmAction.spawnEnemy(action.enemyName().trim());
             case "GRANT_REWARD" -> action.itemName() == null ? null : action;
             case "APPLY_CONDITION" -> {
                 Condition condition = Condition.fromCode(action.condition());

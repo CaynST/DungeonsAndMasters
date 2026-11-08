@@ -125,6 +125,53 @@ public class CombatService {
         return state;
     }
 
+    /**
+     * Adds a creature to a running combat with its own initiative. The list stays sorted by
+     * initiative; if the newcomer is inserted before the active participant, the turn pointer is
+     * shifted so the creature that was acting keeps its turn. Returns the existing participant
+     * when the creature is already in the fight, or {@code null} when the combat is not running
+     * in the creature's scene.
+     */
+    @Transactional
+    public CombatParticipant addParticipant(Long campaignId, CombatState state, GameEntity entity) {
+        if (state == null || !state.isActive() || entity == null || entity.getId() == null) {
+            return null;
+        }
+        if (state.getSceneId() != null && !state.getSceneId().equals(entity.getSceneId())) {
+            return null;
+        }
+        CombatParticipant existing = state.getParticipants().stream()
+                .filter(p -> entity.getId().equals(p.getEntityId()))
+                .findFirst().orElse(null);
+        if (existing != null) {
+            return existing;
+        }
+
+        int dieRoll = dice.roll("1d20").rolls().get(0);
+        int initiative = dieRoll + Combatants.of(entity).dexterityModifier();
+        List<CombatParticipant> participants = state.getParticipants();
+        int insertAt = 0;
+        while (insertAt < participants.size() && participants.get(insertAt).getInitiative() >= initiative) {
+            insertAt++;
+        }
+        boolean hadCurrent = state.currentParticipant() != null;
+        CombatParticipant participant = new CombatParticipant(
+                null, entity.getId(), entity.getName(), entity.getKind(), initiative, insertAt, true);
+        participants.add(insertAt, participant);
+        if (hadCurrent && insertAt <= state.getCurrentTurnIndex()) {
+            state.setCurrentTurnIndex(state.getCurrentTurnIndex() + 1);
+        }
+        for (int i = 0; i < participants.size(); i++) {
+            participants.get(i).setOrderIndex(i);
+        }
+        persist(state);
+
+        // The newcomer has not spent action, movement, bonus action or reaction yet.
+        campaigns.resetTurnUsage(entity.getId());
+        campaigns.resetFeatureUses(entity.getId());
+        return participant;
+    }
+
     @Transactional
     public void persist(CombatState state) {
         CombatStateEntity entity = state.getId() == null

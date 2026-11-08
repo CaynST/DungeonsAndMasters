@@ -13,6 +13,23 @@ class DmActionValidatorTest {
     private final DmActionValidator validator = new DmActionValidator();
 
     @Test
+    void acceptsSpawnEnemyNamesAndDropsBlankOnes() {
+        DmResponse valid = new DmResponse("n", java.util.List.of(
+                DmAction.spawnEnemy("  Lobo  ")), false, null);
+        DmResponse blank = new DmResponse("n", java.util.List.of(
+                DmAction.spawnEnemy("   ")), false, null);
+        DmResponse missing = new DmResponse("n", java.util.List.of(
+                DmAction.spawnEnemy(null)), false, null);
+
+        DmResponse clean = validator.sanitize(valid, new DmContext());
+        assertThat(clean.actions()).hasSize(1);
+        assertThat(clean.actions().get(0).type()).isEqualTo("SPAWN_ENEMY");
+        assertThat(clean.actions().get(0).enemyName()).isEqualTo("Lobo");
+        assertThat(validator.sanitize(blank, new DmContext()).actions()).isEmpty();
+        assertThat(validator.sanitize(missing, new DmContext()).actions()).isEmpty();
+    }
+
+    @Test
     void acceptsAndNormalisesKnownConditions() {
         DmResponse raw = new DmResponse("n", java.util.List.of(
                 DmAction.applyCondition(7L, "poisoned", 2)), false, null);
