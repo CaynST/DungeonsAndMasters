@@ -2,6 +2,20 @@
 
 ## 2026-11-08
 
+- **D-39** `feat(rules)` — Estilo **Protección**: al atacarse a un jugador, un aliado jugador vivo y
+  consciente con el estilo a 5 pies gasta su reacción para imponer **desventaja**; se valida estilo,
+  alcance, estado y reacción y se registra el evento `PROTECTION`. Reacción automática acotada
+  (sin prompt), documentada en ADR-019. Selección en creación para guerrero/paladín.
+
+- **D-38** `feat(rules)` — Estilo **Gran arma**: repetición por dado de los 1 y 2 en el daño de un
+  arma cuerpo a cuerpo a dos manos, una sola vez por dado y conservando el resultado nuevo. El
+  evento de ataque registra `greatWeaponFighting`, `greatWeaponRerolls` y `greatWeaponBonus`. La
+  aproximación de crítico y la falta de empuñadura versátil quedan en ADR-019/TECH_DEBT. Nuevo
+  `DiceEngine.rollRerollingLowFaces`; selección en creación para guerrero/paladín.
+
+- **B-03** `docs(development)` — **Canalizar divinidad** no se implementa: exige decidir dominio
+  divino y soporte de nivel 2. R-11 queda parcialmente completo y bloqueado por producto.
+
 - **D-37** `feat(ui)` — Segunda pasada visual de **Home, Lobby, Crónica y estados vacíos/carga**:
   `EmptyState` y `Skeleton` compartidos, etiquetas de estado/fase de campaña centralizadas,
   cabecera destacada y tarjetas de héroe con mejor jerarquía, resumen de preparación y selección de

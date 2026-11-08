@@ -93,6 +93,23 @@ class CharacterBuilderTest {
     }
 
     @Test
+    void acceptsGreatWeaponAndProtectionStylesForMartialClasses() {
+        CharacterBuildRequest greatWeapon = new CharacterBuildRequest(
+                "Kael", Edition.DND_5E_2014, "human", "fighter", "soldier",
+                scores(15, 12, 14, 10, 10, 8), List.of("athletics", "perception"),
+                "cadena", "longsword", "great-weapon");
+        CharacterBuildRequest protection = new CharacterBuildRequest(
+                "Dara", Edition.DND_5E_2014, "human", "paladin", "soldier",
+                scores(15, 12, 14, 10, 10, 8), List.of("athletics", "insight"),
+                "cadena", "longsword", "protection");
+
+        assertThat(builder.build(greatWeapon).getCreationData().get("fightingStyle"))
+                .isEqualTo("great-weapon");
+        assertThat(builder.build(protection).getCreationData().get("fightingStyle"))
+                .isEqualTo("protection");
+    }
+
+    @Test
     void rejectsFightingStyleForNonMartialClasses() {
         CharacterBuildRequest request = new CharacterBuildRequest(
                 "Lyra", Edition.DND_5E_2014, "high-elf", "wizard", "sage",

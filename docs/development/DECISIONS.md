@@ -203,3 +203,28 @@ bandera sin efecto; (c) aproximación acotada y documentada.
 reacciones. Quedan documentadas en `TECH_DEBT.md` las aproximaciones: Ocultarse sin Sigilo,
 Preparado limitado a "atacar al entrar en alcance", la ventaja de Ayudar sin expiración temporal
 exacta y efectos de objeto descriptivos.
+
+## ADR-019 — Gran arma con repetición por dado y Protección como reacción automática
+**Contexto:** R-11 pedía los estilos **Gran arma** y **Protección**. Gran arma repite los dados de
+daño que muestran 1 o 2 con un arma cuerpo a cuerpo a dos manos; Protección impone desventaja, con
+la reacción, a un ataque contra un aliado a 5 pies. El prototipo no tiene ventana de reacción ni
+selección de objetivo de reacción.
+**Alternativas:** (a) aproximar Gran arma sumando una media fija o repitiendo el total; (b) repetir
+cada dado individualmente; (c) para Protección, pedir una reacción al jugador (requiere UI y turnos
+suspendidos) o aplicarla automáticamente.
+**Decisión:**
+- **Gran arma** se implementa por **dado individual**: `DiceEngine.rollRerollingLowFaces` repite una
+  sola vez cada 1 o 2 y conserva el resultado nuevo, aunque vuelva a ser bajo. Solo aplica a ataques
+  de arma (`weaponAttack`), cuerpo a cuerpo y con `Attack.twoHanded`. En un crítico se mantiene la
+  aproximación existente (se repite un conjunto de dados y se duplica el total), por lo que el bonus
+  de la repetición también se duplica. El evento de ataque registra `greatWeaponFighting`,
+  `greatWeaponRerolls` y `greatWeaponBonus`.
+- **Protección** se aplica como **reacción automática acotada**: al atacarse a un jugador, se busca
+  un protector jugador, vivo, consciente, con el estilo, a 1 casilla (5 pies) del objetivo y con
+  `reactionUsed` libre; se elige el de menor `id` para que sea determinista. El protector gasta su
+  reacción, el ataque recibe desventaja (se combina con ventaja/desventaja según 5e) y se registra
+  un evento `PROTECTION`. El protector nunca es el atacante ni el objetivo.
+**Consecuencia:** ambas reglas son testeables de extremo a extremo y visibles en el registro de
+combate. Aproximaciones documentadas en `TECH_DEBT.md`: no hay elección del jugador (la reacción se
+gasta siempre que sea elegible, incluso si el ataque ya tenía desventaja), no se comprueba línea de
+visión ni sorpresa, y las armas versátiles no cambian de empuñadura.

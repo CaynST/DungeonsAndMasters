@@ -81,3 +81,5 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-35 | Peso de inventario, capacidad de carga, aviso de sobrecarga y herramientas/munición iniciales | done |
 | D-36 | Acciones R-02/R-03: Ayudar, Ocultarse, Preparado, Buscar, Usar objeto, interacción y reacciones | done |
 | D-37 | Segunda pasada visual: Home, Lobby, Crónica, estados vacíos y de carga | done |
+| D-38 | Gran arma: repetición por dado de 1/2 con arma a dos manos y bonus en el evento de ataque | done |
+| D-39 | Protección: reacción automática acotada que impone desventaja a ataques contra aliados a 5 pies | done |

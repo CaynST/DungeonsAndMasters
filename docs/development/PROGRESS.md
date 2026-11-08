@@ -1,5 +1,52 @@
 # PROGRESS
 
+## 2026-11-08 — Estilos Gran arma y Protección (R-11 parcial)
+
+**Objetivo:** completar los dos estilos de combate que faltaban (Gran arma y Protección) sin
+inventar el subsistema de dominio/nivel que exige Canalizar divinidad.
+
+**Acciones**
+- `FightingStyleRules` reconoce `great-weapon` y `protection`, expone
+  `rerollsLowDamageDice(style, melee, twoHanded)` y `hasProtection(style)`, y etiqueta ambos en
+  español. `CharacterBuilder` los acepta para guerrero y paladín.
+- **Gran arma** se implementa por dado: `DiceEngine.rollRerollingLowFaces` repite una sola vez cada
+  dado de daño que muestra 1 o 2 y conserva el resultado nuevo. `DiceRollResult` y `DamageResult`
+  exponen `rerolledFrom`/`rerollBonus` y `rerolls`/`rerollBonus`; `DamageResolver.apply(...)` acepta
+  un flag de Gran arma. Solo se activa en ataques de arma cuerpo a cuerpo con `Attack.twoHanded`.
+- `CombatService` pasa el flag según el estilo y el arma y registra en el evento de ataque
+  `greatWeaponFighting`, `greatWeaponRerolls` y `greatWeaponBonus`.
+- **Protección**: antes de resolver el ataque, `CombatService.findProtector` busca un jugador vivo,
+  consciente, con el estilo, a 1 casilla del objetivo, sin reacción gastada y distinto del atacante
+  y del objetivo (menor `id` si hay varios). El protector gasta `reactionUsed`, el ataque gana
+  desventaja (combinada según 5e) y se registra el evento `PROTECTION` con protector, protegido y
+  atacante. El evento de ataque incluye `protection`, `protectorId` y `protectorName`.
+- `CharacterCreation.tsx` centraliza las opciones en `FIGHTING_STYLE_OPTIONS` y muestra los cinco
+  estilos con su efecto.
+- **Canalizar divinidad** no se implementó: es nivel 2 y depende del dominio. Queda registrado en
+  `BLOCKERS.md` (B-03) con la decisión de producto necesaria.
+
+**Verificación (TDD)**
+- Rojo frontend capturado: `CharacterCreation.test.tsx` falló por `FIGHTING_STYLE_OPTIONS` ausente
+  antes de exportarlo.
+- Nuevos tests backend: `FightingStyleRulesTest` (Gran arma, Protección, etiquetas y estilos
+  conocidos), `DiceEngineTest` (repetición de 1/2, repetición que sigue siendo baja, umbral 0,
+  constantes y expresiones inválidas), `RulesEngineTest` (daño de Gran arma opt-in y bonus
+  registrado), `FightingStyleIntegrationTest` (evento de Gran arma, no aplica a una mano,
+  Protección con desventaja/evento/reacción, segunda vez sin reacción, fuera de 5 pies, sin estilo,
+  inconsciente y protector muerto) y `CharacterBuilderTest` (acepta ambos estilos).
+- Backend completo: **294 tests** en verde (`mvn test`).
+- Frontend: **63 tests** en verde (`pnpm test --maxWorkers=1 --no-file-parallelism
+  --testTimeout=30000`) y `pnpm build` en verde.
+- Decisión y aproximaciones en `DECISIONS.md` (ADR-019) y `TECH_DEBT.md` (R-11/R-11b).
+
+**Commits**
+- `feat(rules): add great weapon and protection fighting styles`
+- `feat(ui): offer great weapon and protection at character creation`
+- `docs(development): record R-11 fighting style work`
+
+**Siguiente paso**
+- Decidir dominio y nivel 2 para Canalizar divinidad (B-03). R-11 permanece `in_progress`.
+
 ## 2026-11-08 — Peso, capacidad y munición/herramientas (R-15)
 
 **Objetivo:** modelar el peso del inventario y mostrarlo sin alterar las reglas de combate ni la

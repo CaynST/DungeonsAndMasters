@@ -20,6 +20,15 @@ import type {
 
 type Step = "edition" | "species" | "class" | "background" | "abilities" | "skills" | "review";
 
+/** Fighting styles accepted by the backend for Fighters and Paladins. */
+export const FIGHTING_STYLE_OPTIONS = [
+  { value: "defense", label: "Defensa (+1 CA con armadura)" },
+  { value: "archery", label: "Arquería (+2 a ataques a distancia)" },
+  { value: "dueling", label: "Duelo (+2 daño con arma a una mano)" },
+  { value: "great-weapon", label: "Gran arma (repetir 1 o 2 en daño con arma a dos manos)" },
+  { value: "protection", label: "Protección (reacción: desventaja a un ataque contra un aliado cercano)" },
+] as const;
+
 const STEPS: { id: Step; label: string }[] = [
   { id: "edition", label: "Edición" },
   { id: "species", label: "Especie" },
@@ -519,9 +528,11 @@ function ReviewStep({
             onChange={(event) => setFightingStyle(event.target.value)}
             className="h-10 w-full rounded-lg border border-parchment/15 bg-black/35 px-3 text-ink outline-none focus:border-gold/50"
           >
-            <option value="defense">Defensa (+1 CA con armadura)</option>
-            <option value="archery">Arquería (+2 a ataques a distancia)</option>
-            <option value="dueling">Duelo (+2 daño con arma a una mano)</option>
+            {FIGHTING_STYLE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </label>
       )}

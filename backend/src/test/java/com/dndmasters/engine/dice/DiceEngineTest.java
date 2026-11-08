@@ -84,6 +84,51 @@ class DiceEngineTest {
     }
 
     @Test
+    void rerollsLowFacesOnceAndKeepsTheReplacement() {
+        // 2d6: first die 1 (rerolled into 3), second die 6.
+        DiceEngine engine = new DiceEngine(stubRandom(0, 2, 5));
+        DiceRollResult result = engine.rollRerollingLowFaces("2d6+3", 2);
+
+        assertThat(result.rolls()).containsExactly(3, 6);
+        assertThat(result.rerolledFrom()).containsExactly(1);
+        assertThat(result.rerollBonus()).isEqualTo(2);
+        assertThat(result.modifier()).isEqualTo(3);
+        assertThat(result.total()).isEqualTo(12);
+    }
+
+    @Test
+    void keepsAReplacementThatIsStillLow() {
+        // Both dice show 1 or 2 and both replacements are low too; the new roll is final.
+        DiceEngine engine = new DiceEngine(stubRandom(0, 0, 1, 1));
+        DiceRollResult result = engine.rollRerollingLowFaces("2d6", 2);
+
+        assertThat(result.rolls()).containsExactly(1, 2);
+        assertThat(result.rerolledFrom()).containsExactly(1, 2);
+        assertThat(result.rerollBonus()).isZero();
+    }
+
+    @Test
+    void leavesAnEmptyRerollThresholdAlone() {
+        DiceEngine engine = new DiceEngine(stubRandom(0, 5));
+        DiceRollResult result = engine.rollRerollingLowFaces("2d6", 0);
+
+        assertThat(result.rolls()).containsExactly(1, 6);
+        assertThat(result.rerolledFrom()).isEmpty();
+        assertThat(result.rerollBonus()).isZero();
+    }
+
+    @Test
+    void rerollingPreservesConstantsAndRejectsMalformedExpressions() {
+        DiceEngine engine = new DiceEngine();
+        DiceRollResult constant = engine.rollRerollingLowFaces("7", 2);
+        assertThat(constant.rolls()).containsExactly(7);
+        assertThat(constant.total()).isEqualTo(7);
+
+        assertThatThrownBy(() -> engine.rollRerollingLowFaces("2d", 2))
+                .isInstanceOf(DiceParseException.class);
+    }
+
+    @Test
     void rejectsMalformedExpressions() {
         DiceEngine engine = new DiceEngine();
         assertThatThrownBy(() -> engine.roll("2d")).isInstanceOf(DiceParseException.class);
