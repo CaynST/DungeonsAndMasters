@@ -132,3 +132,17 @@ abrir el combate y en cada avance de turno, registra `SURPRISED` y limpia la ban
 El DM la activa con la acción validada `SET_SURPRISED` sobre un `entityId` de la escena.
 **Consecuencia:** la regla es determinista, persistente y testeable sin migración; la detección
 automática o por guion y el render visual quedan como deuda.
+
+## ADR-015 — Competencias e idiomas como metadata derivada de la creación
+**Contexto:** el PHB 2014 define idiomas por especie y competencias de armadura/arma/herramienta
+por clase y trasfondo. Añadir columnas nuevas exigiría migración; además el prototipo todavía no
+aplica mecánicamente herramientas ni idiomas.
+**Alternativas:** columnas dedicadas con migración; duplicar los datos en el frontend; no mostrarlos.
+**Decisión:** `CharacterProficiencies` deriva listas de visualización a partir de los ids de especie,
+clase y trasfondo, y `CharacterBuilder` las guarda en `creationData` (`languages`,
+`armorProficiencies`, `weaponProficiencies`, `toolProficiencies`). La ficha las muestra; no hay
+migración. En 2024 se usa la regla de creación de personaje (Común + dos idiomas a elección).
+Los trasfondos nuevos se añaden solo a 2014 porque el SRD 5.2.1 no incluye sus equivalentes.
+**Consecuencia:** la información está disponible sin tocar el esquema y es testeable como regla pura.
+Los personajes creados antes de este cambio no tienen los campos, y las competencias siguen siendo
+descriptivas hasta que existan pruebas de herramienta/idioma.

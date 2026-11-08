@@ -151,6 +151,26 @@ class CharacterBuilderTest {
     }
 
     @Test
+    void storesLanguagesAndProficienciesInCreationData() {
+        CharacterBuildRequest request = new CharacterBuildRequest(
+                "Borin", Edition.DND_5E_2014, "dwarf", "fighter", "soldier",
+                scores(15, 12, 14, 10, 10, 8), List.of("athletics", "perception"), "cadena", "longsword");
+
+        PlayerCharacter character = builder.build(request);
+
+        assertThat(values(character, "languages")).containsExactly("Común", "Enano");
+        assertThat(values(character, "armorProficiencies")).containsExactly("Todas las armaduras", "Escudos");
+        assertThat(values(character, "weaponProficiencies")).containsExactly("Armas simples", "Armas marciales");
+        assertThat(values(character, "toolProficiencies"))
+                .containsExactly("Set de juego (a elección)", "Vehículos (terrestres)");
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> values(PlayerCharacter character, String key) {
+        return (List<String>) character.getCreationData().get(key);
+    }
+
+    @Test
     void twoThousandTwentyFourTakesBonusesFromBackground() {
         // Soldier background +2 STR, human gives no bonus in 2024.
         CharacterBuildRequest request = new CharacterBuildRequest(

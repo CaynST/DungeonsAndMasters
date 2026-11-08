@@ -145,6 +145,18 @@ public final class RuleSet2014 {
                 "Serviste en un ejército; conoces la disciplina y la guerra."));
         register(map, new Background("urchin", "Golfillo", List.of("sleight_of_hand", "stealth"), Map.of(),
                 "Creciste en las calles; sabes sobrevivir y moverte sin ser visto."));
+        register(map, new Background("charlatan", "Charlatán", List.of("deception", "sleight_of_hand"), Map.of(),
+                "Vives de engaños y disfraces; sabes leer los deseos ajenos y falsificar documentos."));
+        register(map, new Background("entertainer", "Artista", List.of("acrobatics", "performance"), Map.of(),
+                "Actúas ante el público; tu música, danza o humor te abre puertas y corazones."));
+        register(map, new Background("guild-artisan", "Artesano gremial", List.of("insight", "persuasion"), Map.of(),
+                "Perteneces a un gremio de artesanos; conoces un oficio, el comercio y sus contactos."));
+        register(map, new Background("hermit", "Ermitaño", List.of("medicine", "religion"), Map.of(),
+                "Viviste recluido y buscaste iluminación; guardas un descubrimiento que cambió tu vida."));
+        register(map, new Background("outlander", "Forastero", List.of("athletics", "survival"), Map.of(),
+                "Creciste en las tierras salvajes; guías al grupo y sobrevives lejos de la civilización."));
+        register(map, new Background("sailor", "Marinero", List.of("athletics", "perception"), Map.of(),
+                "Navegaste durante años; conoces el mar, los puertos y el trabajo a bordo."));
         return map;
     }
 

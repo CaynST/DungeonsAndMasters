@@ -2,6 +2,16 @@
 
 ## 2026-11-08
 
+- **D-32** `feat(character)` — Idiomas y competencias de armadura/arma/herramienta: se derivan de
+  especie, clase y trasfondo en `CharacterProficiencies` y se guardan en `creationData`
+  (`languages`, `armorProficiencies`, `weaponProficiencies`, `toolProficiencies`). La ficha del
+  personaje muestra una sección **Idiomas y competencias**. Sin migración de base de datos.
+
+- **D-31** `feat(rules)` — Añadidos los seis trasfondos PHB 2014 que faltaban: **Charlatán**,
+  **Artista**, **Artesano gremial**, **Ermitaño**, **Forastero** y **Marinero**, con sus dos
+  habilidades y descripción en español. No se añaden a 2024 porque el SRD 5.2.1 solo incluye
+  Acólito, Criminal, Sabio y Soldado. Sin bonificadores de característica en 2014.
+
 - **D-30** `feat(ui)` — **d100** añadido al menú de dados y a la mesa 3D como dado percentil
   (caras 00–90). El resultado máximo de cualquier dado se clasifica como **MÁXIMO**.
 

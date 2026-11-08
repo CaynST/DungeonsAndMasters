@@ -1,4 +1,4 @@
-import { Package, Swords } from "lucide-react";
+import { BookOpen, Package, Swords } from "lucide-react";
 import type { PlayerCharacter } from "@/types/game";
 import { AbilityScore } from "@/components/ui/AbilityScore";
 import { HealthBar } from "@/components/ui/HealthBar";
@@ -22,6 +22,12 @@ export function CharacterSheet({
     ["SAB", character.stats.wisdom],
     ["CAR", character.stats.charisma],
   ];
+  const languages = stringList(character.creationData?.languages);
+  const armorProficiencies = stringList(character.creationData?.armorProficiencies);
+  const weaponProficiencies = stringList(character.creationData?.weaponProficiencies);
+  const toolProficiencies = stringList(character.creationData?.toolProficiencies);
+  const hasProficiencies =
+    languages.length + armorProficiencies.length + weaponProficiencies.length + toolProficiencies.length > 0;
 
   return (
     <div className="panel p-4">
@@ -86,6 +92,20 @@ export function CharacterSheet({
             </ul>
           </div>
 
+          {hasProficiencies && (
+            <div className="mt-4">
+              <p className="mb-2 flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted">
+                <BookOpen className="h-3.5 w-3.5 text-arcane-soft" /> Idiomas y competencias
+              </p>
+              <div className="space-y-1.5">
+                <ProficiencyGroup label="Idiomas" items={languages} />
+                <ProficiencyGroup label="Armaduras" items={armorProficiencies} />
+                <ProficiencyGroup label="Armas" items={weaponProficiencies} />
+                <ProficiencyGroup label="Herramientas" items={toolProficiencies} />
+              </div>
+            </div>
+          )}
+
           <div className="mt-4">
             <p className="mb-2 flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted">
               <Package className="h-3.5 w-3.5 text-gold" /> Inventario
@@ -119,4 +139,26 @@ export function CharacterSheet({
       )}
     </div>
   );
+}
+
+function ProficiencyGroup({ label, items }: { label: string; items: string[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="flex flex-wrap items-baseline gap-1.5">
+      <span className="text-[10px] uppercase tracking-widest text-muted">{label}</span>
+      {items.map((item) => (
+        <span
+          key={item}
+          className="rounded border border-parchment/10 bg-black/30 px-2 py-0.5 text-xs text-muted"
+          title={item}
+        >
+          {item}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }

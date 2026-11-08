@@ -106,6 +106,9 @@ public class CharacterBuilder {
         character.setPredefined(false);
 
         // Store creation metadata for later (level-up, re-render, verification).
+        CharacterProficiencies.Proficiencies proficiencies = CharacterProficiencies.derive(
+                request.edition(), species.id(), characterClass.id(), background.id());
+
         Map<String, Object> creationData = new LinkedHashMap<>();
         creationData.put("edition", request.edition().name());
         creationData.put("speciesId", species.id());
@@ -113,6 +116,10 @@ public class CharacterBuilder {
         creationData.put("backgroundId", background.id());
         creationData.put("savingThrows", characterClass.savingThrows());
         creationData.put("skills", skillIds);
+        creationData.put("languages", proficiencies.languages());
+        creationData.put("armorProficiencies", proficiencies.armor());
+        creationData.put("weaponProficiencies", proficiencies.weapons());
+        creationData.put("toolProficiencies", proficiencies.tools());
         creationData.put("proficiencyBonus", PROFICIENCY_BONUS);
         creationData.put("hitDie", characterClass.hitDie());
         creationData.put("baseScores", request.baseScores());

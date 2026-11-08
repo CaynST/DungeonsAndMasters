@@ -18,8 +18,8 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | R-09 | Sorpresa | P2 | done |
 | R-10 | Conjuros: trucos, espacios, concentración, componentes | P1 | done |
 | R-11 | Rasgos de clase (Estilo de combate, Segundo aliento, Ataque furtivo, Furia, Inspiración, Canalizar divinidad, etc.) | P1 | in_progress |
-| R-12 | Trasfondos PHB faltantes: Charlatán, Artista, Artesano gremial, Ermitaño, Forastero, Marinero | P2 | pending |
-| R-13 | Competencias de armadura/arma/herramienta e idiomas | P2 | pending |
+| R-12 | Trasfondos PHB faltantes: Charlatán, Artista, Artesano gremial, Ermitaño, Forastero, Marinero | P2 | done |
+| R-13 | Competencias de armadura/arma/herramienta e idiomas | P2 | done |
 | R-14 | Descanso corto/largo y dados de golpe | P2 | pending |
 | R-15 | Peso/equipamiento, munición, herramientas | P3 | pending |
 | R-16 | Ventaja/desventaja expuesta en la UI (el motor ya la soporta) | P2 | done |
@@ -73,3 +73,5 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-28 | Tablero sin anillo vacío + layout del juego adaptativo (móvil/tablet) | done |
 | D-29 | Ventaja/desventaja visible en el registro de ataques del DM | done |
 | D-30 | d100 en el menú de dados y en la mesa 3D | done |
+| D-31 | Trasfondos PHB 2014 restantes: Charlatán, Artista, Artesano gremial, Ermitaño, Forastero y Marinero | done |
+| D-32 | Idiomas y competencias de armadura/arma/herramienta derivados y visibles en la ficha | done |

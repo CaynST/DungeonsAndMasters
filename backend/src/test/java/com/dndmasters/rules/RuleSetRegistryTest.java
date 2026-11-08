@@ -3,6 +3,7 @@ package com.dndmasters.rules;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class RuleSetRegistryTest {
@@ -37,6 +38,30 @@ class RuleSetRegistryTest {
         assertThat(human.abilityBonuses()).isEmpty();
         RuleSet.Background soldier = set.backgroundOrThrow("soldier");
         assertThat(soldier.abilityBonuses()).containsEntry("strength", 2);
+    }
+
+    @Test
+    void twoThousandFourteenIncludesTheSixRemainingPlayerHandbookBackgrounds() {
+        RuleSet set = registry.get(Edition.DND_5E_2014);
+
+        assertThat(set.backgroundOrThrow("charlatan").name()).isEqualTo("Charlatán");
+        assertThat(set.backgroundOrThrow("charlatan").skills()).containsExactly("deception", "sleight_of_hand");
+        assertThat(set.backgroundOrThrow("entertainer").name()).isEqualTo("Artista");
+        assertThat(set.backgroundOrThrow("entertainer").skills()).containsExactly("acrobatics", "performance");
+        assertThat(set.backgroundOrThrow("guild-artisan").name()).isEqualTo("Artesano gremial");
+        assertThat(set.backgroundOrThrow("guild-artisan").skills()).containsExactly("insight", "persuasion");
+        assertThat(set.backgroundOrThrow("hermit").name()).isEqualTo("Ermitaño");
+        assertThat(set.backgroundOrThrow("hermit").skills()).containsExactly("medicine", "religion");
+        assertThat(set.backgroundOrThrow("outlander").name()).isEqualTo("Forastero");
+        assertThat(set.backgroundOrThrow("outlander").skills()).containsExactly("athletics", "survival");
+        assertThat(set.backgroundOrThrow("sailor").name()).isEqualTo("Marinero");
+        assertThat(set.backgroundOrThrow("sailor").skills()).containsExactly("athletics", "perception");
+
+        for (String id : List.of("charlatan", "entertainer", "guild-artisan", "hermit", "outlander", "sailor")) {
+            RuleSet.Background background = set.backgroundOrThrow(id);
+            assertThat(background.abilityBonuses()).as("2014 backgrounds do not grant ability bonuses").isEmpty();
+            assertThat(background.description()).as("description of " + id).isNotBlank();
+        }
     }
 
     @Test
