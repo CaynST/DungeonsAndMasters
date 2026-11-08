@@ -7,6 +7,7 @@ import com.dndmasters.content.AdventureDefinition.Placement;
 import com.dndmasters.content.AdventureDefinition.SceneDefinition;
 import com.dndmasters.content.ValdrosAdventure;
 import com.dndmasters.domain.Campaign;
+import com.dndmasters.domain.CampaignPage;
 import com.dndmasters.domain.CampaignStatus;
 import com.dndmasters.domain.Cell;
 import com.dndmasters.domain.CombatState;
@@ -51,8 +52,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -120,6 +126,47 @@ public class CampaignService {
             c.setMembers(memberViews(e.getId()));
             return c;
         }).toList();
+    }
+
+    /**
+     * Returns one page of campaigns, newest first, optionally filtered by status. Campaign data is
+     * never removed from the database: the Home screen only asks for the slice it can display.
+     *
+     * @param status {@code null}, blank or {@code ALL} for every status; otherwise LOBBY, ACTIVE or
+     *               FINISHED (case-insensitive)
+     */
+    @Transactional(readOnly = true)
+    public CampaignPage listPage(int page, int size, String status) {
+        if (page < 0) {
+            throw new IllegalArgumentException("La página debe ser mayor o igual que 0");
+        }
+        if (size < 1 || size > 100) {
+            throw new IllegalArgumentException("El tamaño de página debe estar entre 1 y 100");
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        String normalizedStatus = normalizeStatus(status);
+        Page<CampaignEntity> result = normalizedStatus == null
+                ? campaigns.findAll(pageable)
+                : campaigns.findByStatus(normalizedStatus, pageable);
+        List<Campaign> content = result.getContent().stream().map(e -> {
+            Campaign c = campaignMapper.toDomain(e);
+            c.setMembers(memberViews(e.getId()));
+            return c;
+        }).toList();
+        return new CampaignPage(content, result.getNumber(), result.getSize(), result.getTotalElements(),
+                result.getTotalPages(), result.isFirst(), result.isLast());
+    }
+
+    /** Normalizes an optional status filter; {@code null} means "no filter". */
+    private String normalizeStatus(String status) {
+        if (status == null || status.isBlank() || "ALL".equalsIgnoreCase(status.trim())) {
+            return null;
+        }
+        try {
+            return CampaignStatus.valueOf(status.trim().toUpperCase(Locale.ROOT)).name();
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Estado de campaña inválido: " + status);
+        }
     }
 
     @Transactional(readOnly = true)

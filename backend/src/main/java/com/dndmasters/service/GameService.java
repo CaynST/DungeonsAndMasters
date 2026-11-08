@@ -7,6 +7,7 @@ import com.dndmasters.ai.dm.DmResponse;
 import com.dndmasters.domain.Attack;
 import com.dndmasters.domain.Ability;
 import com.dndmasters.domain.Campaign;
+import com.dndmasters.domain.CampaignPage;
 import com.dndmasters.domain.CampaignStatus;
 import com.dndmasters.domain.CombatState;
 import com.dndmasters.domain.EntityKind;
@@ -108,6 +109,10 @@ public class GameService {
 
     public List<Campaign> campaigns() {
         return campaigns.list();
+    }
+
+    public CampaignPage campaignsPage(int page, int size, String status) {
+        return campaigns.listPage(page, size, status);
     }
 
     public Campaign createCampaign(Long userId, String name) {

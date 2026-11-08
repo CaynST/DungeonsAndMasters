@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { Badge } from "@/components/ui/Badge";
+import { Avatar } from "@/components/ui/Avatar";
 import { HealthBar } from "@/components/ui/HealthBar";
 import { abilityModifier } from "@/lib/utils";
 import { getStoredUser } from "@/lib/api";
@@ -74,7 +75,11 @@ export function Lobby() {
         <div className="panel-wood panel p-6">
           <h2 className="title-display mb-4 text-lg text-parchment">La Compañía</h2>
           <div className="mb-5 flex items-start gap-4 rounded-lg border border-gold/20 bg-black/30 p-4">
-            <Avatar name={campaign.data?.dmName ?? "DM"} />
+            <Avatar
+              name={campaign.data?.dmName ?? "DM"}
+              src={campaign.data?.dmAvatar}
+              size="md"
+            />
             <div>
               <div className="flex items-center gap-2">
                 <Crown className="h-4 w-4 text-gold" />
@@ -98,7 +103,7 @@ export function Lobby() {
                 className="flex items-center justify-between rounded-lg border border-parchment/10 bg-surface/60 px-4 py-3"
               >
                 <div className="flex items-center gap-3">
-                  <Avatar name={member.displayName} small />
+                  <Avatar name={member.displayName} size="sm" />
                   <div>
                     <p className="text-sm font-medium text-ink">{member.displayName}</p>
                     <p className="text-xs text-muted">{member.characterName ?? "sin personaje"}</p>
@@ -192,7 +197,12 @@ function CharacterChoice({
       }`}
     >
       <div className="flex items-center gap-3">
-        <Portrait character={character} />
+        <Avatar
+          name={character.name}
+          src={character.portrait}
+          color={character.color}
+          size="sm"
+        />
         <div className="min-w-0 flex-1">
           <p className="title-display text-sm text-parchment">{character.name}</p>
           <p className="text-[11px] uppercase tracking-wider text-muted">
@@ -210,32 +220,6 @@ function CharacterChoice({
         </div>
       </div>
     </button>
-  );
-}
-
-function Portrait({ character }: { character: PlayerCharacter }) {
-  if (character.portrait) {
-    return (
-      <img
-        src={character.portrait}
-        alt=""
-        className="h-10 w-10 shrink-0 rounded-full border-2 object-cover"
-        style={{ borderColor: character.color ?? "#C9A227" }}
-      />
-    );
-  }
-  return <Avatar name={character.name} color={character.color} small />;
-}
-
-function Avatar({ name, color, small = false }: { name: string; color?: string; small?: boolean }) {
-  const size = small ? "h-10 w-10 text-sm" : "h-12 w-12 text-base";
-  return (
-    <span
-      className={`title-display flex ${size} shrink-0 items-center justify-center rounded-full border-2 font-bold`}
-      style={{ borderColor: color ?? "#C9A227", color: color ?? "#C9A227" }}
-    >
-      {name.charAt(0)}
-    </span>
   );
 }
 

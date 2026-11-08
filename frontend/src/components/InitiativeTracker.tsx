@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Swords } from "lucide-react";
 import type { CombatState, GameEntity } from "@/types/game";
 import { ConditionBadges } from "@/components/ConditionBadges";
+import { Avatar } from "@/components/ui/Avatar";
 import { cn, hpColor, hpPercent } from "@/lib/utils";
 
 interface Props {
@@ -40,6 +41,12 @@ export function InitiativeTracker({ combat, entities }: Props) {
                 dead && "opacity-40",
               )}
             >
+              <Avatar
+                name={participant.name}
+                src={entity?.portrait}
+                color={entity?.color}
+                size="xs"
+              />
               <span
                 className={cn(
                   "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold",

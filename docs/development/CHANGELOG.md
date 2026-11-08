@@ -2,6 +2,13 @@
 
 ## 2026-11-08
 
+- **D-34** `feat(campaigns)` — Listado paginado/filtrable: `GET /api/campaigns/page` devuelve
+  `CampaignPage` con página, tamaño, estado y metadatos; el endpoint legacy conserva el array. La
+  Home pagina de 6 en 6 con filtros Todas/En curso/En lobby/Completadas. Sin borrar campañas.
+
+- **D-33** `feat(ui)` — `Avatar` reutilizable con retrato local y fallback determinista de iniciales
+  (incluida recuperación ante imagen rota); usado en Home, Lobby, CampaignCard e InitiativeTracker.
+
 - **D-32** `feat(character)` — Idiomas y competencias de armadura/arma/herramienta: se derivan de
   especie, clase y trasfondo en `CharacterProficiencies` y se guardan en `creationData`
   (`languages`, `armorProficiencies`, `weaponProficiencies`, `toolProficiencies`). La ficha del

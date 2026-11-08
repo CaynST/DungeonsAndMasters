@@ -146,3 +146,14 @@ Los trasfondos nuevos se añaden solo a 2014 porque el SRD 5.2.1 no incluye sus 
 **Consecuencia:** la información está disponible sin tocar el esquema y es testeable como regla pura.
 Los personajes creados antes de este cambio no tienen los campos, y las competencias siguen siendo
 descriptivas hasta que existan pruebas de herramienta/idioma.
+
+## ADR-016 — Listado paginado junto al contrato legacy de campañas
+**Contexto:** la Home descargaba y renderizaba todas las campañas; con datos de prueba acumulados
+la lista crecía sin límite. Borrar campañas no es aceptable porque son datos de usuario.
+**Alternativas:** cambiar `GET /api/campaigns` para devolver siempre un sobre paginado (rompe a
+los consumidores actuales); o añadir un endpoint dedicado manteniendo el array existente.
+**Decisión:** `GET /api/campaigns/page?page=&size=&status=` devuelve un `CampaignPage` con
+`content`, metadatos de paginación y filtro opcional por estado; `GET /api/campaigns` conserva el
+array y los parámetros de paginación se validan (página ≥ 0, tamaño 1-100, estado conocido).
+**Consecuencia:** la Home pagina y filtra en el servidor sin borrar datos y los clientes antiguos
+siguen funcionando. El coste es un endpoint adicional y dos rutas que deben mantenerse alineadas.

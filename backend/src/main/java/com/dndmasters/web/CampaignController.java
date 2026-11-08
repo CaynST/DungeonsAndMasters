@@ -1,6 +1,7 @@
 package com.dndmasters.web;
 
 import com.dndmasters.domain.Campaign;
+import com.dndmasters.domain.CampaignPage;
 import com.dndmasters.domain.GameState;
 import com.dndmasters.security.SecurityUtils;
 import com.dndmasters.service.GameService;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -33,6 +35,18 @@ public class CampaignController {
     @GetMapping
     public List<Campaign> list() {
         return game.campaigns();
+    }
+
+    /**
+     * Paginated, optionally status-filtered listing used by the Home screen. The legacy
+     * {@code GET /api/campaigns} array contract is kept for existing callers.
+     */
+    @GetMapping("/page")
+    public CampaignPage page(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size,
+            @RequestParam(required = false) String status) {
+        return game.campaignsPage(page, size, status);
     }
 
     @PostMapping

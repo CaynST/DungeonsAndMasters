@@ -4,6 +4,7 @@ import type {
   AdminUser,
   AuthResponse,
   Campaign,
+  CampaignPage,
   CampaignIntro,
   CreateCharacterPayload,
   GameEvent,
@@ -81,6 +82,15 @@ export const api = {
   me: () => request<User>("/api/auth/me"),
 
   campaigns: () => request<Campaign[]>("/api/campaigns"),
+
+  campaignsPage: (params: { page?: number; size?: number; status?: string } = {}) => {
+    const search = new URLSearchParams();
+    if (params.page !== undefined) search.set("page", String(params.page));
+    if (params.size !== undefined) search.set("size", String(params.size));
+    if (params.status) search.set("status", params.status);
+    const query = search.toString();
+    return request<CampaignPage>(`/api/campaigns/page${query ? `?${query}` : ""}`);
+  },
 
   campaign: (id: number) => request<Campaign>(`/api/campaigns/${id}`),
 
