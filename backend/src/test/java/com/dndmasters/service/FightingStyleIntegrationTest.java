@@ -10,6 +10,9 @@ import com.dndmasters.domain.EntityKind;
 import com.dndmasters.domain.GameEntity;
 import com.dndmasters.domain.GameEvent;
 import com.dndmasters.domain.GameState;
+import com.dndmasters.engine.combat.Condition;
+import com.dndmasters.engine.combat.Conditions;
+import com.dndmasters.engine.combat.TurnEconomy;
 import com.dndmasters.util.Json;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,23 +49,39 @@ class FightingStyleIntegrationTest {
     }
 
     private GameEntity createEnemy(Campaign campaign, GameEntity player) {
+        return createEntity(campaign, player, EntityKind.ENEMY, "Dummy de estilo", 1, 0, 999);
+    }
+
+    /** Creates a scene entity next to the anchor player so combat helpers can find it. */
+    private GameEntity createEntity(Campaign campaign, GameEntity anchor, EntityKind kind,
+                                    String name, int dx, int dy, int hp) {
         GameState state = campaigns.state(campaign.getId());
-        GameEntity enemy = new GameEntity();
-        enemy.setSceneId(state.getScene().id());
-        enemy.setMapId(state.getMap().getId());
-        enemy.setKind(EntityKind.ENEMY);
-        enemy.setName("Dummy de estilo");
-        enemy.setHp(999);
-        enemy.setMaxHp(999);
-        enemy.setAc(10);
-        enemy.setSpeed(6);
-        enemy.setAlive(true);
-        enemy.moveTo(new Cell(player.getX() + 1, player.getY()));
-        campaigns.saveEntity(enemy);
+        GameEntity entity = new GameEntity();
+        entity.setSceneId(state.getScene().id());
+        entity.setMapId(state.getMap().getId());
+        entity.setKind(kind);
+        entity.setName(name);
+        entity.setHp(hp);
+        entity.setMaxHp(hp);
+        entity.setAc(10);
+        entity.setSpeed(6);
+        entity.setAlive(true);
+        entity.getData().put("ownerId", anchor.getData().get("ownerId"));
+        entity.getData().put("attacks", List.of(Map.of(
+                "name", "Prueba", "attackBonus", 5, "damageExpression", "1d4",
+                "range", 1, "ranged", false)));
+        entity.moveTo(new Cell(anchor.getX() + dx, anchor.getY() + dy));
+        campaigns.saveEntity(entity);
         return campaigns.state(campaign.getId()).getEntities().stream()
-                .filter(entity -> entity.getKind() == EntityKind.ENEMY
-                        && "Dummy de estilo".equals(entity.getName()))
+                .filter(candidate -> candidate.getKind() == kind && name.equals(candidate.getName()))
                 .findFirst().orElseThrow();
+    }
+
+    private GameEntity createProtector(Campaign campaign, GameEntity anchor, String name, int dx, int dy) {
+        GameEntity protector = createEntity(campaign, anchor, EntityKind.PLAYER, name, dx, dy, 30);
+        protector.getData().put("fightingStyle", "protection");
+        campaigns.saveEntity(protector);
+        return campaigns.entity(protector.getId()).orElseThrow();
     }
 
     private CombatState transientState(Campaign campaign, GameState state) {
@@ -139,5 +158,157 @@ class FightingStyleIntegrationTest {
             }
         }
         assertThat(sawTwoHanded).isTrue();
+    }
+
+    private int intValue(Object value) {
+        return value instanceof Number number ? number.intValue() : 0;
+    }
+
+    @Test
+    void greatWeaponFightingRerollsLowDiceOnTwoHandedWeaponsAndRecordsTheBonus() {
+        Campaign campaign = campaignWithPlayer(9504L, "Style Great Weapon");
+        GameEntity player = player(campaign);
+        player.getData().put("fightingStyle", "great-weapon");
+        campaigns.saveEntity(player);
+        GameEntity enemy = createEnemy(campaign, player);
+        CombatState state = transientState(campaign, campaigns.state(campaign.getId()));
+
+        Map<String, Object> data = Map.of();
+        for (int attempt = 0; attempt < 40 && intValue(data.get("greatWeaponRerolls")) == 0; attempt++) {
+            data = lastAttackData(combat.attack(campaign.getId(), state, player, enemy,
+                    Attack.meleeTwoHanded("Espadón", 100, "1d12")));
+        }
+
+        assertThat(data.get("greatWeaponFighting")).isEqualTo(true);
+        assertThat(intValue(data.get("greatWeaponRerolls"))).isPositive();
+        assertThat(intValue(data.get("greatWeaponBonus"))).isPositive();
+    }
+
+    @Test
+    void greatWeaponFightingDoesNotApplyToOneHandedWeapons() {
+        Campaign campaign = campaignWithPlayer(9505L, "Style Great Weapon One Handed");
+        GameEntity player = player(campaign);
+        player.getData().put("fightingStyle", "great-weapon");
+        campaigns.saveEntity(player);
+        GameEntity enemy = createEnemy(campaign, player);
+        CombatState state = transientState(campaign, campaigns.state(campaign.getId()));
+
+        Map<String, Object> data = Map.of();
+        for (int attempt = 0; attempt < 40 && data.isEmpty(); attempt++) {
+            data = lastAttackData(combat.attack(campaign.getId(), state, player, enemy,
+                    Attack.melee("Espada larga", 100, "1d8")));
+        }
+
+        assertThat(data.get("greatWeaponFighting")).isEqualTo(false);
+        assertThat(intValue(data.get("greatWeaponRerolls"))).isZero();
+        assertThat(intValue(data.get("greatWeaponBonus"))).isZero();
+    }
+
+    @Test
+    void protectionImposesDisadvantageAndSpendsTheProtectorsReaction() {
+        Campaign campaign = campaignWithPlayer(9511L, "Style Protection");
+        GameEntity target = player(campaign);
+        GameEntity protector = createProtector(campaign, target, "Guardiana", 0, 1);
+        GameEntity enemy = createEnemy(campaign, target);
+        CombatState state = transientState(campaign, campaigns.state(campaign.getId()));
+
+        Map<String, Object> data = Map.of();
+        List<GameEvent> events = List.of();
+        for (int attempt = 0; attempt < 20 && data.isEmpty(); attempt++) {
+            // Reset the reaction so a natural 1 on the attack roll does not waste the setup.
+            protector.getData().put("reactionUsed", false);
+            campaigns.saveEntity(protector);
+            events = combat.attack(campaign.getId(), state, enemy, target,
+                    Attack.melee("Garra", 100, "0"));
+            data = lastAttackData(events);
+        }
+
+        assertThat(data.get("advantage")).isEqualTo("DISADVANTAGE");
+        assertThat(data.get("protection")).isEqualTo(true);
+        assertThat(((Number) data.get("protectorId")).longValue()).isEqualTo(protector.getId());
+        assertThat(events).anyMatch(event -> "PROTECTION".equals(event.type()));
+        assertThat(campaigns.entity(protector.getId()).orElseThrow().getData().get("reactionUsed"))
+                .isEqualTo(true);
+    }
+
+    @Test
+    void protectionCannotBeUsedAgainWithoutANewReaction() {
+        Campaign campaign = campaignWithPlayer(9512L, "Style Protection Spent");
+        GameEntity target = player(campaign);
+        GameEntity protector = createProtector(campaign, target, "Guardiana", 0, 1);
+        GameEntity enemy = createEnemy(campaign, target);
+        CombatState state = transientState(campaign, campaigns.state(campaign.getId()));
+
+        combat.attack(campaign.getId(), state, enemy, target, Attack.melee("Garra", 100, "0"));
+
+        Map<String, Object> data = Map.of();
+        List<GameEvent> events = List.of();
+        for (int attempt = 0; attempt < 20 && data.isEmpty(); attempt++) {
+            events = combat.attack(campaign.getId(), state, enemy, target,
+                    Attack.melee("Garra", 100, "0"));
+            data = lastAttackData(events);
+        }
+
+        assertThat(data.get("advantage")).isEqualTo("NONE");
+        assertThat(data.get("protection")).isEqualTo(false);
+        assertThat(events).noneMatch(event -> "PROTECTION".equals(event.type()));
+    }
+
+    @Test
+    void protectionDoesNotReachBeyondFiveFeet() {
+        Campaign campaign = campaignWithPlayer(9513L, "Style Protection Range");
+        GameEntity target = player(campaign);
+        GameEntity protector = createProtector(campaign, target, "Lejana", 2, 0);
+        GameEntity enemy = createEnemy(campaign, target);
+        CombatState state = transientState(campaign, campaigns.state(campaign.getId()));
+
+        List<GameEvent> events = combat.attack(campaign.getId(), state, enemy, target,
+                Attack.melee("Garra", 100, "0"));
+
+        assertThat(events).noneMatch(event -> "PROTECTION".equals(event.type()));
+        assertThat(TurnEconomy.flag(
+                campaigns.entity(protector.getId()).orElseThrow().getData(), "reactionUsed")).isFalse();
+    }
+
+    @Test
+    void protectionRequiresTheStyleAndAConsciousLivingProtector() {
+        Campaign campaign = campaignWithPlayer(9514L, "Style Protection Requirements");
+        GameEntity target = player(campaign);
+        GameEntity ally = createEntity(campaign, target, EntityKind.PLAYER, "Sin estilo", 0, 1, 30);
+        GameEntity enemy = createEnemy(campaign, target);
+        CombatState state = transientState(campaign, campaigns.state(campaign.getId()));
+
+        List<GameEvent> withoutStyle = combat.attack(campaign.getId(), state, enemy, target,
+                Attack.melee("Garra", 100, "0"));
+        assertThat(withoutStyle).noneMatch(event -> "PROTECTION".equals(event.type()));
+        assertThat(TurnEconomy.flag(
+                campaigns.entity(ally.getId()).orElseThrow().getData(), "reactionUsed")).isFalse();
+
+        ally.getData().put("fightingStyle", "protection");
+        Conditions.add(ally, Condition.UNCONSCIOUS, null, null, null, null);
+        campaigns.saveEntity(ally);
+
+        List<GameEvent> unconscious = combat.attack(campaign.getId(), state, enemy, target,
+                Attack.melee("Garra", 100, "0"));
+        assertThat(unconscious).noneMatch(event -> "PROTECTION".equals(event.type()));
+        assertThat(TurnEconomy.flag(
+                campaigns.entity(ally.getId()).orElseThrow().getData(), "reactionUsed")).isFalse();
+    }
+
+    @Test
+    void aDeadProtectorCannotUseProtection() {
+        Campaign campaign = campaignWithPlayer(9515L, "Style Protection Dead");
+        GameEntity target = player(campaign);
+        GameEntity protector = createProtector(campaign, target, "Caída", 0, 1);
+        protector.setHp(0);
+        protector.setAlive(false);
+        campaigns.saveEntity(protector);
+        GameEntity enemy = createEnemy(campaign, target);
+        CombatState state = transientState(campaign, campaigns.state(campaign.getId()));
+
+        List<GameEvent> events = combat.attack(campaign.getId(), state, enemy, target,
+                Attack.melee("Garra", 100, "0"));
+
+        assertThat(events).noneMatch(event -> "PROTECTION".equals(event.type()));
     }
 }

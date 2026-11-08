@@ -137,6 +137,39 @@ class RulesEngineTest {
     }
 
     @Test
+    void greatWeaponFightingRerollsLowDamageDiceOnTwoHandedWeapons() {
+        Combatant target = combatant(2, 30, 10, new Stats(10, 10, 10, 10, 10, 10));
+        Attack attack = Attack.meleeTwoHanded("Espadón", 5, "2d6+3");
+        AttackResult hit = new AttackResult("Espadón", 15, 5, 20, 10, true, false, false);
+        // 2d6 → 1 and 6; the 1 is rerolled into a 3.
+        DiceEngine dice = new DiceEngine(StubRandom.of(0, 2, 5));
+
+        DamageResult damage = new DamageResolver(dice).apply(attack, hit, target, 0, false, true);
+
+        assertThat(damage.rolls()).containsExactly(3, 6);
+        assertThat(damage.rerolls()).isEqualTo(1);
+        assertThat(damage.rerollBonus()).isEqualTo(2);
+        assertThat(damage.diceTotal()).isEqualTo(9);
+        assertThat(damage.total()).isEqualTo(12); // 9 + 3
+        assertThat(damage.targetHpAfter()).isEqualTo(18);
+    }
+
+    @Test
+    void greatWeaponFightingIsOptIn() {
+        Combatant target = combatant(2, 30, 10, new Stats(10, 10, 10, 10, 10, 10));
+        Attack attack = Attack.meleeTwoHanded("Espadón", 5, "2d6+3");
+        AttackResult hit = new AttackResult("Espadón", 15, 5, 20, 10, true, false, false);
+        DiceEngine dice = new DiceEngine(StubRandom.of(0, 5));
+
+        DamageResult damage = new DamageResolver(dice).apply(attack, hit, target, 0, false, false);
+
+        assertThat(damage.rolls()).containsExactly(1, 6);
+        assertThat(damage.rerolls()).isZero();
+        assertThat(damage.rerollBonus()).isZero();
+        assertThat(damage.total()).isEqualTo(10); // 7 + 3
+    }
+
+    @Test
     void advantageTakesHigherDieAndDisadvantageTakesLower() {
         Combatant attacker = combatant(1, 20, 15, new Stats(10, 10, 10, 10, 10, 10));
         Combatant target = combatant(2, 20, 15, new Stats(10, 10, 10, 10, 10, 10));

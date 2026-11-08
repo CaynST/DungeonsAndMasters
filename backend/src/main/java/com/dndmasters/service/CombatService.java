@@ -451,6 +451,19 @@ public class CombatService {
         if (hidden) {
             effective = combine(effective, com.dndmasters.engine.rules.Advantage.ADVANTAGE);
         }
+        // Protection (automatic reaction approximation): a living, conscious ally with the
+        // style within 5 ft of the target spends its reaction to impose disadvantage.
+        GameEntity protector = findProtector(state, attacker, target);
+        if (protector != null) {
+            protector.getData().put("reactionUsed", true);
+            campaigns.saveEntity(protector);
+            effective = combine(effective, com.dndmasters.engine.rules.Advantage.DISADVANTAGE);
+            recorded.add(events.record(campaignId, state.getSceneId(), "PROTECTION", protector.getName(),
+                    protector.getName() + " usa su reacción para proteger a " + target.getName()
+                            + " (desventaja para " + attacker.getName() + ").",
+                    Map.of("protectorId", protector.getId(), "protectedId", target.getId(),
+                            "attackerId", attacker.getId())));
+        }
         int blessBonus = Boolean.TRUE.equals(attacker.getData().get("blessed"))
                 ? dice.roll("1d4").total() : 0;
         int inspirationBonus = consumeInspiration(attacker);
@@ -488,6 +501,11 @@ public class CombatService {
         data.put("blessBonus", blessBonus);
         data.put("fightingStyleAttackBonus", styleAttackBonus);
         data.put("inspirationBonus", inspirationBonus);
+        data.put("protection", protector != null);
+        if (protector != null) {
+            data.put("protectorId", protector.getId());
+            data.put("protectorName", protector.getName());
+        }
 
         String coverNote = cover.acBonus() > 0 ? " (cobertura +" + cover.acBonus() + " CA)" : "";
 
@@ -495,6 +513,8 @@ public class CombatService {
             int rageBonus = weaponAttack ? RageRules.damageBonus(attacker, melee) : 0;
             int duelingBonus = weaponAttack
                     ? FightingStyleRules.duelingBonus(fightingStyle, melee, attack.twoHanded()) : 0;
+            boolean greatWeaponFighting = weaponAttack
+                    && FightingStyleRules.rerollsLowDamageDice(fightingStyle, melee, attack.twoHanded());
             int bonusDamage = rageBonus + duelingBonus;
             boolean sneakAttack = false;
             int sneakDamage = 0;
@@ -513,13 +533,17 @@ public class CombatService {
                 }
             }
             boolean resistance = weaponAttack && RageRules.resistsPhysicalDamage(target);
-            DamageResult damage = damageResolver.apply(attack, attackResult, targetC, bonusDamage, resistance);
+            DamageResult damage = damageResolver.apply(attack, attackResult, targetC, bonusDamage,
+                    resistance, greatWeaponFighting);
             if (sneakAttack) {
                 attacker.getData().put("sneakAttackUsed", true);
                 campaigns.saveEntity(attacker);
             }
             data.put("rageBonus", rageBonus);
             data.put("duelingBonus", duelingBonus);
+            data.put("greatWeaponFighting", greatWeaponFighting);
+            data.put("greatWeaponRerolls", damage.rerolls());
+            data.put("greatWeaponBonus", damage.rerollBonus());
             data.put("sneakAttack", sneakAttack);
             data.put("sneakAttackDamage", sneakDamage);
             data.put("resisted", resistance);
@@ -823,6 +847,29 @@ public class CombatService {
                     com.dndmasters.engine.rules.Advantage.NONE));
         }
         return recorded;
+    }
+
+    /**
+     * Finds a living, conscious player with the Protection style within 5 ft of the target.
+     * The protector cannot be the attacker or the target; the lowest entity id wins when
+     * several allies qualify, which keeps the automatic choice deterministic.
+     */
+    private GameEntity findProtector(CombatState state, GameEntity attacker, GameEntity target) {
+        if (state.getSceneId() == null || target.getKind() != EntityKind.PLAYER) {
+            return null;
+        }
+        return campaigns.entitiesInScene(state.getSceneId()).stream()
+                .filter(e -> e.getKind() == EntityKind.PLAYER)
+                .filter(e -> !java.util.Objects.equals(e.getId(), target.getId()))
+                .filter(e -> !java.util.Objects.equals(e.getId(), attacker.getId()))
+                .filter(GameEntity::isAlive)
+                .filter(e -> !Conditions.of(e).incapacitated())
+                .filter(e -> !TurnEconomy.flag(e.getData(), "reactionUsed"))
+                .filter(e -> e.cell().chebyshevTo(target.cell()) <= 1)
+                .filter(e -> FightingStyleRules.hasProtection(
+                        e.getData().get("fightingStyle") instanceof String value ? value : ""))
+                .min(Comparator.comparingLong(GameEntity::getId))
+                .orElse(null);
     }
 
     /**
