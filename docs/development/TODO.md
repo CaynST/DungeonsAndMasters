@@ -24,7 +24,8 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | R-15 | Peso/equipamiento y herramientas: peso por objeto, carga total, capacidad FUE×15 y aviso de sobrecarga en ficha/tienda (sin efecto en velocidad) | P3 | done |
 | R-16 | Ventaja/desventaja expuesta en la UI (el motor ya la soporta) | P2 | done |
 | R-17 | d100 en la mesa de dados | P3 | done |
-| R-18 | Consumo de munición en combate (flechas/virotes) y penalización de carga en el movimiento | P3 | pending |
+| R-18 | Consumo de munición en combate (flechas/virotes) para ataques de arma a distancia de jugadores | P3 | done |
+| R-18b | Penalización de carga en el movimiento (separada de R-18 para no alterar reglas de combate ajenas) | P3 | pending |
 
 ## Producto / UX
 
@@ -85,3 +86,4 @@ Prioridad: P0 (bloquea la demo) · P1 (fidelidad D&D) · P2 (pulido).
 | D-39 | Protección: reacción automática acotada que impone desventaja a ataques contra aliados a 5 pies | done |
 | D-40 | Descanso corto/largo, dados de golpe y menú de descanso (R-14) | done |
 | D-41 | Accesibilidad AA en pantallas no-VTT: foco, teclado, contraste, aria, reduced-motion | done |
+| D-42 | Consumo de munición (flechas/virotes) en ataques de arma a distancia de jugadores (R-18) | done |

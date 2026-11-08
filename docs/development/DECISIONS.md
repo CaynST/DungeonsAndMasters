@@ -260,3 +260,27 @@ existentes (`crimson-soft`, `gold-soft`, `muted`) en lugar de introducir una pal
 **Consecuencia:** la base queda reutilizable y testeable sin añadir dependencias. Los avisos de
 lint preexistentes y la cobertura de VTT/creación de personajes quedan fuera del alcance y
 documentados en `TECH_DEBT.md`.
+
+## ADR-022 — Munición de arcos y ballestas desde la ficha persistida
+**Contexto:** R-18 pide que los ataques de arma a distancia de los jugadores consuman munición. El
+prototipo guarda el inventario como JSON en `characters`, los tokens solo copian ataques y datos de
+combate, y no existe una taxonomía genérica de objetos ni recuperación de munición. Los conjuros de
+ataque reutilizan el pipeline de ataque y los enemigos llaman directamente a `CombatService`.
+**Alternativas:** (a) modelar tipos de arma/objeto y munición genérica con migración; (b) mapear por
+nombre de ataque con una tabla explícita y consumir desde `GameService`; (c) consumir dentro de
+`CombatService` para todos los ataques de arma.
+**Decisión:** (b) acotada:
+- `AmmunitionRules` mapea **arcos** → `Flechas` y **ballestas** → `Virotes`, con alias español/inglés
+  y comparación insensible a mayúsculas/acentos. Las armas arrojadizas (jabalina, daga), el cuerpo a
+  cuerpo y los nombres de conjuros no consumen.
+- El consumo ocurre en `GameService.attack` solo para tokens `PLAYER` con `refId`, tras validar
+  objetivo/turno/acción/rango/cobertura y antes de marcar `actionUsed`. Sin munición se devuelve un
+  `ActionResult` de error en español y no se resuelve el ataque.
+- La cantidad se descuenta con `CharacterRepository` + `CharacterMapper`; al llegar a cero se elimina
+  la línea. `GameState.party` relee la ficha, así que la UI se actualiza al refrescar el estado.
+- `CombatService` no consume: los ataques de enemigos/aliados automáticos y los conjuros
+  (`weaponAttack=false`) quedan fuera por diseño.
+**Consecuencia:** la regla es testeable, no requiere migración y no altera energía de acción ni
+conjuros. Quedan como deuda la recuperación de munición, el consumo de armas arrojadizas, los turnos
+automáticos de aliados jugadores y la visualización explícita de munición en la barra de acción.
+La penalización de carga en el movimiento se separa en R-18b.
