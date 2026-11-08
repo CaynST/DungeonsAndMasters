@@ -32,6 +32,7 @@ import com.dndmasters.engine.dice.DiceRollResult;
 import com.dndmasters.engine.rules.CheckResolver;
 import com.dndmasters.engine.rules.CheckResult;
 import com.dndmasters.engine.rules.Advantage;
+import com.dndmasters.engine.rules.AmmunitionRules;
 import com.dndmasters.engine.rules.BardicInspirationRules;
 import com.dndmasters.engine.rules.ClassFeatures;
 import com.dndmasters.engine.rules.Combatant;
@@ -374,6 +375,10 @@ public class GameService {
             return ActionResult.error(cover.reason());
         }
         Advantage advantage = range.disadvantage() ? Advantage.DISADVANTAGE : Advantage.NONE;
+        ActionResult ammunitionError = consumeAmmunition(actor, chosen);
+        if (ammunitionError != null) {
+            return ammunitionError;
+        }
         CombatState eventState = state != null ? state : transientState(campaignId);
         List<GameEvent> recorded = new ArrayList<>(combat.attack(campaignId, eventState, actor, target, chosen, advantage));
         actor.getData().put("actionUsed", true);
@@ -1795,6 +1800,48 @@ public class GameService {
             }
         }
         return occupied;
+    }
+
+    /**
+     * Consumes one ammunition item from the persisted character sheet before a ranged weapon
+     * attack. Returns {@code null} when the attack can continue or needs no tracked ammunition,
+     * and a Spanish error when the player has none. Enemy/NPC attacks never enter this player
+     * action path, and spell attacks use {@code CombatService} with {@code weaponAttack=false}.
+     */
+    private ActionResult consumeAmmunition(GameEntity actor, Attack attack) {
+        String ammunition = AmmunitionRules.ammunitionFor(attack).orElse(null);
+        if (ammunition == null || actor.getKind() != EntityKind.PLAYER) {
+            return null;
+        }
+        if (actor.getRefId() == null) {
+            return ActionResult.error("No se encontró la ficha del personaje para consumir munición.");
+        }
+        CharacterEntity stored = characters.findById(actor.getRefId()).orElse(null);
+        if (stored == null) {
+            return ActionResult.error("No se encontró la ficha del personaje para consumir munición.");
+        }
+        PlayerCharacter character = characterMapper.toDomain(stored);
+        List<InventoryItem> inventory = new ArrayList<>(
+                character.getInventory() == null ? List.of() : character.getInventory());
+        int slot = AmmunitionRules.findAmmunitionSlot(inventory, ammunition).orElse(-1);
+        if (slot < 0 || inventory.get(slot).quantity() <= 0) {
+            return ActionResult.error("No te quedan " + ammunition.toLowerCase(Locale.ROOT)
+                    + " para atacar con " + attack.name() + ". Consigue munición antes de volver a disparar.");
+        }
+        InventoryItem current = inventory.get(slot);
+        int remaining = current.quantity() - 1;
+        if (remaining == 0) {
+            inventory.remove(slot);
+        } else {
+            inventory.set(slot, new InventoryItem(current.name(), current.description(), current.icon(),
+                    remaining, current.weight()));
+        }
+        character.setInventory(inventory);
+        CharacterEntity updated = characterMapper.toEntity(character);
+        updated.setOwnerId(stored.getOwnerId());
+        updated.setCreatedAt(stored.getCreatedAt());
+        characters.save(updated);
+        return null;
     }
 
     private Attack chooseAttack(GameEntity actor, String attackName) {
