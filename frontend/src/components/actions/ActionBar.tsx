@@ -9,6 +9,7 @@ import {
   Lock,
   MessageSquare,
   MoveRight,
+  Music,
   Shield,
   Sparkles,
   Store,
@@ -37,6 +38,9 @@ interface Props {
   secondWindUsed?: boolean;
   raging?: boolean;
   ragesUsed?: number;
+  bardicInspirationUses?: number;
+  inspirationDie?: number;
+  inspirationPending?: boolean;
   spells?: Spell[];
   spellSlotsMax?: number;
   spellSlotsUsed?: number;
@@ -58,6 +62,8 @@ interface Props {
   onStandUp: () => void;
   onSecondWind: () => void;
   onRage: () => void;
+  onBardicInspiration: () => void;
+  onUseInspiration: () => void;
   onCastSpell: (spellId: string) => void;
 }
 
@@ -78,6 +84,9 @@ export function ActionBar({
   secondWindUsed,
   raging,
   ragesUsed,
+  bardicInspirationUses,
+  inspirationDie,
+  inspirationPending,
   spells = [],
   spellSlotsMax = 0,
   spellSlotsUsed = 0,
@@ -99,6 +108,8 @@ export function ActionBar({
   onStandUp,
   onSecondWind,
   onRage,
+  onBardicInspiration,
+  onUseInspiration,
   onCastSpell,
 }: Props) {
   // While an action is in flight, a check is unresolved, the hero is downed or incapacitated,
@@ -243,6 +254,29 @@ export function ActionBar({
               onClick={onRage}
             >
               <Flame className="h-4 w-4" /> {raging ? "Furia activa" : `Furia (${2 - (ragesUsed ?? 0)})`}
+            </Button>
+          )}
+          {classId === "bard" && (
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!canActNow || Boolean(bonusUsed) || (bardicInspirationUses ?? 0) <= 0}
+              title="Inspiración bárdica: un aliado a 12 casillas gana un d6 (acción adicional)"
+              onClick={onBardicInspiration}
+            >
+              <Music className="h-4 w-4" /> Inspirar ({bardicInspirationUses ?? 0})
+            </Button>
+          )}
+          {Boolean(inspirationDie) && (
+            <Button
+              variant={inspirationPending ? "danger" : "secondary"}
+              size="sm"
+              disabled={!canActNow || Boolean(inspirationPending)}
+              title="Usa el d6 de inspiración en tu próxima tirada de ataque, prueba o salvación"
+              onClick={onUseInspiration}
+            >
+              <Sparkles className="h-4 w-4" />
+              {inspirationPending ? "Inspiración lista" : `Inspiración d${inspirationDie}`}
             </Button>
           )}
 

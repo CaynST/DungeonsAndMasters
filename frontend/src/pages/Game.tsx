@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { entityConditions, isIncapacitated } from "@/lib/conditions";
 import { classIdOf } from "@/lib/classes";
+import { abilityModifier } from "@/lib/utils";
 import type { Attack, Cell, GameEvent, PlayerActionPayload } from "@/types/game";
 
 export function Game() {
@@ -156,6 +157,15 @@ export function Game() {
     ? myEntity.data.concentrationRounds
     : 0;
   const blessed = Boolean(myEntity?.data?.blessed);
+  const bardicInspirationMax = Math.max(1, abilityModifier(myCharacter?.stats.charisma ?? 10));
+  const bardicInspirationUsed = typeof myEntity?.data?.bardicInspirationUsed === "number"
+    ? myEntity.data.bardicInspirationUsed
+    : 0;
+  const bardicInspirationUses = Math.max(0, bardicInspirationMax - bardicInspirationUsed);
+  const inspirationDie = typeof myEntity?.data?.inspirationDie === "number"
+    ? myEntity.data.inspirationDie
+    : 0;
+  const inspirationPending = Boolean(myEntity?.data?.inspirationPending);
   const myConditions = useMemo(() => entityConditions(myEntity), [myEntity]);
   const incapacitated = isIncapacitated(myEntity);
   const prone = myConditions.some((condition) => condition.code === "PRONE");
@@ -522,6 +532,9 @@ export function Game() {
           secondWindUsed={Boolean(myEntity?.data?.secondWindUsed)}
           raging={Boolean(myEntity?.data?.raging)}
           ragesUsed={typeof myEntity?.data?.ragesUsed === "number" ? myEntity.data.ragesUsed : 0}
+          bardicInspirationUses={bardicInspirationUses}
+          inspirationDie={inspirationDie}
+          inspirationPending={inspirationPending}
           spells={spells}
           spellSlotsMax={spellSlotsMax}
           spellSlotsUsed={spellSlotsUsed}
@@ -546,6 +559,14 @@ export function Game() {
           onStandUp={() => act.mutate({ type: "STAND_UP", actorEntityId: myEntity?.id })}
           onSecondWind={() => act.mutate({ type: "SECOND_WIND", actorEntityId: myEntity?.id })}
           onRage={() => act.mutate({ type: "RAGE", actorEntityId: myEntity?.id })}
+          onBardicInspiration={() =>
+            act.mutate({
+              type: "BARDIC_INSPIRATION",
+              actorEntityId: myEntity?.id,
+              targetEntityId: selectedEntity?.id,
+            })
+          }
+          onUseInspiration={() => act.mutate({ type: "USE_INSPIRATION", actorEntityId: myEntity?.id })}
           onCastSpell={(spellId) =>
             act.mutate({
               type: "CAST_SPELL",
