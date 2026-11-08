@@ -2,6 +2,12 @@
 
 ## 2026-11-08
 
+- **D-37** `feat(ui)` — Segunda pasada visual de **Home, Lobby, Crónica y estados vacíos/carga**:
+  `EmptyState` y `Skeleton` compartidos, etiquetas de estado/fase de campaña centralizadas,
+  cabecera destacada y tarjetas de héroe con mejor jerarquía, resumen de preparación y selección de
+  héroe accesible en Lobby, y crónica agrupada por día con etiquetas en español y reintento.
+  Verificación visual a 1440 px y 390 px; 50 tests y build en verde.
+
 - **D-35** `feat(equipment)` — Peso de inventario (libras por unidad), carga total y capacidad
   `FUE × 15` en `PlayerCharacter`; JSON antiguo sin `weight` se lee como `0`. `CharacterSheet`
   muestra **Carga X / Y lb** y un aviso de **Sobrecargado** solo informativo; `ShopModal` muestra

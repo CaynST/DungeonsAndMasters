@@ -90,6 +90,43 @@ reacciones completo.
 - Reacciones elegibles para conjuros/rasgos, tirada de Sigilo al ocultarse y disparadores genéricos
   para Preparado (ver `TECH_DEBT.md`).
 
+## 2026-11-08 — Segunda pasada visual de Home, Lobby y Crónica (U-03)
+
+**Objetivo:** mejorar jerarquía, espaciado y estados vacíos/carga de Home, Lobby y Crónica sin
+tocar el tablero, la barra de acciones ni el contrato de la API.
+
+**Acciones**
+- Nuevos primitivos compartidos `EmptyState` y `Skeleton`, y helper `lib/campaigns` para traducir
+  estado y fase de campaña. `Badge` deja de partir etiquetas cortas.
+- **Home:** cabecera con identidad del usuario, campaña destacada con estado, miembros y fase,
+  filtros con iconos, formulario con etiquetas, esqueletos con forma de tarjeta, estados vacíos con
+  CTA y error con reintento. Las tarjetas de héroe muestran badges, retrato, CA/VEL en fichas y
+  acciones accesibles. Se conserva intacta la consulta paginada/filtrada (`page`, `size`, `status`).
+- **Lobby:** cabecera con imagen, estado, edición y fase; resumen de preparación; fila del DM;
+  estados vacíos de compañía y héroes; selección con `aria-pressed` y confirmación del héroe.
+- **Crónica:** recuento de entradas, agrupación por día, etiquetas en español, hora por evento,
+  puntos de color y estados de carga/vacío/error con reintento.
+- **CampaignCard:** estado y fase traducidos, DM visible, avatares de miembros y affordance de
+  entrada. Sin cambios en el comportamiento de navegación.
+
+**Verificación**
+- `pnpm build` en verde.
+- `pnpm test -- --maxWorkers=1 --no-file-parallelism --testTimeout=30000`: **15 archivos, 50 tests**
+  en verde (8 nuevos: 2 en Home, 3 en Lobby y 3 en Crónica).
+- `pnpm lint`: sin errores; solo warnings preexistentes ajenos a los archivos tocados.
+- Verificación visual con Chrome headless + CDP a **1440 px** y **390 px**: Home, destacada, filtros,
+  estado vacío, Lobby con y sin miembros y Crónica. Sin errores de consola.
+- Nota: la primera ejecución completa de tests bajo carga (backend + Vite + Chrome) agotó el
+  timeout por defecto de 5 s; tras detener los servicios, la misma orden terminó en verde.
+
+**Commits**
+- `be1debd` `feat(ui): add shared empty-state and skeleton primitives`
+- `3334f30` `feat(ui): polish home, lobby and chronicle visual states`
+
+**Siguiente paso**
+- U-04 (accesibilidad: contraste, foco y `aria` en iconos) y reutilizar `Avatar`/`EmptyState` en las
+  pantallas restantes cuando se retomen.
+
 ## 2026-11-08 — Terreno difícil (R-08) y sorpresa (R-09)
 
 **Objetivo:** cerrar las dos brechas P2 del motor sin tocar el frontend ni inventar UX.
