@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { CharacterSheet } from "@/components/CharacterSheet";
 import type { PlayerCharacter } from "@/types/game";
 
@@ -26,7 +27,9 @@ describe("CharacterSheet", () => {
     expect(screen.getByText("Kael")).toBeInTheDocument();
     expect(screen.getByText("Human · Fighter")).toBeInTheDocument();
     expect(screen.getByText("23 / 28")).toBeInTheDocument();
-    expect(screen.getByText("🛡 16")).toBeInTheDocument();
+    expect(
+      screen.getByText((_, node) => node?.tagName === "P" && node.textContent === "🛡 16"),
+    ).toBeInTheDocument();
     expect(screen.getByText("14")).toBeInTheDocument();
   });
 
@@ -84,6 +87,23 @@ describe("CharacterSheet", () => {
     expect(screen.getByText(/Sobrecargado/)).toBeInTheDocument();
     expect(screen.getByText(/220 lb supera tu capacidad de 210 lb/)).toBeInTheDocument();
     expect(screen.getByText("6")).toBeInTheDocument(); // speed stays at 6
+  });
+
+  it("names the use-item control with the item and keeps a level-two heading", async () => {
+    const onUseItem = vi.fn();
+    render(
+      <CharacterSheet
+        character={{
+          ...kael,
+          inventory: [{ name: "Poción de curación", description: "Cura 2d4+2", quantity: 1 }],
+        }}
+        onUseItem={onUseItem}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { level: 2, name: "Kael" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Usar Poción de curación" }));
+    expect(onUseItem).toHaveBeenCalledWith("Poción de curación");
   });
 
   it("falls back to inventory weights when the server omits totals", () => {

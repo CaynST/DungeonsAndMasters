@@ -55,13 +55,14 @@ export function Home() {
   const [showCreate, setShowCreate] = useState(false);
   const [campaignPage, setCampaignPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("ALL");
-  const createPanelRef = useRef<HTMLDivElement>(null);
+  const createPanelRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (!showCreate) return;
     const panel = createPanelRef.current;
     if (panel && typeof panel.scrollIntoView === "function") {
-      panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+      panel.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "nearest" });
     }
   }, [showCreate]);
 
@@ -259,7 +260,15 @@ export function Home() {
         </div>
 
         {showCreate && (
-          <div id="create-campaign" ref={createPanelRef} className="panel mb-5 p-4">
+          <form
+            id="create-campaign"
+            ref={createPanelRef}
+            onSubmit={(event) => {
+              event.preventDefault();
+              createCampaign.mutate();
+            }}
+            className="panel mb-5 p-4"
+          >
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end">
               <label className="block">
                 <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.22em] text-muted">
@@ -285,20 +294,16 @@ export function Home() {
                   <option value="dnd-5e-2024">D&D 5e (2024)</option>
                 </select>
               </label>
-              <Button
-                variant="primary"
-                onClick={() => createCampaign.mutate()}
-                loading={createCampaign.isPending}
-              >
+              <Button type="submit" variant="primary" loading={createCampaign.isPending}>
                 Crear y entrar
               </Button>
             </div>
             {createCampaign.isError && (
-              <p className="mt-3 text-xs text-crimson-soft">
+              <p role="alert" className="mt-3 text-xs text-crimson-soft">
                 No se pudo crear la campaña. Inténtalo de nuevo.
               </p>
             )}
-          </div>
+          </form>
         )}
 
         {campaigns.isLoading ? (

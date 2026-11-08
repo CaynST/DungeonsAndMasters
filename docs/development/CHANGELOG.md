@@ -2,6 +2,15 @@
 
 ## 2026-11-08
 
+- **D-41** `fix(a11y)` — Revisión WCAG 2.2 AA de Login, Home, Lobby, Crónica, Admin, tienda,
+  ficha y primitivas: foco visible global, skip link y `<main>`, `prefers-reduced-motion` (CSS y
+  Fireflies), pestañas ARIA en Admin, diálogo modal de tienda con foco atrapado/Escape/restauración,
+  errores anunciados, `aria-invalid`/`aria-describedby`, `caption`/`scope` en tablas, barra de vida
+  como `progressbar`, contraste AA en textos atenuados y estados no asequibles, nombres accesibles
+  en iconos y objetivo táctil de 24 px en "Usar". Sin cambios en el VTT ni en creación de
+  personajes. Verificación: 75 tests, build y lint (solo avisos preexistentes) en verde; contraste
+  comprobado por cálculo, sin axe/Lighthouse ni lector de pantalla real.
+
 - **D-40** `feat(rest)` — R-14: **descanso corto y largo** con dados de golpe. `PlayerAction`
   acepta `SHORT_REST`/`LONG_REST`; `RestRules` deriva el dado por clase/nivel y calcula curación y
   recuperación. El descanso corto gasta un dado y cura `dado + CON` (tope PG), recarga Segundo

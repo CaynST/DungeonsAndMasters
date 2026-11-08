@@ -10,7 +10,8 @@ interface Props {
 }
 
 export function HealthBar({ value, max, className, showLabel = true }: Props) {
-  const pct = max <= 0 ? 0 : Math.max(0, Math.min(100, (value / max) * 100));
+  const safeMax = Math.max(0, max);
+  const pct = safeMax === 0 ? 0 : Math.max(0, Math.min(100, (value / safeMax) * 100));
   const tone = pct > 60 ? "#3E9C6E" : pct > 30 ? "#C9A227" : "#B0364B";
   return (
     <div className={cn("w-full", className)}>
@@ -22,7 +23,15 @@ export function HealthBar({ value, max, className, showLabel = true }: Props) {
           </span>
         </div>
       )}
-      <div className="h-2 w-full overflow-hidden rounded-full bg-black/50">
+      <div
+        role="progressbar"
+        aria-label="Puntos de golpe"
+        aria-valuemin={0}
+        aria-valuemax={safeMax}
+        aria-valuenow={Math.max(0, Math.min(safeMax, value))}
+        aria-valuetext={`${value} de ${max}`}
+        className="h-2 w-full overflow-hidden rounded-full bg-black/50"
+      >
         <div className="hp-bar h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: tone }} />
       </div>
     </div>

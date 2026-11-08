@@ -133,7 +133,7 @@ export function Chronicle({ campaignId }: { campaignId: number }) {
             <BookOpen className="h-4 w-4" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <h3 className="title-display truncate text-sm font-semibold text-ink">Crónica de la aventura</h3>
+            <h2 className="title-display truncate text-sm font-semibold text-ink">Crónica de la aventura</h2>
             <p className="text-[10px] uppercase tracking-[0.2em] text-muted">Lo que ha quedado escrito</p>
           </div>
         </div>
@@ -186,7 +186,7 @@ export function Chronicle({ campaignId }: { campaignId: number }) {
               <section key={day.key} aria-label={day.label}>
                 <div className="mb-3 flex items-center gap-3">
                   <span className="h-px flex-1 bg-gold/15" aria-hidden="true" />
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold/70">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold-soft">
                     {day.label}
                   </span>
                   <span className="h-px flex-1 bg-gold/15" aria-hidden="true" />
@@ -210,7 +210,7 @@ export function Chronicle({ campaignId }: { campaignId: number }) {
                             {time && (
                               <time
                                 dateTime={event.createdAt}
-                                className="shrink-0 text-[10px] tabular-nums text-muted/70"
+                                className="shrink-0 text-[10px] tabular-nums text-muted"
                               >
                                 {time}
                               </time>

@@ -36,7 +36,7 @@ export function Login() {
       <div className="absolute inset-0 bg-[#0b0907]/80" />
       <div className="relative w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="mb-3 flex justify-center gap-3 text-gold">
+          <div className="mb-3 flex justify-center gap-3 text-gold" aria-hidden="true">
             <Sword className="h-7 w-7" />
             <Dices className="h-7 w-7" />
             <Sparkles className="h-7 w-7" />
@@ -50,12 +50,18 @@ export function Login() {
         </div>
 
         <div className="panel p-6">
-          <div className="mb-5 flex rounded-lg border border-parchment/10 bg-black/30 p-1">
+          <div
+            role="group"
+            aria-label="Modo de acceso"
+            className="mb-5 flex rounded-lg border border-parchment/10 bg-black/30 p-1"
+          >
             {(["login", "register"] as const).map((value) => (
               <button
                 key={value}
+                type="button"
+                aria-pressed={mode === value}
                 onClick={() => setMode(value)}
-                className={`flex-1 rounded-md py-2 text-sm font-medium transition ${
+                className={`flex-1 rounded-md py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#17130f] ${
                   mode === value ? "bg-gold/90 text-[#241a06]" : "text-muted hover:text-ink"
                 }`}
               >
@@ -89,6 +95,7 @@ export function Login() {
                   value={displayName}
                   onChange={(event) => setDisplayName(event.target.value)}
                   placeholder="Kael"
+                  autoComplete="nickname"
                   className="input"
                 />
               </Field>
@@ -101,6 +108,8 @@ export function Login() {
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="••••••••"
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
+                aria-invalid={errorMessage ? true : undefined}
+                aria-describedby={errorMessage ? "login-error" : undefined}
                 className="input"
                 required
                 minLength={4}
@@ -108,7 +117,11 @@ export function Login() {
             </Field>
 
             {errorMessage && (
-              <p className="rounded-md border border-crimson/30 bg-crimson/10 px-3 py-2 text-sm text-crimson-soft">
+              <p
+                id="login-error"
+                role="alert"
+                className="rounded-md border border-crimson/30 bg-crimson/10 px-3 py-2 text-sm text-crimson-soft"
+              >
                 {errorMessage}
               </p>
             )}
@@ -135,7 +148,8 @@ export function Login() {
           color: #E8E1D5;
           outline: none;
         }
-        .input:focus { border-color: rgba(201,162,39,0.55); box-shadow: 0 0 0 3px rgba(201,162,39,0.12); }
+        .input::placeholder { color: rgba(179, 167, 147, 0.85); }
+        .input:focus { border-color: rgba(201,162,39,0.75); box-shadow: 0 0 0 3px rgba(201,162,39,0.3); }
       `}</style>
     </div>
   );

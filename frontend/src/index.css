@@ -30,6 +30,48 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Keyboard focus must stay visible on every interactive element. Components that paint their
+   own brass ring can override this with their focus-visible utilities. */
+:where(a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid #e0c56a;
+  outline-offset: 2px;
+}
+
+/* First Tab stop on every screen: bypasses the page chrome and moves focus to <main>. */
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  transform: translateY(-200%);
+  border: 1px solid #8c6e1b;
+  border-radius: 8px;
+  background: #2c2015;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #f0e9dc;
+  box-shadow: 0 8px 24px -10px rgba(0, 0, 0, 0.9);
+  transition: transform 0.12s ease;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* Respect the operating-system motion preference for every CSS animation and transition.
+   JavaScript-driven motion (framer-motion) is disabled in the components that use it. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Stone-walled backdrop with warm torchlight and a touch of grain. */
 .app-backdrop {
   background:
