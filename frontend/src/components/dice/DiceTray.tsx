@@ -26,6 +26,7 @@ const DIE_COLORS: Record<number, string> = {
   10: "#8B5CF6", // amatista
   12: "#14B8A6", // turquesa
   20: "#C0392B", // rubí
+  100: "#C2A878", // hueso
 };
 
 interface Face {
@@ -42,7 +43,9 @@ function buildGeometry(sides: number): THREE.BufferGeometry {
       return new THREE.BoxGeometry(1.5, 1.5, 1.5);
     case 8:
       return new THREE.OctahedronGeometry(1.35);
-    case 10: {
+    case 10:
+    case 100: {
+      // The percentile die is a tens d10: ten faces showing 00–90.
       const up = new THREE.ConeGeometry(1.05, 1.25, 5, 1, true);
       const down = new THREE.ConeGeometry(1.05, 1.25, 5, 1, true);
       up.translate(0, 0.625, 0);
@@ -102,10 +105,10 @@ function extractFaces(geometry: THREE.BufferGeometry): Face[] {
   }));
 }
 
-const TEXTURE_CACHE = new Map<number, THREE.CanvasTexture>();
+const TEXTURE_CACHE = new Map<string, THREE.CanvasTexture>();
 
-function numberTexture(value: number): THREE.CanvasTexture {
-  const cached = TEXTURE_CACHE.get(value);
+function numberTexture(label: string): THREE.CanvasTexture {
+  const cached = TEXTURE_CACHE.get(label);
   if (cached) return cached;
   const canvas = document.createElement("canvas");
   canvas.width = 128;
@@ -118,18 +121,18 @@ function numberTexture(value: number): THREE.CanvasTexture {
     ctx.textBaseline = "middle";
     ctx.lineWidth = 10;
     ctx.strokeStyle = "rgba(10,8,6,0.85)";
-    ctx.strokeText(String(value), 64, 70);
+    ctx.strokeText(label, 64, 70);
     ctx.fillStyle = "#f6efe1";
-    ctx.fillText(String(value), 64, 70);
+    ctx.fillText(label, 64, 70);
   }
   const texture = new THREE.CanvasTexture(canvas);
   texture.anisotropy = 4;
-  TEXTURE_CACHE.set(value, texture);
+  TEXTURE_CACHE.set(label, texture);
   return texture;
 }
 
-function FaceNumber({ face, value }: { face: Face; value: number }) {
-  const texture = useMemo(() => numberTexture(value), [value]);
+function FaceNumber({ face, label }: { face: Face; label: string }) {
+  const texture = useMemo(() => numberTexture(label), [label]);
   const quaternion = useMemo(
     () => new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), face.normal.clone().normalize()),
     [face],
@@ -162,14 +165,20 @@ function Die({ sides, color, faceValue, rolling }: { sides: number; color: strin
     [color],
   );
 
+  // Percentile dice show tens (00–90) on a d10 body; every other die is numbered 1..N.
+  const faceLabel = (index: number) =>
+    sides === 100 ? String(index * 10).padStart(2, "0") : String(index + 1);
+
   const target = useMemo(() => {
-    const index = Math.min(faces.length - 1, Math.max(0, (faceValue - 1) % faces.length));
+    const index = sides === 100
+      ? Math.min(faces.length - 1, Math.max(0, Math.floor((faceValue % 100) / 10)))
+      : Math.min(faces.length - 1, Math.max(0, (faceValue - 1) % faces.length));
     const normal = faces[index]?.normal.clone().normalize() ?? new THREE.Vector3(0, 0, 1);
     const tilt = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.22, -0.18, 0.05));
     return new THREE.Quaternion()
       .setFromUnitVectors(normal, new THREE.Vector3(0, 0, 1))
       .premultiply(tilt);
-  }, [faces, faceValue]);
+  }, [faces, faceValue, sides]);
 
   useFrame((state, delta) => {
     if (!group.current) return;
@@ -188,7 +197,7 @@ function Die({ sides, color, faceValue, rolling }: { sides: number; color: strin
     <group ref={group}>
       <mesh geometry={geometry} material={material} />
       {faces.map((face, index) => (
-        <FaceNumber key={index} face={face} value={index + 1} />
+        <FaceNumber key={index} face={face} label={faceLabel(index)} />
       ))}
     </group>
   );

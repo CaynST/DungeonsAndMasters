@@ -38,6 +38,43 @@
 - Detección automática/guion de la sorpresa y render del terreno difícil/sorpresa en la UI;
   terreno difícil en el tablero antes de sembrarlo en contenido.
 
+## 2026-11-08 — Tablero a pantalla completa, responsive, ventaja y d100
+
+**Objetivo:** cerrar U-01, U-05, R-16 y R-17 sin tocar el motor de reglas ni el backend.
+
+**Acciones**
+- U-01: `Board` deja de reservar una casilla vacía alrededor del mapa (`padding = 0`) y el layout
+  del juego reduce padding/gaps; el tablero es el elemento que absorbe el espacio restante en
+  escritorio.
+- U-05: raíz de altura de viewport (`100dvh`) con la zona central desplazable en móvil/tablet. El
+  tablero (`52dvh`, 58dvh en `sm`) y la sidebar (`62dvh`) tienen alturas utilizables; la barra de
+  acciones queda fija como último hijo del shell. Cabecera con `truncate`/`min-w-0`, sidebar con
+  `min-w-0` y menú de conjuros limitado a `min(20rem, 100vw - 2rem)` para evitar overflow.
+- R-16: `lib/combat.ts` lee `advantage` del `dataJson` de los eventos; `DmPanel` pinta una insignia
+  **Ventaja**/**Desventaja** en `ATTACK`/`ATTACK_MISS`.
+- R-17: `DICE_SIDES` incluye 100; el menú rápido y `DiceTray` lo soportan como dado percentil
+  (geometría d10 con caras 00–90). `outcomeOf` generaliza el resultado **MÁXIMO** a cualquier dado.
+
+**Verificación**
+- `pnpm exec tsc -b` en verde.
+- `pnpm build` en verde.
+- `pnpm test -- --maxWorkers=1 --no-file-parallelism`: **11 archivos, 33 tests** en verde.
+- Tests nuevos: `lib/combat.test.ts`, insignias en `DmPanel.test.tsx`, d100/outcome en
+  `dice.test.ts`, viewBox sin anillo en `Board.test.tsx`.
+- Nota: con la máquina bajo carga alta, dos ejecuciones iniciales de Vitest agotaron el tiempo de
+  respuesta del worker; la repetición con un solo worker terminó en verde. No se observaron fallos
+  de aserción.
+- `pnpm lint` solo reporta avisos preexistentes (no errores).
+
+**Commits**
+- `feat(ui): show attack advantage in the DM event log`
+- `feat(ui): add d100 to the dice tray`
+- `feat(ui): let the game board fill the screen and reflow on small devices`
+
+**Siguiente paso**
+- Verificación visual con navegador a 1440 px y ~390 px (no ejecutada en esta sesión).
+- Continuar con deuda P2 restante (U-02 retratos, U-03 segunda pasada visual, U-04 accesibilidad).
+
 ## 2026-11-05 — Inspiración bárdica (R-11)
 
 **Objetivo:** añadir el rasgo de Bardo de nivel 1 con acción adicional y uso en tiradas.

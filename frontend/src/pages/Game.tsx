@@ -329,19 +329,19 @@ export function Game() {
   const finished = gameState.campaign.status === "FINISHED";
 
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-[100dvh] flex-col overflow-hidden">
       {/* Top bar */}
-      <header className="flex items-center justify-between border-b border-parchment/10 bg-surface/70 px-4 py-2 backdrop-blur">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+      <header className="flex min-w-0 items-center justify-between gap-2 border-b border-parchment/10 bg-surface/70 px-3 py-2 backdrop-blur sm:px-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <Button variant="ghost" size="sm" className="shrink-0" onClick={() => navigate("/")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div>
-            <h1 className="title-display text-lg font-semibold text-parchment">{gameState.campaign.name}</h1>
-            <p className="text-[11px] text-muted">{gameState.scene?.title ?? "Preparando..."}</p>
+          <div className="min-w-0">
+            <h1 className="title-display truncate text-lg font-semibold text-parchment">{gameState.campaign.name}</h1>
+            <p className="truncate text-[11px] text-muted">{gameState.scene?.title ?? "Preparando..."}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {gameState.combat?.active && <Badge tone="crimson">Ronda {gameState.combat.round}</Badge>}
           <Badge tone={finished ? "gold" : "emerald"}>
             {finished ? "Aventura completada" : gameState.campaign.phase}
@@ -350,8 +350,8 @@ export function Game() {
       </header>
 
       {/* Main grid */}
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 p-3 lg:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="flex min-h-0 flex-col gap-3">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-y-auto p-2 lg:grid-cols-[minmax(0,1fr)_380px] lg:overflow-hidden">
+        <div className="flex min-h-0 min-w-0 flex-col gap-2">
           {/* Scene banner */}
           <div className="panel flex items-center justify-between gap-3 p-3">
             <div className="flex items-center gap-2">
@@ -415,7 +415,7 @@ export function Game() {
           )}
 
           {/* Board */}
-          <div className="panel relative min-h-0 flex-1 overflow-hidden">
+          <div className="panel relative h-[52dvh] min-h-[280px] shrink-0 overflow-hidden sm:h-[58dvh] lg:h-auto lg:min-h-0 lg:flex-1 lg:shrink">
             <AnimatePresence mode="wait">
               <motion.div
                 key={gameState.scene?.id ?? "none"}
@@ -445,7 +445,7 @@ export function Game() {
         </div>
 
         {/* Right sidebar with tabs */}
-        <div className="flex min-h-0 flex-col gap-2">
+        <div className="flex min-h-0 min-w-0 flex-col gap-2">
           <div className="flex gap-1 rounded-lg border border-[#2b2118] bg-[#100d0a] p-1">
             {(
               [
@@ -466,7 +466,7 @@ export function Game() {
             ))}
           </div>
 
-          <div className="min-h-0 flex-1 overflow-hidden">
+          <div className="h-[62dvh] min-h-[360px] overflow-hidden lg:h-auto lg:min-h-0 lg:flex-1">
             {tab === "dm" && (
               <DmPanel
                 dmName={gameState.campaign.dmName}
@@ -510,7 +510,7 @@ export function Game() {
       </div>
 
       {/* Action bar */}
-      <div className="px-3 pb-3">
+      <div className="shrink-0 px-2 pb-2">
         {myEntity && (myConditions.length > 0 || blessed || concentrationName) && (
           <div className="panel mb-2 flex flex-wrap items-center gap-2 px-3 py-2">
             <span className="text-[11px] uppercase tracking-wider text-muted">Estados</span>

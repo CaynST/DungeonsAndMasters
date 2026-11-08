@@ -2,18 +2,30 @@
 
 ## 2026-11-08
 
+- **D-30** `feat(ui)` — **d100** añadido al menú de dados y a la mesa 3D como dado percentil
+  (caras 00–90). El resultado máximo de cualquier dado se clasifica como **MÁXIMO**.
+
+- **D-29** `feat(ui)` — El registro del DM muestra una insignia **Ventaja** o **Desventaja** en los
+  eventos de ataque, leyendo `advantage` del `dataJson` con tolerancia a payloads corruptos.
+
+- **D-28** `feat(ui)` — El tablero usa toda el área disponible: se elimina el anillo vacío de una
+  casilla alrededor del mapa y se reducen márgenes/gaps del layout. En móvil/tablet el tablero y la
+  sidebar tienen alturas propias dentro de una columna desplazable, mientras la barra de acciones
+  queda siempre visible; cabecera truncada y menús de conjuros/dados acotados para evitar overflow
+  horizontal.
+
 - **D-27** `feat(dm)` — Disparador de sorpresa: acción estructurada **SET_SURPRISED** validada
   para un `entityId` de la escena; aplica la bandera que consume `SurpriseRules` y registra
   `SURPRISE_APPLIED`. El DM puede declarar una emboscada sin inventar una UX de jugador.
+
+- **D-26** `feat(combat)` — Sorpresa: `SurpriseRules` gestiona la bandera `surprised` en
+  `entity.data`. `CombatService` la consume al abrir el combate o al avanzar el turno, registra
+  `SURPRISED` y salta el primer turno de la criatura; la bandera se limpia exactamente una vez.
 
 - **D-25** `feat(map)` — Terreno difícil: `GameMap.difficultTerrain` se persiste en
   `maps.difficult_terrain_json` (migración V11) y `MovementValidator` cobra **2** al entrar en
   esas casillas, también en diagonal (el motor cobra 1 por paso). No se sembró contenido nuevo
   para no alterar mapas existentes ni introducir penalizaciones invisibles en la UI.
-
-- **D-26** `feat(combat)` — Sorpresa: `SurpriseRules` gestiona la bandera `surprised` en
-  `entity.data`. `CombatService` la consume al abrir el combate o al avanzar el turno, registra
-  `SURPRISED` y salta el primer turno de la criatura; la bandera se limpia exactamente una vez.
 
 ## 2026-11-05
 

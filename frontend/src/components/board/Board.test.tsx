@@ -79,6 +79,12 @@ describe("Board", () => {
     expect(screen.getByText("G")).toBeInTheDocument();
   });
 
+  it("uses the full map area without an empty ring around the tiles", () => {
+    const { container } = renderBoard();
+    const svg = container.querySelector("svg");
+    expect(svg).toHaveAttribute("viewBox", `0 0 ${map.width * map.tileSize} ${map.height * map.tileSize}`);
+  });
+
   it("does not duplicate walls when the map has repeated cells (regression)", () => {
     const duplicated: GameMap = {
       ...map,

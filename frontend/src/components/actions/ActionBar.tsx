@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import type { Attack, PlayerCharacter, Spell } from "@/types/game";
 import { Button } from "@/components/ui/Button";
+import { DICE_SIDES } from "@/lib/dice";
 import { formatModifier } from "@/lib/utils";
 
 interface Props {
@@ -323,7 +324,7 @@ export function ActionBar({
                 </span>
               </Button>
               {spellOpen && (
-                <div className="absolute bottom-full right-0 z-30 mb-2 w-80 rounded-lg border border-[#3a2a1a] bg-[#1a130d] p-2 shadow-lg">
+                <div className="absolute bottom-full left-0 z-30 mb-2 w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-[#3a2a1a] bg-[#1a130d] p-2 shadow-lg lg:left-auto lg:right-0">
                   <div className="mb-2 flex items-center justify-between px-1 text-[10px] uppercase tracking-wider text-muted">
                     <span>Conjuros</span>
                     <span>
@@ -374,7 +375,7 @@ export function ActionBar({
             </Button>
             {diceOpen && (
               <div className="absolute bottom-full left-0 z-30 mb-2 grid grid-cols-3 gap-1 rounded-lg border border-[#3a2a1a] bg-[#1a130d] p-2 shadow-lg">
-                {[4, 6, 8, 10, 12, 20].map((sides) => (
+                {DICE_SIDES.map((sides) => (
                   <button
                     key={sides}
                     onClick={() => {
