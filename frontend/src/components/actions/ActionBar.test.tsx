@@ -47,6 +47,8 @@ function renderBar(overrides: Partial<ComponentProps<typeof ActionBar>> = {}) {
     onReady: vi.fn(),
     onUseObject: vi.fn(),
     onInteract: vi.fn(),
+    onShortRest: vi.fn(),
+    onLongRest: vi.fn(),
   };
   render(
     <ActionBar
@@ -116,5 +118,38 @@ describe("ActionBar combat actions", () => {
     expect(screen.getByRole("button", { name: /oculto/i })).toBeDisabled();
     expect(screen.getByRole("button", { name: /preparado/i })).toBeDisabled();
     expect(screen.getByRole("button", { name: /interacción usada/i })).toBeDisabled();
+  }, 30000);
+});
+
+describe("ActionBar rests", () => {
+  it("opens the rest menu and requests short and long rests", async () => {
+    const handlers = renderBar();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: /^descanso$/i }));
+    expect(screen.getByRole("button", { name: /descanso corto/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /descanso corto/i }));
+    expect(handlers.onShortRest).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByRole("button", { name: /^descanso$/i }));
+    await user.click(screen.getByRole("button", { name: /descanso largo/i }));
+    expect(handlers.onLongRest).toHaveBeenCalledTimes(1);
+  }, 30000);
+
+  it("disables both rests during combat", async () => {
+    renderBar({ inCombat: true });
+    await userEvent.setup().click(screen.getByRole("button", { name: /^descanso$/i }));
+
+    expect(screen.getByRole("button", { name: /descanso corto/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /descanso largo/i })).toBeDisabled();
+    expect(screen.getByText(/no puedes descansar durante un combate/i)).toBeInTheDocument();
+  }, 30000);
+
+  it("disables a short rest when no hit dice remain", async () => {
+    renderBar({ hitDiceRemaining: 0, hitDiceMax: 1 });
+    await userEvent.setup().click(screen.getByRole("button", { name: /^descanso$/i }));
+
+    expect(screen.getByRole("button", { name: /descanso corto/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /descanso largo/i })).toBeEnabled();
   }, 30000);
 });

@@ -228,3 +228,19 @@ suspendidos) o aplicarla automáticamente.
 combate. Aproximaciones documentadas en `TECH_DEBT.md`: no hay elección del jugador (la reacción se
 gasta siempre que sea elegible, incluso si el ataque ya tenía desventaja), no se comprueba línea de
 visión ni sorpresa, y las armas versátiles no cambian de empuñadura.
+
+## ADR-020 — Dados de golpe en `entity.data`, sin migración
+**Contexto:** R-14 necesita dados de golpe por personaje, pero el prototipo no tiene columnas por
+token y ya existen partidas con tokens creados antes de esta regla. Añadir columnas exigiría una
+migración y un backfill; calcular solo para tokens nuevos dejaría incompatibles los existentes.
+**Alternativas:** (a) columnas nuevas en `board_entities` con migración; (b) derivar siempre el dado
+de la clase/nivel sin persistirlo; (c) persistir en `entity.data` con respaldos.
+**Decisión:** (c) `hitDie`, `hitDiceMax` y `hitDiceRemaining` viven en `entity.data`.
+`CampaignService` los inicializa al crear tokens desde `creationData.hitDie`; `RestRules` aplica
+respaldos por clase SRD, nivel y `d8`. El descanso corto gasta exactamente un dado y el largo
+recupera `max(restantes, mitad con mínimo 1)`. El descanso corto recarga Segundo aliento y no toca
+espacios de conjuro; el largo limpia espacios, rasgos, concentración, inspiración y banderas de un
+solo uso. La UI solo muestra y solicita; el motor decide.
+**Consecuencia:** no hay migración ni cambios en el contrato del DM, y los tokens antiguos siguen
+funcionando. Quedan como deuda el gasto de varios dados por descanso corto, la limpieza de
+condiciones/efectos de terceros y el backfill persistente hasta el primer descanso.

@@ -444,6 +444,9 @@ public class CampaignService {
             data.put("ownerId", controllerByCharacterOwner(campaignId).get(character.getId()));
             data.put("classId", com.dndmasters.engine.rules.ClassFeatures.idOf(character.getCls()));
             data.put("level", character.getLevel());
+            data.put("hitDie", hitDieFor(character));
+            data.put("hitDiceMax", Math.max(1, character.getLevel()));
+            data.put("hitDiceRemaining", Math.max(1, character.getLevel()));
             data.put("spellSlotsUsed", 0);
             data.put("spellFocus", com.dndmasters.engine.spells.SpellComponentRules.hasFocus(character));
             data.put("bardicInspirationUsed", 0);
@@ -454,6 +457,15 @@ public class CampaignService {
                     character.getColor(), character.getIcon(), character.getPortrait(), data);
             index++;
         }
+    }
+
+    private String hitDieFor(PlayerCharacter character) {
+        Object stored = character.getCreationData().get("hitDie");
+        if (stored instanceof String label && !label.isBlank()) {
+            return label;
+        }
+        return com.dndmasters.engine.rules.RestRules.hitDieForClass(
+                com.dndmasters.engine.rules.ClassFeatures.idOf(character.getCls()));
     }
 
     @Transactional(readOnly = true)

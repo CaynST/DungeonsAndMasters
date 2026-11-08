@@ -38,6 +38,8 @@ public class PlayerAction {
     public static final String SEARCH = "SEARCH";
     public static final String USE_OBJECT = "USE_OBJECT";
     public static final String INTERACT = "INTERACT";
+    public static final String SHORT_REST = "SHORT_REST";
+    public static final String LONG_REST = "LONG_REST";
 
     private String type;
     private Long actorEntityId;

@@ -26,6 +26,7 @@ import com.dndmasters.engine.combat.ConditionSet;
 import com.dndmasters.engine.combat.Conditions;
 import com.dndmasters.engine.combat.DeathSaveRules;
 import com.dndmasters.engine.combat.SurpriseRules;
+import com.dndmasters.engine.combat.TurnEconomy;
 import com.dndmasters.engine.dice.DiceEngine;
 import com.dndmasters.engine.dice.DiceRollResult;
 import com.dndmasters.engine.rules.CheckResolver;
@@ -38,6 +39,7 @@ import com.dndmasters.engine.rules.CoverRules;
 import com.dndmasters.engine.rules.Modifier;
 import com.dndmasters.engine.rules.RageRules;
 import com.dndmasters.engine.rules.RangeRules;
+import com.dndmasters.engine.rules.RestRules;
 import com.dndmasters.engine.rules.SaveResolver;
 import com.dndmasters.engine.rules.SaveResult;
 import com.dndmasters.engine.rules.SecondWindRules;
@@ -182,6 +184,8 @@ public class GameService {
             case PlayerAction.SEARCH -> search(campaignId, userId, action);
             case PlayerAction.USE_OBJECT -> useObject(campaignId, userId, action);
             case PlayerAction.INTERACT -> interact(campaignId, userId, action);
+            case PlayerAction.SHORT_REST -> rest(campaignId, userId, action, false);
+            case PlayerAction.LONG_REST -> rest(campaignId, userId, action, true);
             default -> ActionResult.error("Tipo de acción desconocido: " + action.getType());
         };
     }
@@ -911,6 +915,121 @@ public class GameService {
         campaigns.saveEntity(actor);
         data.put("entityId", actor.getId());
         GameEvent event = events.record(campaignId, activeSceneId(campaignId), type, actor.getName(), message, data);
+        return new ActionResult(true, null, null, List.of(event), null, null, null, List.of(), false);
+    }
+
+    /**
+     * Short and long rests. Both require an out-of-combat, conscious and owned character.
+     * Short rest spends exactly one hit die (healing die + CON, capped at max HP) and recharges
+     * short-rest features; long rest restores HP, spell slots, class-feature uses and one-use
+     * combat flags, and recovers at least half of the spent hit dice (minimum one).
+     */
+    private ActionResult rest(Long campaignId, Long userId, PlayerAction action, boolean longRest) {
+        GameEntity actor = resolveActor(campaignId, userId, action);
+        if (actor == null) {
+            return ActionResult.error("No se encontró el personaje activo");
+        }
+        if (!ownedBy(actor, userId)) {
+            return ActionResult.error("No controlas ese personaje");
+        }
+        if (!actor.isAlive()) {
+            return ActionResult.error("Estás muerto y no puedes descansar.");
+        }
+        if (isDowned(actor)) {
+            return ActionResult.error("Estás moribundo; solo puedes tirar una salvación de muerte.");
+        }
+        if (Conditions.of(actor).incapacitated()) {
+            return ActionResult.error("Estás incapacitado y no puedes descansar.");
+        }
+        CombatState state = campaigns.activeCombat(campaignId);
+        if (state != null && state.isActive()) {
+            return ActionResult.error("No puedes descansar durante un combate.");
+        }
+
+        int maxHitDice = RestRules.hitDiceMax(actor);
+        int remainingHitDice = RestRules.hitDiceRemaining(actor);
+        String hitDie = RestRules.hitDieLabel(actor);
+        int hpBefore = actor.getHp();
+        Map<String, Object> data = new LinkedHashMap<>();
+        String message;
+        String type;
+
+        if (longRest) {
+            int restoredHitDice = RestRules.longRestHitDiceRemaining(maxHitDice, remainingHitDice);
+            actor.setHp(actor.getMaxHp());
+            actor.setAlive(true);
+            actor.getData().put("hitDie", hitDie);
+            actor.getData().put("hitDiceMax", maxHitDice);
+            actor.getData().put("hitDiceRemaining", restoredHitDice);
+            actor.getData().put("dying", false);
+            actor.getData().put("stable", false);
+            actor.getData().put("deathSuccesses", 0);
+            actor.getData().put("deathFailures", 0);
+            actor.getData().put("surprised", false);
+            actor.getData().put("spellSlotsUsed", 0);
+            actor.getData().put("secondWindUsed", false);
+            actor.getData().put("raging", false);
+            actor.getData().put("rageRounds", 0);
+            actor.getData().put("ragesUsed", 0);
+            actor.getData().put("bardicInspirationUsed", 0);
+            actor.getData().put("inspirationDie", 0);
+            actor.getData().put("inspirationPending", false);
+            actor.getData().put("inspirationRounds", 0);
+            actor.getData().put("inspirationSourceId", null);
+            actor.getData().put("concentrationSpell", null);
+            actor.getData().put("concentrationName", null);
+            actor.getData().put("concentrationRounds", 0);
+            actor.getData().put("blessed", false);
+            actor.getData().put("blessedBy", null);
+            actor.getData().put("hidden", false);
+            actor.getData().put("helpAdvantage", false);
+            actor.getData().put("helpedBy", null);
+            TurnEconomy.reset(actor.getData(),
+                    ConditionRules.effectiveSpeed(actor.getSpeed(), Conditions.of(actor)));
+            // A long rest ends the character's own concentration and the buffs it granted.
+            campaigns.clearConcentration(campaignId, actor.getId());
+            campaigns.saveEntity(actor);
+
+            type = PlayerAction.LONG_REST;
+            message = actor.getName() + " completa un descanso largo: recupera todos sus PG ("
+                    + actor.getHp() + "/" + actor.getMaxHp() + ") y " + restoredHitDice
+                    + " dado(s) de golpe (" + restoredHitDice + "/" + maxHitDice + ").";
+            data.put("restoredHitDice", restoredHitDice);
+        } else {
+            if (remainingHitDice <= 0) {
+                return ActionResult.error("No te quedan dados de golpe; necesitas un descanso largo.");
+            }
+            int roll = dice.roll("1" + hitDie).rolls().get(0);
+            int conModifier = Modifier.of(actor.getStats().constitution());
+            int heal = RestRules.shortRestHeal(roll, conModifier);
+            int hpAfter = Math.min(actor.getMaxHp(), hpBefore + heal);
+            actor.setHp(hpAfter);
+            actor.setAlive(true);
+            actor.getData().put("hitDie", hitDie);
+            actor.getData().put("hitDiceMax", maxHitDice);
+            actor.getData().put("hitDiceRemaining", remainingHitDice - 1);
+            // Second Wind recharges on a short rest; spell slots intentionally do not.
+            actor.getData().put("secondWindUsed", false);
+            campaigns.saveEntity(actor);
+
+            type = PlayerAction.SHORT_REST;
+            message = actor.getName() + " descansa una hora: gasta un dado de golpe (" + hitDie
+                    + "), recupera " + (hpAfter - hpBefore) + " PG (" + hpAfter + "/"
+                    + actor.getMaxHp() + "). Dados de golpe: " + (remainingHitDice - 1)
+                    + "/" + maxHitDice + ".";
+            data.put("dieRoll", roll);
+            data.put("conModifier", conModifier);
+            data.put("heal", hpAfter - hpBefore);
+        }
+
+        data.put("entityId", actor.getId());
+        data.put("hitDie", hitDie);
+        data.put("hitDiceMax", maxHitDice);
+        data.put("hitDiceRemaining", actor.getData().get("hitDiceRemaining"));
+        data.put("hpBefore", hpBefore);
+        data.put("hpAfter", actor.getHp());
+        GameEvent event = events.record(campaignId, activeSceneId(campaignId), type, actor.getName(),
+                message, data);
         return new ActionResult(true, null, null, List.of(event), null, null, null, List.of(), false);
     }
 

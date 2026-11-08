@@ -47,6 +47,49 @@ inventar el subsistema de dominio/nivel que exige Canalizar divinidad.
 **Siguiente paso**
 - Decidir dominio y nivel 2 para Canalizar divinidad (B-03). R-11 permanece `in_progress`.
 
+## 2026-11-08 — Descanso corto/largo y dados de golpe (R-14)
+
+**Objetivo:** cerrar R-14 con descansos reales, dados de golpe persistentes y reinicio de recursos,
+sin migración ni cambios en el contrato del DM.
+
+**Acciones**
+- `PlayerAction` incorpora `SHORT_REST` y `LONG_REST`; `GameService.act` los enruta a un único
+  método de descanso que valida propiedad, vida, estado consciente y ausencia de combate activo.
+- `RestRules` (motor puro) deriva el dado de golpe desde `entity.data.hitDie`, con respaldo por
+  clase SRD (`bárbaro d12`, `guerrero/paladín/explorador d10`, `mago/hechicero d6`, resto d8) y
+  `d8` para clases desconocidas. `hitDiceMax` usa el nivel y `hitDiceRemaining` cae al máximo para
+  tokens antiguos.
+- `CampaignService.ensurePartyInScene` copia `hitDie` desde `creationData`, y persiste
+  `hitDiceMax`/`hitDiceRemaining` con el nivel del personaje en los tokens nuevos.
+- Descanso corto: un dado (tirado con `DiceEngine`), curación `dado + mod. CON` con tope en PG
+  máximos, consume el dado, recarga Segundo aliento y **no** restaura espacios de conjuro.
+- Descanso largo: PG al máximo, espacios a 0, Segundo aliento/Furia/Inspiración bárdica
+  recargados, concentración e inspiración limpias, banderas de un solo uso reiniciadas y dados de
+  golpe recuperados hasta `max(restantes, mitad con mínimo 1)`. Se registran eventos `SHORT_REST`
+  y `LONG_REST` con PG, tirada, modificador y dados restantes.
+- UI: menú **Descanso** en `ActionBar` con dados restantes, botones corto/largo y aviso explícito
+  cuando hay combate o no quedan dados; `Game.tsx` conecta los callbacks y calcula el respaldo de
+  dados para tokens antiguos. El menú es responsive (`min(19rem, 100vw - 2rem)`).
+
+**Verificación (TDD)**
+- Rojo: `RestRulesTest` y `RestIntegrationTest` no compilaban por `RestRules`/constantes ausentes;
+  los tests de `ActionBar` fallaban al no existir el botón **Descanso**.
+- Backend completo: **293 tests** en verde (`mvn test`), incluidos 6 unitarios de `RestRules` y 9
+  de integración de descansos (dados, tope de curación, espacios, combate, moribundo, muerto y
+  tokens nuevos).
+- Frontend: **64 tests** en verde (`pnpm test --maxWorkers=1 --no-file-parallelism
+  --testTimeout=30000`) y `pnpm build` en verde; `pnpm lint` solo reporta avisos preexistentes.
+- `git diff --check` sin errores.
+
+**Decisiones / deuda**
+- ADR-020: dados de golpe en `entity.data` con respaldos, sin migración.
+- `TECH_DEBT.md` R-14: un solo dado por descanso corto, sin limpiar condiciones ni efectos de
+  otros lanzadores, y sin backfill persistente hasta el primer descanso.
+
+**Siguiente paso**
+- Evaluar R-18 (munición/sobrecarga en movimiento) y, si el producto lo pide, permitir gastar
+  varios dados de golpe en un descanso corto.
+
 ## 2026-11-08 — Peso, capacidad y munición/herramientas (R-15)
 
 **Objetivo:** modelar el peso del inventario y mostrarlo sin alterar las reglas de combate ni la

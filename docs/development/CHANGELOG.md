@@ -2,6 +2,14 @@
 
 ## 2026-11-08
 
+- **D-40** `feat(rest)` — R-14: **descanso corto y largo** con dados de golpe. `PlayerAction`
+  acepta `SHORT_REST`/`LONG_REST`; `RestRules` deriva el dado por clase/nivel y calcula curación y
+  recuperación. El descanso corto gasta un dado y cura `dado + CON` (tope PG), recarga Segundo
+  aliento y no restaura espacios; el largo restaura PG, espacios, rasgos, concentración,
+  inspiración y banderas de un solo uso, y recupera al menos la mitad de los dados (mínimo 1).
+  Ambos se rechazan en combate o con el personaje moribundo/incapacitado. Menú **Descanso** en
+  `ActionBar` con dados restantes y avisos, deshabilitado en combate. Sin migración.
+
 - **D-39** `feat(rules)` — Estilo **Protección**: al atacarse a un jugador, un aliado jugador vivo y
   consciente con el estilo a 5 pies gasta su reacción para imponer **desventaja**; se valida estilo,
   alcance, estado y reacción y se registra el evento `PROTECTION`. Reacción automática acotada
