@@ -25,6 +25,11 @@ public record DmAction(
         return new DmAction("START_COMBAT", null, null, null, null, null, null, null, null, null);
     }
 
+    /** Spawns a bestiary monster into the current scene, joining combat when one is active. */
+    public static DmAction spawnEnemy(String enemyName) {
+        return new DmAction("SPAWN_ENEMY", null, null, null, enemyName, null, null, null, null, null);
+    }
+
     public static DmAction grantReward(String item) {
         return new DmAction("GRANT_REWARD", null, null, null, null, null, item, null, null, null);
     }

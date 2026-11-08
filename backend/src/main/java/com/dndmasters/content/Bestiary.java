@@ -76,6 +76,21 @@ public final class Bestiary {
                 .orElseThrow(() -> new IllegalArgumentException("Unknown monster: " + id));
     }
 
+    /**
+     * Resolves a monster named by the DM. Matching is case-insensitive and ignores surrounding
+     * spaces; the stable id is accepted as an alias. Unknown or blank names return empty so the
+     * caller can reject the action without throwing.
+     */
+    public static java.util.Optional<Monster> findByName(String name) {
+        if (name == null || name.isBlank()) {
+            return java.util.Optional.empty();
+        }
+        String normalized = name.trim();
+        return MONSTERS.stream()
+                .filter(m -> m.name().equalsIgnoreCase(normalized) || m.id().equalsIgnoreCase(normalized))
+                .findFirst();
+    }
+
     public static List<Monster> byTier(Tier tier) {
         return MONSTERS.stream().filter(m -> m.tier() == tier).toList();
     }
